@@ -4,7 +4,7 @@
  
 @font-face {
   font-family: 'Inter';
-  src: url("src/assets/Inter-VariableFont_slnt,wght.ttf") format('truetype');
+  src:local("Inter") url(@/assets/Inter-VariableFont_slnt,wght.ttf) format('truetype');
   font-weight: 100 900;
   font-style: normal;
 }
@@ -40,9 +40,12 @@
     --ring: 0 0% 3.9%;
  
     --radius: 0.3rem;
+    color-scheme: light;
   }
  
   .dark {
+    color-scheme: dark;
+
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
  
@@ -80,10 +83,27 @@
   ::selection{
     @apply text-primary-foreground bg-primary;
   }
+  ::-webkit-scrollbar {
+      width: 0.5em;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-primary/0;
+
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded bg-primary/10;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/20;
+  }
+  ::-webkit-scrollbar-thumb:active {
+    @apply bg-primary/30;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
     font-weight: 400;
+    font-size: 16px;
     width: 450px;
     height: 600px;
     user-select: none;

@@ -1,8 +1,13 @@
 {
   "name": "collection-extension",
-  "private": true,
-  "version": "0.0.0",
+  "productName": "Collection",
+  "version": "0.0.1",
   "type": "module",
+  "description": "Chromium Extension to keep URLs in a ordered way.",
+  "author": {
+    "name": "mienaiyami",
+    "url": "https://github.com/mienaiyami"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -12,6 +17,7 @@
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.0.4",
     "@radix-ui/react-context-menu": "^2.1.4",
+    "@radix-ui/react-scroll-area": "^1.0.4",
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-toast": "^1.1.4",
     "class-variance-authority": "^0.7.0",

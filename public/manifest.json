@@ -1,24 +1,21 @@
-// todo, auto make it using package.json
 {
-    "manifest_version": 3,
-    "name": "Collections 2.0",
-    "author": "mienaiyami",
-    "version": "1.3.1",
-    "description": "Extension to add links to collection.",
-    "background": {
-        "service_worker": "./background.js"
-    },
-    "action": {
-        "default_popup": "index.html"
-    },
-    "permissions": [
-        "tabs",
-        "activeTab",
-        "storage",
-        "scripting",
-        "webRequest"
-    ],
-    "host_permissions": [
-        "<all_urls>"
-    ]
+	"manifest_version": 3,
+	"name": "Collection",
+	"author": "mienaiyami",
+	"homepage_url": "https://github.com/mienaiyami",
+	"version": "0.0.1",
+	"description": "Chromium Extension to keep URLs in a ordered way.",
+	"action": {
+		"default_popup": "index.html"
+	},
+	"permissions": [
+		"tabs",
+		"activeTab",
+		"storage",
+		"scripting",
+		"webRequest"
+	],
+	"host_permissions": [
+		"<all_urls>"
+	]
 }
