@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "./ui/button";
 import { useAppContext } from "@/App";
 import Collection from "./Collection";
-import { ScrollArea } from "./ui/scroll-area";
 
 const CollectionView = () => {
     const { collectionData, makeNewCollection } = useAppContext();

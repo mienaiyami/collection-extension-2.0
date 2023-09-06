@@ -9,19 +9,27 @@ import {
 import { useAppContext } from "@/App";
 import { AppWindow } from "lucide-react";
 
-type PropType = CollectionItem;
+type PropType = CollectionItem & {
+    toggleSelected: (id: UUID) => void;
+    isSelected: boolean;
+};
 const CollectionItem = (props: PropType) => {
     const { removeFromCollection, inCollectionView } = useAppContext();
     const [imgLoaded, setImgLoaded] = useState(false);
     return (
         <ContextMenu>
             <ContextMenuTrigger
-                className="w-full h-16 cursor-pointer p-2 gap-2 rounded-md grid grid-cols-[15%_70%_15%] hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20 border"
+                className={`w-full h-16 cursor-pointer rounded-md grid grid-cols-[15%_70%_15%] hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20 border ${
+                    props.isSelected ? "ring-2 ring-purple-600" : ""
+                }`}
                 tabIndex={0}
                 onClick={(e) => {
                     if (e.ctrlKey)
                         chrome.tabs.create({ url: props.url, active: false });
                     else chrome.tabs.update({ url: props.url });
+                }}
+                onMouseDown={(e) => {
+                    e.preventDefault();
                 }}
                 onMouseUp={(e) => {
                     if (e.button === 1) {
@@ -29,22 +37,80 @@ const CollectionItem = (props: PropType) => {
                         chrome.tabs.create({ url: props.url, active: false });
                     }
                 }}
+                onKeyDown={(e) => {
+                    if ([" ", "Enter"].includes(e.key)) {
+                        e.preventDefault();
+                        e.currentTarget.click();
+                    }
+                }}
             >
-                {!imgLoaded ? (
-                    <AppWindow className="w-full h-full p-2" />
-                ) : (
-                    <img
-                        src={props.img}
-                        className="w-full h-full p-2"
-                        draggable={false}
-                        onLoad={() => setImgLoaded(true)}
-                    />
-                )}
-                <div className="flex flex-col item-center justify-center">
-                    <span className="text-lg truncate">{props.title}</span>
-                    <span className="text-xs text-muted-foreground truncate">
+                <AppWindow
+                    className="w-full h-full p-3"
+                    style={{
+                        display: !imgLoaded ? "initial" : "none",
+                    }}
+                />
+                <img
+                    src={props.img}
+                    className="w-full h-full p-3"
+                    draggable={false}
+                    onLoad={() => setImgLoaded(true)}
+                    style={{
+                        display: imgLoaded ? "initial" : "none",
+                    }}
+                />
+                <div className="p-2 flex flex-col item-center justify-center">
+                    <span className="text-lg truncate" title={props.title}>
+                        {props.title}
+                    </span>
+                    <span
+                        className="text-xs text-muted-foreground truncate"
+                        title={props.url}
+                    >
                         {props.url}
                     </span>
+                </div>
+                <div className="grid place-items-center p-4 cursor-default">
+                    <label
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            e.currentTarget.focus();
+                        }}
+                        onKeyDown={(e) => {
+                            if ([" ", "Enter"].includes(e.key)) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.currentTarget.click();
+                            }
+                        }}
+                        tabIndex={0}
+                        className="border rounded-md hover:border-foreground/20"
+                    >
+                        <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={props.isSelected}
+                            onChange={() => {
+                                console.log("aaaaaaaa");
+                                props.toggleSelected(props.id);
+                            }}
+                        />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            height="24px"
+                            viewBox="0 0 24 24"
+                            width="24px"
+                            fill="#FFFFFF"
+                            className=""
+                            style={{
+                                visibility: props.isSelected
+                                    ? "visible"
+                                    : "hidden",
+                            }}
+                        >
+                            <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
+                        </svg>
+                    </label>
                 </div>
             </ContextMenuTrigger>
             <ContextMenuContent
@@ -73,7 +139,7 @@ const CollectionItem = (props: PropType) => {
                         (async () => {
                             chrome.windows.create({
                                 url: props.url,
-                                state: "normal",
+                                state: "maximized",
                             });
                         })();
                     }}
@@ -86,7 +152,7 @@ const CollectionItem = (props: PropType) => {
                         (async () => {
                             chrome.windows.create({
                                 url: props.url,
-                                state: "normal",
+                                state: "maximized",
                                 incognito: true,
                             });
                         })();

@@ -1,4 +1,5 @@
 import React from "react";
+import Draggable from "react-draggable";
 import {
     ContextMenu,
     ContextMenuContent,
@@ -37,16 +38,19 @@ const Collection = (props: PropType) => {
     return (
         <AlertDialog>
             <ContextMenu>
+                {/* //todo */}
+                {/* <Draggable axis="y" handle=".handle"> */}
                 <ContextMenuTrigger
-                    className="w-full h-16 p-2 gap-2 rounded-md grid grid-cols-[15%_70%_15%] hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20 border"
+                    className="handle w-full h-16 rounded-md grid grid-cols-[15%_70%_15%] hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20 border"
                     tabIndex={0}
-                    onClick={(e) => {
+                    onClick={() => {
                         openCollection(props.id);
                     }}
                 >
                     <Button
                         variant={"ghost"}
                         className="w-full h-full"
+                        title="Add Current Tab"
                         onClick={(e) => {
                             e.stopPropagation();
                             chrome.tabs
@@ -71,14 +75,17 @@ const Collection = (props: PropType) => {
                     >
                         <Plus />
                     </Button>
-                    <div className="flex flex-col item-center justify-center">
-                        <span className="text-lg truncate">{props.title}</span>
+                    <div className="p-2 flex flex-col item-center justify-center">
+                        <span className="text-lg truncate" title={props.title}>
+                            {props.title}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                             {props.itemLen}{" "}
                             {props.itemLen > 1 ? "Items" : "Item"}
                         </span>
                     </div>
                 </ContextMenuTrigger>
+                {/* </Draggable> */}
                 <ContextMenuContent
                     className="w-62"
                     onContextMenu={(e) => {
@@ -88,7 +95,6 @@ const Collection = (props: PropType) => {
                 >
                     <ContextMenuItem
                         onClick={() => {
-                            //todo test
                             (async () => {
                                 const collection = collectionData.find(
                                     (e) => e.id === props.id
@@ -113,7 +119,6 @@ const Collection = (props: PropType) => {
                     </ContextMenuItem>
                     <ContextMenuItem
                         onClick={() => {
-                            //todo test
                             (async () => {
                                 const collection = collectionData.find(
                                     (e) => e.id === props.id
@@ -124,7 +129,7 @@ const Collection = (props: PropType) => {
                                     );
                                     chrome.windows.create({
                                         url: urls,
-                                        state: "normal",
+                                        state: "maximized",
                                     });
                                 }
                             })();
@@ -134,7 +139,6 @@ const Collection = (props: PropType) => {
                     </ContextMenuItem>
                     <ContextMenuItem
                         onClick={() => {
-                            //todo test
                             (async () => {
                                 const collection = collectionData.find(
                                     (e) => e.id === props.id
@@ -145,7 +149,7 @@ const Collection = (props: PropType) => {
                                     );
                                     chrome.windows.create({
                                         url: urls,
-                                        state: "normal",
+                                        state: "maximized",
                                         incognito: true,
                                     });
                                 }
@@ -157,7 +161,6 @@ const Collection = (props: PropType) => {
                     <ContextMenuSeparator />
                     <ContextMenuItem
                         onClick={() => {
-                            //todo test
                             (async () => {
                                 const collection = collectionData.find(
                                     (e) => e.id === props.id
@@ -195,7 +198,6 @@ const Collection = (props: PropType) => {
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
                         onClick={() => {
-                            //todo test
                             removeCollections(props.id);
                         }}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
