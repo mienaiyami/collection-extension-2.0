@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import {
     ContextMenu,
     ContextMenuContent,
@@ -7,34 +7,112 @@ import {
     ContextMenuTrigger,
 } from "./ui/context-menu";
 import { useAppContext } from "@/App";
-import { AppWindow } from "lucide-react";
+import { AppWindow, Check } from "lucide-react";
 
 type PropType = CollectionItem & {
-    toggleSelected: (id: UUID) => void;
+    changeSelected: (id: UUID, checked: boolean) => void;
     isSelected: boolean;
+    index: number;
 };
 const CollectionItem = (props: PropType) => {
-    const { removeFromCollection, inCollectionView } = useAppContext();
+    const {
+        removeFromCollection,
+        inCollectionView,
+        changeCollectionItemOrder,
+    } = useAppContext();
     const [imgLoaded, setImgLoaded] = useState(false);
+
+    const [dragging, setDragging] = useState<null | {
+        initY: number;
+        height: number;
+    }>(null);
+
+    const elemRef = useRef<HTMLSpanElement>(null);
+
+    useLayoutEffect(() => {
+        const evMove = (e: MouseEvent) => {
+            if (dragging && elemRef.current) {
+                const s = elemRef.current.style;
+                s.translate =
+                    "0 " +
+                    (e.clientY - dragging.initY - dragging.height / 2 + "px");
+            }
+        };
+        const evUp = (e: MouseEvent) => {
+            if (elemRef.current) {
+                setDragging(null);
+                const x = elemRef.current.getBoundingClientRect().x,
+                    y = e.clientY;
+                setTimeout(() => {
+                    const elem = document.elementFromPoint(x, y);
+                    if (elem && inCollectionView) {
+                        if (elem.classList.contains("urlItem")) {
+                            const urlIndex = parseInt(
+                                elem.getAttribute("data-url-index") || "-1"
+                            );
+                            if (urlIndex >= 0) {
+                                changeCollectionItemOrder(
+                                    inCollectionView,
+                                    props.id,
+                                    urlIndex
+                                );
+                            }
+                        }
+                    }
+                }, 0);
+            }
+        };
+        const evLeave = () => {
+            setDragging(null);
+        };
+        if (elemRef.current) {
+            if (dragging === null) {
+                elemRef.current.style.translate = "";
+            } else {
+                window.addEventListener("mousemove", evMove);
+                window.addEventListener("mouseup", evUp);
+                window.addEventListener("mouseleave", evLeave);
+                return () => {
+                    window.removeEventListener("mousemove", evMove);
+                    window.removeEventListener("mouseup", evUp);
+                    window.removeEventListener("mouseleave", evLeave);
+                };
+            }
+        }
+    }, [dragging]);
+
     return (
         <ContextMenu>
             <ContextMenuTrigger
-                className={`w-full h-16 cursor-pointer rounded-md grid grid-cols-[15%_70%_15%] hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20 border ${
-                    props.isSelected ? "ring-2 ring-purple-600" : ""
-                }`}
+                className={`urlItem w-full h-24 cursor-pointer rounded-md grid grid-cols-[25%_65%_10%] items-center hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20 border ${
+                    props.isSelected
+                        ? "ring-2 ring-purple-700 dark:ring-purple-400"
+                        : ""
+                } ${dragging ? "backdrop-blur-sm" : ""}`}
                 tabIndex={0}
-                onClick={(e) => {
-                    if (e.ctrlKey)
-                        chrome.tabs.create({ url: props.url, active: false });
-                    else chrome.tabs.update({ url: props.url });
-                }}
+                data-url-id={props.id}
+                data-url-index={props.index}
+                ref={elemRef}
                 onMouseDown={(e) => {
-                    e.preventDefault();
+                    if (e.button === 1) e.preventDefault();
                 }}
                 onMouseUp={(e) => {
                     if (e.button === 1) {
                         e.preventDefault();
                         chrome.tabs.create({ url: props.url, active: false });
+                    }
+                    if (e.button === 0) {
+                        if (dragging) return;
+                        try {
+                            if (e.ctrlKey)
+                                chrome.tabs.create({
+                                    url: props.url,
+                                    active: false,
+                                });
+                            else chrome.tabs.update({ url: props.url });
+                        } catch {
+                            console.error("Use as extension.");
+                        }
                     }
                 }}
                 onKeyDown={(e) => {
@@ -42,23 +120,57 @@ const CollectionItem = (props: PropType) => {
                         e.preventDefault();
                         e.currentTarget.click();
                     }
+                    if (e.key === "Escape" && dragging) setDragging(null);
+                }}
+                draggable
+                onDragStart={(e) => {
+                    e.preventDefault();
+                    setDragging({
+                        initY: e.currentTarget.getBoundingClientRect().y,
+                        height: e.currentTarget.getBoundingClientRect().height,
+                    });
+                }}
+                onDragEnd={(e) => {
+                    e.preventDefault();
+                    setDragging(null);
                 }}
             >
-                <AppWindow
-                    className="w-full h-full p-3"
-                    style={{
-                        display: !imgLoaded ? "initial" : "none",
-                    }}
-                />
-                <img
-                    src={props.img}
-                    className="w-full h-full p-3"
-                    draggable={false}
-                    onLoad={() => setImgLoaded(true)}
-                    style={{
-                        display: imgLoaded ? "initial" : "none",
-                    }}
-                />
+                <div className="w-full h-full p-1 overflow-hidden grid place-items-center">
+                    <AppWindow
+                        className="h-full w-full p-3.5"
+                        style={{
+                            display: !imgLoaded ? "initial" : "none",
+                        }}
+                    />
+                    <img
+                        src={props.img}
+                        className="h-full w-auto object-cover rounded-sm"
+                        draggable={false}
+                        onLoad={(e) => {
+                            setImgLoaded(true);
+                            if (
+                                e.currentTarget.width <= 100 ||
+                                e.currentTarget.height <= 100
+                            ) {
+                                e.currentTarget.classList.add("p-3.5");
+                            }
+                            if (
+                                e.currentTarget.width <= 50 ||
+                                e.currentTarget.height <= 50 ||
+                                e.currentTarget.src
+                                    .toLowerCase()
+                                    .includes(".ico") ||
+                                e.currentTarget.src
+                                    .toLowerCase()
+                                    .includes(".svg")
+                            )
+                                e.currentTarget.classList.add("p-6");
+                        }}
+                        style={{
+                            display: imgLoaded ? "initial" : "none",
+                        }}
+                    />
+                </div>
                 <div className="p-2 flex flex-col item-center justify-center">
                     <span className="text-lg truncate" title={props.title}>
                         {props.title}
@@ -70,11 +182,11 @@ const CollectionItem = (props: PropType) => {
                         {props.url}
                     </span>
                 </div>
-                <div className="grid place-items-center p-4 cursor-default">
+                <div className="grid place-items-center w-full h-full cursor-default">
                     <label
                         onClick={(e) => {
                             e.stopPropagation();
-                            e.currentTarget.focus();
+                            // e.currentTarget.focus();
                         }}
                         onKeyDown={(e) => {
                             if ([" ", "Enter"].includes(e.key)) {
@@ -84,32 +196,31 @@ const CollectionItem = (props: PropType) => {
                             }
                         }}
                         tabIndex={0}
-                        className="border rounded-md hover:border-foreground/20"
+                        className={`border rounded-md hover:border-foreground/20 ${
+                            props.isSelected
+                                ? "bg-purple-700 dark:bg-purple-400"
+                                : ""
+                        }`}
                     >
                         <input
                             type="checkbox"
                             className="hidden"
                             checked={props.isSelected}
-                            onChange={() => {
-                                console.log("aaaaaaaa");
-                                props.toggleSelected(props.id);
+                            onChange={(e) => {
+                                props.changeSelected(
+                                    props.id,
+                                    e.currentTarget.checked
+                                );
                             }}
                         />
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            height="24px"
-                            viewBox="0 0 24 24"
-                            width="24px"
-                            fill="#FFFFFF"
-                            className=""
+                        <Check
+                            className="text-white"
                             style={{
                                 visibility: props.isSelected
                                     ? "visible"
                                     : "hidden",
                             }}
-                        >
-                            <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
-                        </svg>
+                        />
                     </label>
                 </div>
             </ContextMenuTrigger>
@@ -122,7 +233,6 @@ const CollectionItem = (props: PropType) => {
             >
                 <ContextMenuItem
                     onClick={() => {
-                        //todo test
                         (async () => {
                             chrome.tabs.create({
                                 url: props.url,
@@ -135,7 +245,6 @@ const CollectionItem = (props: PropType) => {
                 </ContextMenuItem>
                 <ContextMenuItem
                     onClick={() => {
-                        //todo test
                         (async () => {
                             chrome.windows.create({
                                 url: props.url,
@@ -148,7 +257,6 @@ const CollectionItem = (props: PropType) => {
                 </ContextMenuItem>
                 <ContextMenuItem
                     onClick={() => {
-                        //todo test
                         (async () => {
                             chrome.windows.create({
                                 url: props.url,
@@ -163,7 +271,6 @@ const CollectionItem = (props: PropType) => {
                 <ContextMenuSeparator />
                 <ContextMenuItem
                     onClick={() => {
-                        //todo test
                         (async () => {
                             navigator.clipboard.writeText(props.url);
                         })();
@@ -173,7 +280,6 @@ const CollectionItem = (props: PropType) => {
                 </ContextMenuItem>
                 <ContextMenuItem
                     onClick={() => {
-                        //todo test
                         inCollectionView &&
                             removeFromCollection(inCollectionView, props.id);
                     }}

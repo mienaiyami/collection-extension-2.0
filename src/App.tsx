@@ -372,6 +372,14 @@ type AppContextType = {
     removeFromCollection: (collectionId: UUID, itemId: UUID | UUID[]) => void;
     toastError: (description: React.ReactNode) => void;
     renameCollection: (id: UUID, newName: string) => void;
+    changeCollectionOrder: (id: UUID, newIndex: number) => void;
+    changeCollectionItemOrder: (
+        colID: UUID,
+        itemID: UUID,
+        newIndex: number
+    ) => void;
+    exportData: () => Promise<void>;
+    importData: () => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -434,16 +442,84 @@ const App = () => {
         } else if (inCollectionView) setInCollectionView(null);
     };
 
+    const exportData = async () => {
+        const handle = await window.showSaveFilePicker({
+            types: [
+                {
+                    accept: {
+                        "application/json": [".json"],
+                    },
+                    description: "JSON File",
+                },
+            ],
+            suggestedName: "collection_data",
+        });
+        const stream = await handle.createWritable();
+        console.log(
+            await stream.write(JSON.stringify(collectionData, null, "\t"))
+        );
+        await stream.close();
+    };
+
+    const importData = async () => {
+        const handle = await window.showOpenFilePicker({
+            types: [
+                {
+                    accept: {
+                        "application/json": [".json"],
+                    },
+                    description: "JSON File",
+                },
+            ],
+            multiple: false,
+        });
+        try {
+            if (handle[0]) {
+                const file = await handle[0].getFile();
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const raw = reader.result;
+                    const data = JSON.parse(raw as string) as Collection[];
+                    setCollectionData((init) => {
+                        data.forEach((e) => {
+                            const index = init.findIndex((a) => a.id === e.id);
+                            if (index >= 0) {
+                                const aa = init[index].items.map((e) => e.id);
+                                e.items.forEach((c) => {
+                                    if (!aa.includes(c.id)) {
+                                        init[index].items.unshift(c);
+                                    }
+                                });
+                            } else init.unshift(e);
+                        });
+                        toast({
+                            title: "Imported Successfully",
+                        });
+                        return [...init];
+                    });
+                    //todo
+                };
+                reader.readAsText(file, "utf8");
+            }
+        } catch {
+            toastError("Couldn't load file.");
+        }
+    };
+
     const makeNewCollection = (title: string, items: CollectionItem[] = []) => {
+        const id = crypto.randomUUID();
         setCollectionData((init) => [
             {
-                id: crypto.randomUUID(),
+                id,
                 title,
                 items,
                 date: new Date().toISOString(),
             },
             ...init,
         ]);
+        setTimeout(() => {
+            openCollection(id);
+        }, 500);
     };
     const removeCollections = (id: UUID | UUID[]) => {
         const init = [...collectionData];
@@ -524,11 +600,38 @@ const App = () => {
         }
     };
 
-    const changeCollectionOrder = (id: UUID, newIndex: string) => {
-        // todo
+    const changeCollectionOrder = (id: UUID, newIndex: number) => {
+        const colIdx = collectionData.findIndex((e) => e.id === id);
+        if (colIdx >= 0) {
+            setCollectionData((init) => {
+                const col = init.splice(colIdx, 1);
+                init.splice(newIndex, 0, col[0]);
+                return [...init];
+            });
+        } else toastError("Couldn't reorder.");
     };
-    const changeCollectionItemOrder = (id: UUID, newIndex: string) => {
-        // todo
+    const changeCollectionItemOrder = (
+        colID: UUID,
+        itemID: UUID,
+        newIndex: number
+    ) => {
+        const colIdx = collectionData.findIndex((e) => e.id === colID);
+        try {
+            if (colIdx >= 0) {
+                const itemIdx = collectionData[colIdx].items.findIndex(
+                    (e) => e.id === itemID
+                );
+                if (itemIdx >= 0) {
+                    setCollectionData((init) => {
+                        const item = init[colIdx].items.splice(itemIdx, 1);
+                        init[colIdx].items.splice(newIndex, 0, item[0]);
+                        return [...init];
+                    });
+                } else throw new Error();
+            } else throw new Error();
+        } catch {
+            toastError("Couldn't reorder.");
+        }
     };
     const renameCollection = (id: UUID, newName: string) => {
         const index = collectionData.findIndex((e) => e.id === id);
@@ -574,9 +677,13 @@ const App = () => {
                     removeFromCollection,
                     toastError,
                     renameCollection,
+                    changeCollectionOrder,
+                    changeCollectionItemOrder,
+                    exportData,
+                    importData,
                 }}
             >
-                <div className="w-full h-full">
+                <div className="w-full h-full border grid grid-rows-[65px_auto]">
                     <TopBar />
                     {inCollectionView ? (
                         <CollectionItemView />

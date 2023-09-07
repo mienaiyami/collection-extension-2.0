@@ -1,5 +1,4 @@
-import React from "react";
-import Draggable from "react-draggable";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import {
     ContextMenu,
     ContextMenuContent,
@@ -21,6 +20,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "./ui/alert-dialog";
+import { getImgFromTab } from "@/utils";
 
 type PropType = {
     id: UUID;
@@ -34,17 +34,105 @@ const Collection = (props: PropType) => {
         collectionData,
         removeCollections,
         openCollection,
+        changeCollectionOrder,
     } = useAppContext();
+
+    const [dragging, setDragging] = useState<null | {
+        initY: number;
+        height: number;
+    }>(null);
+
+    const elemRef = useRef<HTMLSpanElement>(null);
+
+    useLayoutEffect(() => {
+        const evMove = (e: MouseEvent) => {
+            if (dragging && elemRef.current) {
+                const s = elemRef.current.style;
+                s.translate =
+                    "0 " +
+                    (e.clientY - dragging.initY - dragging.height / 2 + "px");
+            }
+        };
+        const evUp = (e: MouseEvent) => {
+            if (elemRef.current) {
+                setDragging(null);
+                const x = elemRef.current.getBoundingClientRect().x + 1,
+                    y = e.clientY;
+                setTimeout(() => {
+                    const elem = document.elementFromPoint(x, y);
+                    if (elem) {
+                        if (
+                            elem.tagName === "BUTTON" &&
+                            elem.parentElement!.classList.contains("collection")
+                        ) {
+                            const elem2 = elem.parentElement;
+                            if (elem2) {
+                                const collectionId =
+                                    elem2.getAttribute("data-collection-id");
+                                if (collectionId) {
+                                    const index = collectionData.findIndex(
+                                        (e) => e.id === collectionId
+                                    );
+                                    if (index >= 0) {
+                                        changeCollectionOrder(props.id, index);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }, 0);
+            }
+        };
+        const evLeave = () => {
+            setDragging(null);
+        };
+        if (elemRef.current) {
+            if (dragging === null) {
+                elemRef.current.style.translate = "";
+            } else {
+                window.addEventListener("mousemove", evMove);
+                window.addEventListener("mouseup", evUp);
+                window.addEventListener("mouseleave", evLeave);
+                return () => {
+                    window.removeEventListener("mousemove", evMove);
+                    window.removeEventListener("mouseup", evUp);
+                    window.removeEventListener("mouseleave", evLeave);
+                };
+            }
+        }
+    }, [dragging]);
+
     return (
         <AlertDialog>
             <ContextMenu>
-                {/* //todo */}
-                {/* <Draggable axis="y" handle=".handle"> */}
                 <ContextMenuTrigger
-                    className="handle w-full h-16 rounded-md grid grid-cols-[15%_70%_15%] hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20 border"
+                    className={`collection handle w-full h-16 rounded-md grid grid-cols-[15%_70%_15%] hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20 border ${
+                        dragging ? "backdrop-blur-sm" : ""
+                    }`}
+                    data-collection-id={props.id}
                     tabIndex={0}
-                    onClick={() => {
-                        openCollection(props.id);
+                    ref={elemRef}
+                    draggable
+                    onDragStart={(e) => {
+                        e.preventDefault();
+                        setDragging({
+                            initY: e.currentTarget.getBoundingClientRect().y,
+                            height: e.currentTarget.getBoundingClientRect()
+                                .height,
+                        });
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Escape" && dragging) setDragging(null);
+                    }}
+                    onMouseUp={(e) => {
+                        if (e.button === 0) {
+                            if (dragging) return;
+                            openCollection(props.id);
+                        }
+                    }}
+                    onDragEnd={(e) => {
+                        e.preventDefault();
+                        setDragging(null);
                     }}
                 >
                     <Button
@@ -60,15 +148,15 @@ const Collection = (props: PropType) => {
                                 })
                                 .then((tabs) => {
                                     const tab = tabs[0];
-                                    addToCollection(props.id, {
-                                        //todo, mayabve move id to fn?
-                                        id: crypto.randomUUID(),
-                                        date: new Date().toISOString(),
-                                        // todo, maybe get screenshot somehow?
-                                        // chrome.tabs.captureVisibleTab
-                                        img: tab.favIconUrl || "",
-                                        title: tab.title || "title",
-                                        url: tab.url || "",
+                                    getImgFromTab(tab).then((img) => {
+                                        addToCollection(props.id, {
+                                            //todo, mayabve move id to fn?
+                                            id: crypto.randomUUID(),
+                                            date: new Date().toISOString(),
+                                            img,
+                                            title: tab.title || "title",
+                                            url: tab.url || "",
+                                        });
                                     });
                                 });
                         }}
@@ -85,7 +173,6 @@ const Collection = (props: PropType) => {
                         </span>
                     </div>
                 </ContextMenuTrigger>
-                {/* </Draggable> */}
                 <ContextMenuContent
                     className="w-62"
                     onContextMenu={(e) => {

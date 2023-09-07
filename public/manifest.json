@@ -5,6 +5,19 @@
 	"homepage_url": "https://github.com/mienaiyami",
 	"version": "0.0.1",
 	"description": "Chromium Extension to keep URLs in a ordered way.",
+	"background": {
+		"service_worker": "background.js"
+	},
+	"content_scripts": [
+		{
+			"matches": [
+				"<all_urls>"
+			],
+			"js": [
+				"content.js"
+			]
+		}
+	],
 	"action": {
 		"default_popup": "index.html"
 	},
@@ -13,7 +26,8 @@
 		"activeTab",
 		"storage",
 		"scripting",
-		"webRequest"
+		"webRequest",
+		"contextMenus"
 	],
 	"host_permissions": [
 		"<all_urls>"

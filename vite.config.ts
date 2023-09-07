@@ -13,13 +13,26 @@ const manifest: chrome.runtime.ManifestV3 = {
     homepage_url: packageJson.author.url,
     version: packageJson.version,
     description: packageJson.description,
-    // background: {
-    //     service_worker: "./background.js",
-    // },
+    background: {
+        service_worker: "background.js",
+    },
+    content_scripts: [
+        {
+            matches: ["<all_urls>"],
+            js: ["content.js"],
+        },
+    ],
     action: {
         default_popup: "index.html",
     },
-    permissions: ["tabs", "activeTab", "storage", "scripting", "webRequest"],
+    permissions: [
+        "tabs",
+        "activeTab",
+        "storage",
+        "scripting",
+        "webRequest",
+        "contextMenus",
+    ],
     host_permissions: ["<all_urls>"],
     icons: {
         16: "/icon16.png",
@@ -51,5 +64,19 @@ export default defineConfig({
 
     build: {
         minify: !isDev,
+        rollupOptions: {
+            input: {
+                index: path.resolve(__dirname, "./index.html"),
+                background: path.resolve(__dirname, "./src/background.ts"),
+                content: path.resolve(__dirname, "./src/content.ts"),
+            },
+            output: {
+                entryFileNames: (asset) => {
+                    if (["background", "content"].includes(asset.name))
+                        return `[name].js`;
+                    return `assets/[name]-[hash].js`;
+                },
+            },
+        },
     },
 });

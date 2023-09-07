@@ -2,12 +2,13 @@ import React, { useEffect } from "react";
 import { Button } from "./ui/button";
 import { useAppContext } from "@/App";
 import Collection from "./Collection";
+import { getImgFromTab } from "@/utils";
 
 const CollectionView = () => {
     const { collectionData, makeNewCollection } = useAppContext();
     return (
-        <div className="h-full grid gap-2 grid-rows-[8%_auto]">
-            <div className="p-3 grid grid-cols-2 h-full items-center">
+        <div className="min-h-full grid grid-rows-[8%_auto]">
+            <div className="p-1 grid grid-cols-2 h-full items-center">
                 <Button
                     variant={"ghost"}
                     onClick={() => {
@@ -26,15 +27,18 @@ const CollectionView = () => {
                             })
                             .then((tabs) => {
                                 const date = new Date();
-                                const items: CollectionItem[] = tabs.map(
-                                    (e) => ({
-                                        date: date.toISOString(),
-                                        id: crypto.randomUUID(),
-                                        img: e.favIconUrl || "",
-                                        title: e.title || "title",
-                                        url: e.url || "",
-                                    })
-                                );
+                                const items: CollectionItem[] = [];
+                                tabs.forEach((tab) => {
+                                    getImgFromTab(tab).then((img) => {
+                                        items.push({
+                                            date: date.toISOString(),
+                                            id: crypto.randomUUID(),
+                                            img,
+                                            title: tab.title || "title",
+                                            url: tab.url || "",
+                                        });
+                                    });
+                                });
                                 makeNewCollection(date.toLocaleString(), items);
                             });
                     }}
@@ -42,8 +46,8 @@ const CollectionView = () => {
                     New from Opened tabs
                 </Button>
             </div>
-            <div className="h-full overflow-hidden overflow-y-auto">
-                <div className="p-3 flex flex-col gap-2">
+            <div className="p-2 h-full overflow-hidden overflow-y-auto">
+                <div className="p-1 flex flex-col gap-2">
                     {collectionData.length <= 0 ? (
                         <p>No Collections</p>
                     ) : (
