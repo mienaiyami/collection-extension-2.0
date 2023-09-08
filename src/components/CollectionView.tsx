@@ -28,8 +28,9 @@ const CollectionView = () => {
                             .then((tabs) => {
                                 const date = new Date();
                                 const items: CollectionItem[] = [];
+                                let done = 0;
                                 tabs.forEach((tab) => {
-                                    getImgFromTab(tab).then((img) => {
+                                    const add = (img: string) => {
                                         items.push({
                                             date: date.toISOString(),
                                             id: crypto.randomUUID(),
@@ -37,9 +38,22 @@ const CollectionView = () => {
                                             title: tab.title || "title",
                                             url: tab.url || "",
                                         });
+                                        done++;
+                                        if (done === tabs.length)
+                                            makeNewCollection(
+                                                date.toLocaleString(),
+                                                items
+                                            );
+                                    };
+                                    // need this because sleeping tabs does not execute script to get img
+                                    const timeout = setTimeout(() => {
+                                        add(tab.favIconUrl || "");
+                                    }, 2000);
+                                    getImgFromTab(tab).then((img) => {
+                                        clearTimeout(timeout);
+                                        add(img);
                                     });
                                 });
-                                makeNewCollection(date.toLocaleString(), items);
                             });
                     }}
                 >

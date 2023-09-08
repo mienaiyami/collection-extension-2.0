@@ -11,11 +11,15 @@ export const getImgFromTab = (tab: chrome.tabs.Tab): Promise<string> => {
                 },
                 func: () => {
                     return (
-                        document.querySelector(
-                            'head > meta[property="og:image"]'
-                        ) ||
-                        document.querySelector('head > meta[name="og:image"]')
-                    )?.getAttribute("content");
+                        (
+                            document.querySelector(
+                                'head > meta[property="og:image"]'
+                            ) ||
+                            document.querySelector(
+                                'head > meta[name="og:image"]'
+                            )
+                        )?.getAttribute("content") || ""
+                    );
                 },
             })
             .then((e) => {

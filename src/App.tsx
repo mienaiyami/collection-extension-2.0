@@ -395,6 +395,7 @@ const App = () => {
     const [collectionData, setCollectionData] = useState<Collection[]>([]);
     const [inCollectionView, setInCollectionView] = useState<UUID | null>(null);
     const [firstDone, setFirstDone] = useState(false);
+    const [openColOnCreate, setOpenColOnCreate] = useState<null | UUID>(null);
 
     const { toast } = useToast();
     const toastError = (description: React.ReactNode) => {
@@ -444,6 +445,10 @@ const App = () => {
             setCollectionData(testData);
         } else {
             //todo, maybe getting called 2x
+            if (openColOnCreate) {
+                openCollection(openColOnCreate);
+                setOpenColOnCreate(null);
+            }
             if (firstDone) chrome.storage.local.set({ collectionData });
         }
     }, [collectionData, firstDone]);
@@ -472,9 +477,6 @@ const App = () => {
             suggestedName: "collection_data",
         });
         const stream = await handle.createWritable();
-        console.log(
-            await stream.write(JSON.stringify(collectionData, null, "\t"))
-        );
         await stream.close();
     };
 
@@ -543,9 +545,7 @@ const App = () => {
             },
             ...init,
         ]);
-        setTimeout(() => {
-            openCollection(id);
-        }, 500);
+        setOpenColOnCreate(id);
     };
     const removeCollections = (id: UUID | UUID[]) => {
         const init = [...collectionData];
