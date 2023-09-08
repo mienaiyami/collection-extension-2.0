@@ -23,7 +23,7 @@ jobs:
         with:
           version: 8
       - name: Install dependencies
-        run: pnpm install --network-timeout 1000000
+        run: pnpm install
       - name: build
         run: pnpm build:zip
 
