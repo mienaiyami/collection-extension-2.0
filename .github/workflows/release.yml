@@ -19,6 +19,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.15.0
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --network-timeout 1000000
       - name: build
