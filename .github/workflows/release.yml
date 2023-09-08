@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: 18.15.0
       - name: Install dependencies
-        run: pnpm ci --network-timeout 1000000
+        run: pnpm install --frozen-lockfile --network-timeout 1000000
       - name: build
         run: pnpm build:zip
 
