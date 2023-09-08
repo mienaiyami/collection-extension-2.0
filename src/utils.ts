@@ -3,7 +3,7 @@ window.wait = (ms: number) =>
         setTimeout(res, ms);
     });
 export const getImgFromTab = (tab: chrome.tabs.Tab): Promise<string> => {
-    if (tab.id)
+    if (tab.id && !(tab.url && /(chrome|edge|brave):\/\//gi.test(tab.url)))
         return chrome.scripting
             .executeScript({
                 target: {
@@ -48,6 +48,7 @@ export const getImgFromTab = (tab: chrome.tabs.Tab): Promise<string> => {
             });
     else
         return new Promise((res, rej) => {
-            rej();
+            // rej();
+            res("");
         });
 };

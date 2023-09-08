@@ -380,6 +380,7 @@ type AppContextType = {
     ) => void;
     exportData: () => Promise<void>;
     importData: () => Promise<void>;
+    restoreBackup: () => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -513,13 +514,22 @@ const App = () => {
                         });
                         return [...init];
                     });
-                    //todo
                 };
                 reader.readAsText(file, "utf8");
             }
         } catch {
             toastError("Couldn't load file.");
         }
+    };
+    const restoreBackup = async () => {
+        chrome.storage.local.get("backup").then(({ backup }) => {
+            if (backup) {
+                chrome.storage.local.set({ collectionData: backup });
+                toast({
+                    title: "Restored Backup",
+                });
+            }
+        });
     };
 
     const makeNewCollection = (title: string, items: CollectionItem[] = []) => {
@@ -697,6 +707,7 @@ const App = () => {
                     changeCollectionItemOrder,
                     exportData,
                     importData,
+                    restoreBackup,
                 }}
             >
                 <div className="w-full h-full border grid grid-rows-[65px_auto]">
