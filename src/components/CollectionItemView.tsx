@@ -200,7 +200,7 @@ const CollectionItemView = () => {
                             <Copy />
                         </Button>
 
-                        <AlertDialogTrigger>
+                        <AlertDialogTrigger asChild>
                             <Button
                                 className="p-1"
                                 variant={"ghost"}

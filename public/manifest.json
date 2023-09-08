@@ -27,7 +27,7 @@
 		"storage",
 		"scripting",
 		"webRequest",
-		"contextMenus"
+		"unlimitedStorage"
 	],
 	"host_permissions": [
 		"<all_urls>"

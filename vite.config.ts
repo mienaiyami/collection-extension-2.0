@@ -31,7 +31,7 @@ const manifest: chrome.runtime.ManifestV3 = {
         "storage",
         "scripting",
         "webRequest",
-        "contextMenus",
+        "unlimitedStorage",
     ],
     host_permissions: ["<all_urls>"],
     icons: {

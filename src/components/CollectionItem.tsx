@@ -184,7 +184,7 @@ const CollectionItem = (props: PropType) => {
                 </div>
                 <div className="grid place-items-center w-full h-full cursor-default">
                     <label
-                        onClick={(e) => {
+                        onMouseUp={(e) => {
                             e.stopPropagation();
                             // e.currentTarget.focus();
                         }}

@@ -393,7 +393,7 @@ export const useAppContext = () => {
 const App = () => {
     const [collectionData, setCollectionData] = useState<Collection[]>([]);
     const [inCollectionView, setInCollectionView] = useState<UUID | null>(null);
-    const [first, setFirst] = useState(false);
+    const [firstDone, setFirstDone] = useState(false);
 
     const { toast } = useToast();
     const toastError = (description: React.ReactNode) => {
@@ -404,32 +404,48 @@ const App = () => {
             description,
         });
     };
-
-    useLayoutEffect(() => {
-        if (!first) {
-            setFirst(true);
-            if (import.meta.env.DEV) {
-                setCollectionData(testData);
-            } else {
-                chrome.storage.local
-                    .get("collectionData")
-                    .then(({ collectionData: _collectionData }) => {
-                        if (_collectionData === undefined) {
-                            setCollectionData([]);
-                            chrome.storage.local.set({ collectionData });
-                        } else setCollectionData(_collectionData);
-                    });
-            }
-        }
-    }, [first]);
+    // useLayoutEffect(() => {
+    //     if (!firstDone) {
+    //         setFirstDone(true);
+    //     }
+    // }, [firstDone]);
 
     useLayoutEffect(() => {
         if (import.meta.env.DEV) {
             setCollectionData(testData);
         } else {
-            chrome.storage.local.set({ collectionData });
+            chrome.storage.local
+                .get("collectionData")
+                .then(({ collectionData: _collectionData }) => {
+                    if (_collectionData === undefined) {
+                        setCollectionData([]);
+                        chrome.storage.local.set({ collectionData });
+                    } else setCollectionData(_collectionData);
+                    setFirstDone(true);
+                });
+
+            const fn = (changes: {
+                [key: string]: chrome.storage.StorageChange;
+            }) => {
+                const c = changes.collectionData;
+                if (c && !(c.newValue.length === 0 && c.oldValue.length !== 0))
+                    setCollectionData(c.newValue);
+            };
+            chrome.storage.local.onChanged.addListener(fn);
+            return () => {
+                chrome.storage.local.onChanged.removeListener(fn);
+            };
         }
-    }, [collectionData]);
+    }, []);
+
+    useLayoutEffect(() => {
+        if (import.meta.env.DEV) {
+            setCollectionData(testData);
+        } else {
+            //todo, maybe getting called 2x
+            if (firstDone) chrome.storage.local.set({ collectionData });
+        }
+    }, [collectionData, firstDone]);
 
     const openCollection = (uuid: UUID | null) => {
         if (uuid) {

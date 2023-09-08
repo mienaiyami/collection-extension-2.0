@@ -139,6 +139,9 @@ const Collection = (props: PropType) => {
                         variant={"ghost"}
                         className="w-full h-full"
                         title="Add Current Tab"
+                        onMouseUp={(e) => {
+                            e.stopPropagation();
+                        }}
                         onClick={(e) => {
                             e.stopPropagation();
                             chrome.tabs

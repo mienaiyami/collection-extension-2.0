@@ -125,9 +125,9 @@ const TopBar = () => {
                 <DialogHeader>
                     <DialogTitle className="text-2xl">Settings</DialogTitle>
                     <DialogDescription>
-                        Note that collections are not synced, so you will lose
-                        them if you delete profile or browser, or clear browser
-                        data.
+                        Note that it is not possible to sync collections because
+                        of quota limit, so you will lose them if you delete
+                        profile or browser or logout.
                     </DialogDescription>
                     <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
                         <span className="font-semibold">Theme</span>
@@ -170,7 +170,7 @@ const TopBar = () => {
                                 className="flex flex-row gap-2 items-center"
                                 onClick={() => {
                                     chrome.tabs.create({
-                                        url: "https://github.com/mienaiyami",
+                                        url: "https://github.com/mienaiyami/collection-extension-2.0",
                                     });
                                 }}
                             >
@@ -181,7 +181,7 @@ const TopBar = () => {
                                 className="flex flex-row gap-2 items-center"
                                 onClick={() => {
                                     chrome.tabs.create({
-                                        url: "https://github.com/mienaiyami",
+                                        url: "https://github.com/mienaiyami/collection-extension-2.0/issues",
                                     });
                                 }}
                             >
