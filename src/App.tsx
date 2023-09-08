@@ -477,6 +477,7 @@ const App = () => {
             suggestedName: "collection_data",
         });
         const stream = await handle.createWritable();
+        await stream.write(JSON.stringify(collectionData, null, "\t"));
         await stream.close();
     };
 
