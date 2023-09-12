@@ -28,9 +28,9 @@ export const getImgFromTab = (tab: chrome.tabs.Tab): Promise<string> => {
                     return chrome.tabs.captureVisibleTab().then((e) => {
                         return new Promise((res: (value: string) => void) => {
                             const canvas = document.createElement("canvas");
-                            // const w = tab.width || 1,
-                            //     h = tab.height || 1;
-                            // const ratio = w / h;
+                            const w = tab.width || 128,
+                                h = tab.height || 128;
+                            const ratio = w / h;
                             canvas.height = 128;
                             canvas.width = 128;
                             const ctx = canvas.getContext("2d");
@@ -38,6 +38,10 @@ export const getImgFromTab = (tab: chrome.tabs.Tab): Promise<string> => {
                             img.onload = () => {
                                 ctx?.drawImage(
                                     img,
+                                    w / 2 - w / ratio / 2,
+                                    0,
+                                    w / ratio,
+                                    h,
                                     0,
                                     0,
                                     canvas.width,

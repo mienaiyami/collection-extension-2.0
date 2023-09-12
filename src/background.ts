@@ -29,19 +29,27 @@
 
 // backup
 
+const backup = () =>
+    chrome.storage.local.get("collectionData").then(({ collectionData }) => {
+        if (collectionData)
+            chrome.storage.local.set({ backup: collectionData }).then(() => {
+                chrome.storage.local.set({
+                    lastBackup: new Date().toJSON(),
+                });
+            });
+    });
+
 chrome.runtime.onInstalled.addListener(() => {
     setInterval(() => {
-        chrome.storage.local
-            .get("collectionData")
-            .then(({ collectionData }) => {
-                if (collectionData)
-                    chrome.storage.local
-                        .set({ backup: collectionData })
-                        .then(() => {
-                            chrome.storage.local.set({
-                                lastBackup: new Date().toJSON(),
-                            });
-                        });
-            });
-    }, 1000 * 60 * 60 * 6);
+        chrome.storage.local.get("lastBackup", ({ lastBackup }) => {
+            if (lastBackup) {
+                const last = new Date(lastBackup);
+                const now = new Date();
+                if (now.getTime() - last.getTime() <= 1000 * 60 * 60 * 6) {
+                    console.log("creating backup.");
+                    backup();
+                }
+            }
+        });
+    }, 1000 * 60 * 5);
 });

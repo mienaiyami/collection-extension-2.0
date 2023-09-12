@@ -1,7 +1,7 @@
 {
   "name": "collection-extension",
   "productName": "Collections",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "type": "module",
   "description": "Chromium Extension to keep URLs in a ordered way.",
   "author": {
@@ -13,9 +13,11 @@
     "build": "tsc && vite build",
     "build:zip": "tsc && vite build && powershell Compress-Archive -LiteralPath ./dist -DestinationPath ./build.zip -Force",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release": "esrun release.ts"
   },
   "dependencies": {
+    "@digitak/esrun": "^3.2.24",
     "@radix-ui/react-alert-dialog": "^1.0.4",
     "@radix-ui/react-context-menu": "^2.1.4",
     "@radix-ui/react-dialog": "^1.0.4",
