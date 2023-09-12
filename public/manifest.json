@@ -3,7 +3,7 @@
 	"name": "Collections",
 	"author": "mienaiyami",
 	"homepage_url": "https://github.com/mienaiyami/collection-extension-2.0",
-	"version": "2.0.7",
+	"version": "2.0.9",
 	"description": "Chromium Extension to keep URLs in a ordered way.",
 	"background": {
 		"service_worker": "background.js"

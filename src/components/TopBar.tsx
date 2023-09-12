@@ -149,8 +149,8 @@ const TopBar = () => {
                         <DialogTitle className="text-2xl">Settings</DialogTitle>
                         <DialogDescription>
                             Note that it is not possible to sync collections
-                            because of quota limit, so you will lose them if you
-                            delete profile or browser or logout.
+                            online because of quota limit, so you will lose them
+                            if you delete profile or browser or logout.
                         </DialogDescription>
                         <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
                             <span className="font-semibold">Theme</span>
@@ -165,6 +165,15 @@ const TopBar = () => {
                                 {theme === "dark" ? <Moon /> : <Sun />}{" "}
                                 {theme === "dark" ? "Dark" : "Light"}
                             </Button>
+                        </div>
+                        <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
+                            <span className="font-semibold">Version</span>
+                            <div className="flex flex-row gap-2 ml-auto">
+                                {window.location.protocol ===
+                                "chrome-extension:"
+                                    ? chrome.runtime.getManifest().version
+                                    : "dev"}
+                            </div>
                         </div>
                         <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
                             <span className="font-semibold">Data</span>
@@ -253,7 +262,9 @@ const TopBar = () => {
                                 Local backup is made every 6 hours (if browser
                                 is open). Choose this option if some error
                                 caused all collections to vanish. <br />
-                                Last Backup : {lastBackup}
+                                <code className="rounded-md bg-secondary">
+                                    Last Backup : {lastBackup}
+                                </code>
                             </DialogDescription>
                         </div>
                     </DialogHeader>
