@@ -17,7 +17,6 @@
     "release": "esrun release.ts"
   },
   "dependencies": {
-    "@digitak/esrun": "^3.2.24",
     "@radix-ui/react-alert-dialog": "^1.0.4",
     "@radix-ui/react-context-menu": "^2.1.4",
     "@radix-ui/react-dialog": "^1.0.4",
@@ -33,6 +32,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@digitak/esrun": "^3.2.24",
     "@types/chrome": "^0.0.244",
     "@types/node": "^20.5.9",
     "@types/react": "^18.2.15",
