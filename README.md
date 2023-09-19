@@ -29,10 +29,12 @@ Chrome Store : wont be available, chrome store require registration fees
 ## Screenshots
 
 ![Alt text](github/image2.png)
-![Alt text](github/image4.png)
-![Alt text](github/image5.png)
-![Alt text](github/image.png)
 
+![Alt text](github/image4.png)
+
+![Alt text](github/image5.png)
+
+![Alt text](github/image.png)
 
 https://github.com/mienaiyami/collection-extension-2.0/assets/84740082/2e9d760d-7ee5-42dc-b838-375172e71e40
 
