@@ -40,4 +40,4 @@ jobs:
       - name: Publish
         env: 
           MS_SECRET: ${{ secrets.MS_SECRET }}
-        run: pnpm publish
+        run: pnpm run publish
