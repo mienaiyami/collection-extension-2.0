@@ -40,16 +40,22 @@ const backup = () =>
     });
 
 chrome.runtime.onInstalled.addListener(() => {
-    setInterval(() => {
+    chrome.alarms.create("backup", {
+        delayInMinutes: 10,
+        periodInMinutes: 10,
+    });
+});
+chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === "backup") {
         chrome.storage.local.get("lastBackup", ({ lastBackup }) => {
             if (lastBackup) {
                 const last = new Date(lastBackup);
                 const now = new Date();
-                if (now.getTime() - last.getTime() >= 1000 * 60 * 60 * 6) {
+                if (now.getTime() - last.getTime() >= 1000 * 1) {
                     console.log("creating backup...");
                     backup();
                 }
             }
         });
-    }, 1000 * 60 * 5);
+    }
 });
