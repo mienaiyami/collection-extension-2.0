@@ -118,7 +118,11 @@ const CollectionItem = (props: PropType) => {
                 onKeyDown={(e) => {
                     if ([" ", "Enter"].includes(e.key)) {
                         e.preventDefault();
-                        e.currentTarget.click();
+                        if (e.target instanceof HTMLElement)
+                            chrome.tabs.create({
+                                url: props.url,
+                                active: false,
+                            });
                     }
                     if (e.key === "Escape" && dragging) setDragging(null);
                 }}

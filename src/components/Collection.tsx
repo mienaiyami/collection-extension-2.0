@@ -122,6 +122,11 @@ const Collection = (props: PropType) => {
                         });
                     }}
                     onKeyDown={(e) => {
+                        if ([" ", "Enter"].includes(e.key)) {
+                            e.preventDefault();
+                            if (e.target instanceof HTMLElement)
+                                openCollection(props.id);
+                        }
                         if (e.key === "Escape" && dragging) setDragging(null);
                     }}
                     onMouseUp={(e) => {
@@ -140,6 +145,9 @@ const Collection = (props: PropType) => {
                         className="w-full h-full"
                         title="Add Current Tab"
                         onMouseUp={(e) => {
+                            e.stopPropagation();
+                        }}
+                        onKeyDown={(e) => {
                             e.stopPropagation();
                         }}
                         onClick={(e) => {

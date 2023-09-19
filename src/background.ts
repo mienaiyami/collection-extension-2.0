@@ -45,8 +45,8 @@ chrome.runtime.onInstalled.addListener(() => {
             if (lastBackup) {
                 const last = new Date(lastBackup);
                 const now = new Date();
-                if (now.getTime() - last.getTime() <= 1000 * 60 * 60 * 6) {
-                    console.log("creating backup.");
+                if (now.getTime() - last.getTime() >= 1000 * 60 * 60 * 6) {
+                    console.log("creating backup...");
                     backup();
                 }
             }
