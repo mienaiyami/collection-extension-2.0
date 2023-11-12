@@ -1,6 +1,7 @@
 import React, {
     createContext,
     useContext,
+    useEffect,
     useLayoutEffect,
     useState,
 } from "react";
@@ -381,6 +382,8 @@ type AppContextType = {
     exportData: () => Promise<void>;
     importData: () => Promise<void>;
     restoreBackup: () => Promise<void>;
+    scrollPos:number;
+    setScrollPos:React.Dispatch<React.SetStateAction<number>>;
 };
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -396,6 +399,9 @@ const App = () => {
     const [inCollectionView, setInCollectionView] = useState<UUID | null>(null);
     const [firstDone, setFirstDone] = useState(false);
     const [openColOnCreate, setOpenColOnCreate] = useState<null | UUID>(null);
+    
+    const [scrollPos,setScrollPos] = useState(0);
+
 
     const { toast } = useToast();
     const toastError = (description: React.ReactNode) => {
@@ -453,6 +459,12 @@ const App = () => {
         }
     }, [collectionData, firstDone]);
 
+    // useEffect(()=>{
+    //     if(inCollectionView===null){
+
+    //     }
+    // },[inCollectionView])
+
     const openCollection = (uuid: UUID | null) => {
         if (uuid) {
             const index = collectionData.findIndex((e) => e.id === uuid);
@@ -461,7 +473,7 @@ const App = () => {
                 console.error(
                     `openCollection: Collection with id ${uuid} not found.`
                 );
-        } else if (inCollectionView) setInCollectionView(null);
+        } else if (inCollectionView){ setInCollectionView(null)}
     };
 
     const exportData = async () => {
@@ -708,7 +720,7 @@ const App = () => {
                     changeCollectionItemOrder,
                     exportData,
                     importData,
-                    restoreBackup,
+                    restoreBackup,setScrollPos,scrollPos
                 }}
             >
                 <div className="w-full h-full border grid grid-rows-[65px_auto]">

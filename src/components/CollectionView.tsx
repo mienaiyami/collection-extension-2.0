@@ -1,11 +1,18 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { useAppContext } from "@/App";
 import Collection from "./Collection";
 import { getImgFromTab } from "@/utils";
 
 const CollectionView = () => {
-    const { collectionData, makeNewCollection } = useAppContext();
+    const { collectionData, makeNewCollection ,setScrollPos,scrollPos} = useAppContext();
+
+    const ref = useRef<HTMLDivElement>(null)
+
+    useLayoutEffect(()=>{
+        ref.current?.scrollTo(0,scrollPos)
+    },[])
+
     return (
         <div className="min-h-full grid grid-rows-[8%_auto]">
             <div className="p-1 grid grid-cols-2 h-full items-center">
@@ -60,7 +67,9 @@ const CollectionView = () => {
                     New from Opened tabs
                 </Button>
             </div>
-            <div className="p-2 h-full overflow-hidden overflow-y-auto">
+            <div className="p-2 h-full overflow-hidden overflow-y-auto" ref={ref} onScroll={(e)=>{
+                setScrollPos(e.currentTarget.scrollTop);
+            }}>
                 <div className="p-1 flex flex-col gap-2">
                     {collectionData.length <= 0 ? (
                         <p>No Collections</p>
