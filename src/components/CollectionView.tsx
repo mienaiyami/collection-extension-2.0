@@ -53,9 +53,10 @@ const CollectionView = () => {
                                             );
                                     };
                                     // need this because sleeping tabs does not execute script to get img
+                                    // reducing time from 2000
                                     const timeout = setTimeout(() => {
                                         add(tab.favIconUrl || "");
-                                    }, 2000);
+                                    }, 500);
                                     getImgFromTab(tab).then((img) => {
                                         clearTimeout(timeout);
                                         add(img);
