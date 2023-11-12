@@ -200,12 +200,14 @@ const CollectionItem = (props: PropType) => {
                             }
                         }}
                         tabIndex={0}
-                        className={`border rounded-md hover:border-foreground/20 ${
+                        className={`h-full flex justify-center items-center group`}
+                    >
+                        <div 
+                        className={`border rounded-md group-hover:border-foreground/20 ${
                             props.isSelected
                                 ? "bg-purple-700 dark:bg-purple-400"
                                 : ""
-                        }`}
-                    >
+                        }`}>
                         <input
                             type="checkbox"
                             className="hidden"
@@ -223,8 +225,9 @@ const CollectionItem = (props: PropType) => {
                                 visibility: props.isSelected
                                     ? "visible"
                                     : "hidden",
-                            }}
-                        />
+                                }}
+                                />
+                                </div>
                     </label>
                 </div>
             </ContextMenuTrigger>
