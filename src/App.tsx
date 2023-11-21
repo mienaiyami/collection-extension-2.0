@@ -373,17 +373,14 @@ type AppContextType = {
     removeFromCollection: (collectionId: UUID, itemId: UUID | UUID[]) => void;
     toastError: (description: React.ReactNode) => void;
     renameCollection: (id: UUID, newName: string) => void;
-    changeCollectionOrder: (id: UUID, newIndex: number) => void;
-    changeCollectionItemOrder: (
-        colID: UUID,
-        itemID: UUID,
-        newIndex: number
-    ) => void;
+    // changeCollectionOrder: (id: UUID, newIndex: number) => void;
+    changeCollectionOrder: (newOrder: UUID[]) => void;
+    changeCollectionItemOrder: (colID: UUID, newOrder: UUID[]) => void;
     exportData: () => Promise<void>;
     importData: () => Promise<void>;
     restoreBackup: () => Promise<void>;
-    scrollPos:number;
-    setScrollPos:React.Dispatch<React.SetStateAction<number>>;
+    scrollPos: number;
+    setScrollPos: React.Dispatch<React.SetStateAction<number>>;
 };
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -399,9 +396,8 @@ const App = () => {
     const [inCollectionView, setInCollectionView] = useState<UUID | null>(null);
     const [firstDone, setFirstDone] = useState(false);
     const [openColOnCreate, setOpenColOnCreate] = useState<null | UUID>(null);
-    
-    const [scrollPos,setScrollPos] = useState(0);
 
+    const [scrollPos, setScrollPos] = useState(0);
 
     const { toast } = useToast();
     const toastError = (description: React.ReactNode) => {
@@ -412,12 +408,6 @@ const App = () => {
             description,
         });
     };
-    // useLayoutEffect(() => {
-    //     if (!firstDone) {
-    //         setFirstDone(true);
-    //     }
-    // }, [firstDone]);
-
     useLayoutEffect(() => {
         if (import.meta.env.DEV) {
             setCollectionData(testData);
@@ -459,12 +449,6 @@ const App = () => {
         }
     }, [collectionData, firstDone]);
 
-    // useEffect(()=>{
-    //     if(inCollectionView===null){
-
-    //     }
-    // },[inCollectionView])
-
     const openCollection = (uuid: UUID | null) => {
         if (uuid) {
             const index = collectionData.findIndex((e) => e.id === uuid);
@@ -473,7 +457,9 @@ const App = () => {
                 console.error(
                     `openCollection: Collection with id ${uuid} not found.`
                 );
-        } else if (inCollectionView){ setInCollectionView(null)}
+        } else if (inCollectionView) {
+            setInCollectionView(null);
+        }
     };
 
     const exportData = async () => {
@@ -639,34 +625,39 @@ const App = () => {
         }
     };
 
-    const changeCollectionOrder = (id: UUID, newIndex: number) => {
-        const colIdx = collectionData.findIndex((e) => e.id === id);
-        if (colIdx >= 0) {
-            setCollectionData((init) => {
-                const col = init.splice(colIdx, 1);
-                init.splice(newIndex, 0, col[0]);
-                return [...init];
-            });
-        } else toastError("Couldn't reorder.");
+    // const changeCollectionOrder = (id: UUID, newIndex: number) => {
+    //     const colIdx = collectionData.findIndex((e) => e.id === id);
+    //     if (colIdx >= 0) {
+    //         setCollectionData((init) => {
+    //             const col = init.splice(colIdx, 1);
+    //             init.splice(newIndex, 0, col[0]);
+    //             return [...init];
+    //         });
+    //     } else toastError("Couldn't reorder.");
+    // };
+    const changeCollectionOrder = (newOrder: UUID[]) => {
+        try {
+            const newColItems = [...collectionData].sort(
+                (a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id)
+            );
+            setCollectionData(newColItems);
+        } catch {
+            toastError("Couldn't reorder.");
+        }
     };
-    const changeCollectionItemOrder = (
-        colID: UUID,
-        itemID: UUID,
-        newIndex: number
-    ) => {
+    const changeCollectionItemOrder = (colID: UUID, newOrder: UUID[]) => {
         const colIdx = collectionData.findIndex((e) => e.id === colID);
         try {
             if (colIdx >= 0) {
-                const itemIdx = collectionData[colIdx].items.findIndex(
-                    (e) => e.id === itemID
-                );
-                if (itemIdx >= 0) {
-                    setCollectionData((init) => {
-                        const item = init[colIdx].items.splice(itemIdx, 1);
-                        init[colIdx].items.splice(newIndex, 0, item[0]);
-                        return [...init];
-                    });
-                } else throw new Error();
+                setCollectionData((init) => {
+                    //todo test performance with v2.0.16;
+                    const updatedColItems = [...init[colIdx].items].sort(
+                        (a, b) =>
+                            newOrder.indexOf(a.id) - newOrder.indexOf(b.id)
+                    );
+                    init[colIdx].items = updatedColItems;
+                    return [...init];
+                });
             } else throw new Error();
         } catch {
             toastError("Couldn't reorder.");
@@ -720,7 +711,9 @@ const App = () => {
                     changeCollectionItemOrder,
                     exportData,
                     importData,
-                    restoreBackup,setScrollPos,scrollPos
+                    restoreBackup,
+                    setScrollPos,
+                    scrollPos,
                 }}
             >
                 <div className="w-full h-full border grid grid-rows-[65px_auto]">

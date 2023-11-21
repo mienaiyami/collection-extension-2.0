@@ -15,15 +15,19 @@ import {
     AlertDialogTrigger,
 } from "./ui/alert-dialog";
 import { getImgFromTab } from "@/utils";
+import { Reorder } from "framer-motion";
 const CollectionItemView = () => {
     const {
         collectionData,
         inCollectionView,
         addToCollection,
         removeFromCollection,
+        changeCollectionItemOrder,
     } = useAppContext();
 
     const [selected, setSelected] = useState<UUID[]>([]);
+
+    const [itemsOrder, setItemsOrder] = useState<UUID[]>([]);
 
     const changeSelected = (id: UUID, checked: boolean) => {
         setSelected((init) => {
@@ -40,6 +44,10 @@ const CollectionItemView = () => {
             return collectionData.find((e) => e.id === inCollectionView);
         }
     }, [collectionData, inCollectionView]);
+
+    useLayoutEffect(() => {
+        setItemsOrder(currentCollection?.items.map((e) => e.id) || []);
+    }, [currentCollection]);
 
     useLayoutEffect(() => {
         setSelected([]);
@@ -234,21 +242,38 @@ const CollectionItemView = () => {
                     </div>
                 )}
                 <div className="h-full overflow-hidden overflow-y-auto">
-                    <div className="p-3 flex flex-col gap-2">
+                    <Reorder.Group
+                        values={itemsOrder}
+                        onReorder={(e) => setItemsOrder(e)}
+                        className="p-3 flex flex-col gap-2"
+                    >
                         {currentCollection.items.length <= 0 ? (
                             <p>No Items</p>
                         ) : (
-                            currentCollection.items.map((e, i) => (
-                                <CollectionItem
-                                    {...e}
-                                    key={e.id}
-                                    changeSelected={changeSelected}
-                                    isSelected={selected.includes(e.id)}
-                                    index={i}
-                                />
-                            ))
+                            currentCollection.items
+                                .map((e, i) => (
+                                    <CollectionItem
+                                        {...e}
+                                        key={e.id}
+                                        changeSelected={changeSelected}
+                                        isSelected={selected.includes(e.id)}
+                                        index={i}
+                                        onDragEnd={() => {
+                                            inCollectionView &&
+                                                changeCollectionItemOrder(
+                                                    inCollectionView,
+                                                    itemsOrder
+                                                );
+                                        }}
+                                    />
+                                ))
+                                .sort(
+                                    (a, b) =>
+                                        itemsOrder.indexOf(a.props.id) -
+                                        itemsOrder.indexOf(b.props.id)
+                                )
                         )}
-                    </div>
+                    </Reorder.Group>
                 </div>
             </div>
             <AlertDialogContent>

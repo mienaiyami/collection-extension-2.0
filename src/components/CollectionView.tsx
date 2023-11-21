@@ -1,17 +1,41 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, {
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { Button } from "./ui/button";
 import { useAppContext } from "@/App";
 import Collection from "./Collection";
 import { getImgFromTab } from "@/utils";
+import { Reorder } from "framer-motion";
 
 const CollectionView = () => {
-    const { collectionData, makeNewCollection ,setScrollPos,scrollPos} = useAppContext();
+    const {
+        collectionData,
+        makeNewCollection,
+        setScrollPos,
+        scrollPos,
+        changeCollectionOrder,
+    } = useAppContext();
+    const [collectionOrder, setCollectionOrder] = useState<
+        { id: UUID; title: string; itemLen: number }[]
+    >([]);
+    useLayoutEffect(() => {
+        setCollectionOrder(
+            collectionData.map((e) => ({
+                id: e.id,
+                title: e.title,
+                itemLen: e.items.length,
+            }))
+        );
+    }, [collectionData]);
+    const ref = useRef<HTMLDivElement>(null);
 
-    const ref = useRef<HTMLDivElement>(null)
-
-    useLayoutEffect(()=>{
-        ref.current?.scrollTo(0,scrollPos)
-    },[])
+    useLayoutEffect(() => {
+        ref.current?.scrollTo(0, scrollPos);
+    }, []);
 
     return (
         <div className="min-h-full grid grid-rows-[8%_auto]">
@@ -68,23 +92,40 @@ const CollectionView = () => {
                     New from Opened tabs
                 </Button>
             </div>
-            <div className="p-2 h-full overflow-hidden overflow-y-auto" ref={ref} onScroll={(e)=>{
-                setScrollPos(e.currentTarget.scrollTop);
-            }}>
-                <div className="p-1 flex flex-col gap-2">
+            <div
+                className="p-2 h-full overflow-hidden overflow-y-auto"
+                ref={ref}
+                onScroll={(e) => {
+                    setScrollPos(e.currentTarget.scrollTop);
+                }}
+            >
+                <Reorder.Group
+                    axis="y"
+                    layoutScroll
+                    values={collectionOrder}
+                    // todo impl real order
+                    onReorder={(e) => {
+                        setCollectionOrder(e);
+                    }}
+                    className="p-1 flex flex-col gap-2"
+                >
                     {collectionData.length <= 0 ? (
                         <p>No Collections</p>
                     ) : (
-                        collectionData.map((e) => (
+                        collectionOrder.map((e) => (
                             <Collection
                                 key={e.id}
-                                id={e.id}
-                                itemLen={e.items.length}
-                                title={e.title}
+                                item={e}
+                                onDragEnd={() => {
+                                    //todo impl
+                                    changeCollectionOrder(
+                                        collectionOrder.map((e) => e.id)
+                                    );
+                                }}
                             />
                         ))
                     )}
-                </div>
+                </Reorder.Group>
             </div>
         </div>
     );

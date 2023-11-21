@@ -3,7 +3,7 @@
 	"name": "Collections",
 	"author": "mienaiyami",
 	"homepage_url": "https://github.com/mienaiyami/collection-extension-2.0",
-	"version": "2.0.15",
+	"version": "2.0.16",
 	"description": "Chromium Extension to keep URLs in a ordered way.",
 	"background": {
 		"service_worker": "background.js"
@@ -28,7 +28,8 @@
 		"scripting",
 		"webRequest",
 		"unlimitedStorage",
-		"alarms"
+		"alarms",
+		"sidePanel"
 	],
 	"host_permissions": [
 		"<all_urls>"
@@ -38,5 +39,8 @@
 		"32": "/icon32.png",
 		"48": "/icon48.png",
 		"128": "/icon128.png"
+	},
+	"side_panel": {
+		"default_path": "index.html"
 	}
 }
