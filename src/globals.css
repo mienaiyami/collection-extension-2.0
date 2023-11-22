@@ -110,6 +110,10 @@
     overflow: hidden;
     position: relative;
   }
+  body.sidePanel{
+    height: 100vh;
+    width: 100vw;
+  }
   #root{
     width: 100%;
     height: 100%;

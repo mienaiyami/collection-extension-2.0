@@ -1,3 +1,6 @@
+window.isSidePanel = window.location.href.includes("side_panel.html");
+window.isSidePanel && document.body.classList.add("sidePanel");
+
 window.wait = (ms: number) =>
     new Promise((res) => {
         setTimeout(res, ms);

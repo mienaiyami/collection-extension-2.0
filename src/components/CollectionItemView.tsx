@@ -55,7 +55,7 @@ const CollectionItemView = () => {
 
     return currentCollection ? (
         <AlertDialog>
-            <div className="min-h-full grid grid-rows-[8%_auto]">
+            <div className="min-h-full grid grid-rows-[3rem_auto]">
                 {selected.length === 0 && (
                     <div className="p-1 grid grid-cols-2 h-full items-center">
                         <Button

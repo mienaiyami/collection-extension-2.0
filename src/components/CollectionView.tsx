@@ -38,7 +38,7 @@ const CollectionView = () => {
     }, []);
 
     return (
-        <div className="min-h-full grid grid-rows-[8%_auto]">
+        <div className="min-h-full grid grid-rows-[3rem_auto]">
             <div className="p-1 grid grid-cols-2 h-full items-center">
                 <Button
                     variant={"ghost"}

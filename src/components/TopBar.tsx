@@ -7,6 +7,9 @@ import {
     ExternalLink,
     Github,
     Moon,
+    PanelRight,
+    Pin,
+    PinOff,
     Settings,
     Sun,
     X,
@@ -31,6 +34,8 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "./ui/alert-dialog";
+import { Switch } from "./ui/switch";
+import { Label } from "./ui/label";
 
 const TopBar = () => {
     const {
@@ -46,6 +51,7 @@ const TopBar = () => {
     const [title, setTitle] = useState("");
     const [first, setFirst] = useState(true);
     const [lastBackup, setLastBackup] = useState("");
+    const [openInSidePanel, setOpenInSidePanel] = useState(false);
 
     useLayoutEffect(() => {
         if (inCollectionView) {
@@ -63,12 +69,16 @@ const TopBar = () => {
     }, [inCollectionView]);
 
     useLayoutEffect(() => {
-        if (!import.meta.env.DEV)
+        if (!import.meta.env.DEV) {
             chrome.storage.local.get("lastBackup").then(({ lastBackup }) => {
                 if (lastBackup)
                     setLastBackup(new Date(lastBackup as string).toString());
                 else setLastBackup("Not found");
             });
+            chrome.sidePanel.getPanelBehavior((b) => {
+                setOpenInSidePanel(b.openPanelOnActionClick || false);
+            });
+        }
     }, []);
 
     useEffect(() => {
@@ -121,19 +131,30 @@ const TopBar = () => {
                                 <Settings />
                             </Button>
                         </DialogTrigger>
+
                         <Button
                             variant={"ghost"}
                             size={"icon"}
-                            onClick={() => {
-                                chrome.tabs.create({
-                                    url:
-                                        "chrome-extension://" +
-                                        chrome.runtime.id +
-                                        "/index.html",
+                            onClick={async () => {
+                                if (window.isSidePanel) {
+                                    chrome.sidePanel.setPanelBehavior({
+                                        openPanelOnActionClick: false,
+                                    });
+                                    window.close();
+                                    return;
+                                }
+                                const windowId = (
+                                    await chrome.windows.getCurrent()
+                                ).id;
+                                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                //@ts-ignore
+                                chrome.sidePanel.open({ windowId });
+                                chrome.sidePanel.setPanelBehavior({
+                                    openPanelOnActionClick: true,
                                 });
                             }}
                         >
-                            <ExternalLink />
+                            {window.isSidePanel ? <PinOff /> : <Pin />}
                         </Button>
                         <Button
                             variant={"ghost"}
@@ -166,6 +187,30 @@ const TopBar = () => {
                                 {theme === "dark" ? "Dark" : "Light"}
                             </Button>
                         </div>
+                        {/* <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
+                            <span className="font-semibold">
+                                Open In Side-panel
+                            </span>
+                            <Label className="flex flex-row gap-2 items-center ml-auto cursor-pointer">
+                                {openInSidePanel ? "On" : "Off"}
+                                <Switch
+                                    checked={openInSidePanel}
+                                    onCheckedChange={(c) => {
+                                        if (c) {
+                                            chrome.sidePanel.setPanelBehavior({
+                                                openPanelOnActionClick: true,
+                                            });
+                                            setOpenInSidePanel(true);
+                                        } else {
+                                            chrome.sidePanel.setPanelBehavior({
+                                                openPanelOnActionClick: false,
+                                            });
+                                            setOpenInSidePanel(false);
+                                        }
+                                    }}
+                                />
+                            </Label>
+                        </div> */}
                         <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
                             <span className="font-semibold">Version</span>
                             <div className="flex flex-row gap-2 ml-auto">
@@ -194,7 +239,7 @@ const TopBar = () => {
                                 </Button>
                             </div>
                         </div>
-                        <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
+                        <div className="flex flex-row flex-wrap items-center gap-2 p-2 border rounded-md">
                             <span className="font-semibold">Links</span>
                             <div className="flex flex-row gap-2 ml-auto">
                                 <Button
@@ -208,6 +253,18 @@ const TopBar = () => {
                                 >
                                     Homepage
                                 </Button>
+                                <Button
+                                    variant={"outline"}
+                                    className="flex flex-row gap-2 items-center"
+                                    onClick={() => {
+                                        chrome.tabs.create({
+                                            url: "https://github.com/mienaiyami/collection-extension-2.0/blob/main/CHANGELOG.md",
+                                        });
+                                    }}
+                                >
+                                    Changelog
+                                </Button>
+
                                 <Button
                                     variant={"outline"}
                                     className="flex flex-row gap-2 items-center"

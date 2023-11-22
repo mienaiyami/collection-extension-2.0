@@ -43,7 +43,7 @@ const manifest: chrome.runtime.ManifestV3 = {
         128: "/icon128.png",
     },
     side_panel: {
-        default_path: "index.html",
+        default_path: "side_panel.html",
     },
 };
 
@@ -72,6 +72,7 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 index: path.resolve(__dirname, "./index.html"),
+                side_panel: path.resolve(__dirname, "./side_panel.html"),
                 background: path.resolve(__dirname, "./src/background.ts"),
                 content: path.resolve(__dirname, "./src/content.ts"),
             },

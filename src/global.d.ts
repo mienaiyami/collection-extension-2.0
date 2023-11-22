@@ -17,6 +17,7 @@ declare global {
     };
     interface Window {
         wait: (ms: number) => Promise<unknown>;
+        isSidePanel: boolean;
     }
 }
 export {};
