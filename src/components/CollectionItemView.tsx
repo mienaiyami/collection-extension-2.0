@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo, useState } from "react";
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { useAppContext } from "@/App";
 import CollectionItem from "./CollectionItem";
@@ -23,12 +23,17 @@ const CollectionItemView = () => {
         addToCollection,
         removeFromCollection,
         changeCollectionItemOrder,
+        openCollection,
     } = useAppContext();
 
     const [selected, setSelected] = useState<UUID[]>([]);
 
     const [itemsOrder, setItemsOrder] = useState<UUID[]>([]);
-
+    const selected_deleteRef = useRef<HTMLButtonElement>(null);
+    const selected_open = useRef<HTMLButtonElement>(null);
+    const selected_openNewWindow = useRef<HTMLButtonElement>(null);
+    const selected_openIncognito = useRef<HTMLButtonElement>(null);
+    const selected_copy = useRef<HTMLButtonElement>(null);
     const changeSelected = (id: UUID, checked: boolean) => {
         setSelected((init) => {
             if (!checked) {
@@ -51,7 +56,43 @@ const CollectionItemView = () => {
 
     useLayoutEffect(() => {
         setSelected([]);
-    }, [collectionData, inCollectionView]);
+        const keyHandler = (e: KeyboardEvent) => {
+            if (!currentCollection) return;
+            switch (e.code) {
+                case "Delete":
+                    selected_deleteRef.current?.click();
+                    break;
+                case "KeyN":
+                    {
+                        if (e.shiftKey) selected_openIncognito.current?.click();
+                        else selected_openNewWindow.current?.click();
+                    }
+                    break;
+                case "KeyT":
+                    selected_open.current?.click();
+                    break;
+                case "Escape":
+                    setSelected([]);
+                    break;
+                case "KeyC":
+                    selected_copy.current?.click();
+                    break;
+                case "KeyA":
+                    if (e.ctrlKey)
+                        setSelected(currentCollection.items.map((e) => e.id));
+                    break;
+                case "ArrowLeft":
+                    if (e.altKey) openCollection(null);
+                    break;
+                default:
+                    break;
+            }
+        };
+        window.addEventListener("keydown", keyHandler);
+        return () => {
+            window.removeEventListener("keydown", keyHandler);
+        };
+    }, [collectionData, inCollectionView, currentCollection, openCollection]);
 
     return currentCollection ? (
         <AlertDialog>
@@ -145,6 +186,7 @@ const CollectionItemView = () => {
                         <Button
                             className="p-1 ml-auto"
                             variant={"ghost"}
+                            ref={selected_open}
                             onClick={() => {
                                 const items = collectionData
                                     .find((e) => e.id === inCollectionView)
@@ -167,6 +209,7 @@ const CollectionItemView = () => {
                         <Button
                             className="p-1"
                             variant={"ghost"}
+                            ref={selected_openNewWindow}
                             onClick={() => {
                                 const items = collectionData
                                     .find((e) => e.id === inCollectionView)
@@ -176,7 +219,8 @@ const CollectionItemView = () => {
                                 if (items)
                                     chrome.windows.create({
                                         url: items.map((e) => e.url),
-                                        state: "maximized",
+                                        //todo check
+                                        state: "normal",
                                     });
                             }}
                         >
@@ -185,6 +229,7 @@ const CollectionItemView = () => {
                         <Button
                             className="p-1"
                             variant={"ghost"}
+                            ref={selected_openIncognito}
                             onClick={() => {
                                 const items = collectionData
                                     .find((e) => e.id === inCollectionView)
@@ -205,6 +250,8 @@ const CollectionItemView = () => {
                             className="p-1"
                             variant={"ghost"}
                             size={"icon"}
+                            ref={selected_copy}
+                            title="Copy"
                             onClick={() => {
                                 const items = collectionData
                                     .find((e) => e.id === inCollectionView)
@@ -212,6 +259,7 @@ const CollectionItemView = () => {
                                         selected.includes(e.id)
                                     );
                                 if (items)
+                                    //todo add toast
                                     navigator.clipboard.writeText(
                                         items.map((e) => e.url).join("\n")
                                     );
@@ -220,7 +268,7 @@ const CollectionItemView = () => {
                             <Copy />
                         </Button>
 
-                        <AlertDialogTrigger asChild>
+                        <AlertDialogTrigger asChild ref={selected_deleteRef}>
                             <Button
                                 className="p-1"
                                 variant={"ghost"}
@@ -257,6 +305,7 @@ const CollectionItemView = () => {
                                         key={e.id}
                                         changeSelected={changeSelected}
                                         isSelected={selected.includes(e.id)}
+                                        anySelected={selected.length > 0}
                                         index={i}
                                         onDragEnd={() => {
                                             inCollectionView &&
@@ -276,7 +325,11 @@ const CollectionItemView = () => {
                     </Reorder.Group>
                 </div>
             </div>
-            <AlertDialogContent>
+            <AlertDialogContent
+                onKeyDown={(e) => {
+                    e.stopPropagation();
+                }}
+            >
                 <AlertDialogHeader>
                     <AlertDialogTitle>Delete URLs?</AlertDialogTitle>
                     <AlertDialogDescription>

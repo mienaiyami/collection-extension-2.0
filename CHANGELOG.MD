@@ -2,3 +2,4 @@
 
 - improved items reordering.
 - added side-panel options
+- shortcut keys

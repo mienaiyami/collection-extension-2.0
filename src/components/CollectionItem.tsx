@@ -14,6 +14,7 @@ import { Reorder, motion } from "framer-motion";
 type PropType = CollectionItem & {
     changeSelected: (id: UUID, checked: boolean) => void;
     isSelected: boolean;
+    anySelected: boolean;
     index: number;
     onDragEnd: () => void;
 };
@@ -79,6 +80,43 @@ const CollectionItem = (props: PropType) => {
                                     url: props.url,
                                     active: false,
                                 });
+                            return;
+                        }
+                        if (props.anySelected) return;
+                        switch (e.code) {
+                            //todo or not?
+                            case "Delete":
+                                inCollectionView &&
+                                    removeFromCollection(
+                                        inCollectionView,
+                                        props.id
+                                    );
+                                break;
+                            case "KeyC":
+                                navigator.clipboard.writeText(props.url);
+                                break;
+                            case "KeyN":
+                                if (e.shiftKey) {
+                                    chrome.windows.create({
+                                        url: props.url,
+                                        state: "maximized",
+                                        incognito: true,
+                                    });
+                                    break;
+                                }
+                                chrome.windows.create({
+                                    url: props.url,
+                                    state: "maximized",
+                                });
+                                break;
+                            case "KeyT":
+                                chrome.tabs.create({
+                                    url: props.url,
+                                    active: false,
+                                });
+                                break;
+                            default:
+                                break;
                         }
                         //todo impl if needed
                         // if (e.key === "Escape" && dragging) setDragging(null);
