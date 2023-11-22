@@ -10,7 +10,7 @@ Microsoft Edge Store Link (works in all chromium browser) : <https://microsofted
 
 > Microsoft Edge extension updates usually take over 7 days. So it is possible for important updates to longer to be delivered.
 
-Chrome Store : wont be available, chrome store require registration fees
+Chrome Store : is not available now, chrome store require registration fees. Will be available soon.
 
 ## Features
 

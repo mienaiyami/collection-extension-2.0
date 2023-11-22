@@ -121,9 +121,17 @@ const TopBar = () => {
                             />
                         </>
                     ) : (
-                        <h1 className="text-3xl font-bold tracking-tight ">
+                        <Button
+                            variant={"ghost"}
+                            onClick={() => {
+                                chrome.tabs.create({
+                                    url: window.location.href,
+                                });
+                            }}
+                            className="text-3xl font-bold tracking-tight"
+                        >
                             Collections
-                        </h1>
+                        </Button>
                     )}
                     <div className="ml-auto flex flex-row gap-1 items-center">
                         <DialogTrigger asChild>
