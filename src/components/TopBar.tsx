@@ -51,7 +51,6 @@ const TopBar = () => {
     const [title, setTitle] = useState("");
     const [first, setFirst] = useState(true);
     const [lastBackup, setLastBackup] = useState("");
-    const [openInSidePanel, setOpenInSidePanel] = useState(false);
 
     useLayoutEffect(() => {
         if (inCollectionView) {
@@ -75,9 +74,6 @@ const TopBar = () => {
                     setLastBackup(new Date(lastBackup as string).toString());
                 else setLastBackup("Not found");
             });
-            chrome.sidePanel.getPanelBehavior((b) => {
-                setOpenInSidePanel(b.openPanelOnActionClick || false);
-            });
         }
     }, []);
 
@@ -88,6 +84,11 @@ const TopBar = () => {
     useLayoutEffect(() => {
         if (first) return;
         const timeout = setTimeout(() => {
+            if (
+                collectionData.find((e) => e.id === inCollectionView)?.title ===
+                title
+            )
+                return;
             if (inCollectionView) renameCollection(inCollectionView, title);
         }, 2000);
         return () => {
@@ -114,6 +115,17 @@ const TopBar = () => {
                             <Input
                                 value={title}
                                 className="text-lg"
+                                onKeyDown={(e) => {
+                                    if (!["Escape"].includes(e.key)) {
+                                        e.stopPropagation();
+                                    }
+                                    if (e.key === "Enter") {
+                                        renameCollection(
+                                            inCollectionView,
+                                            title
+                                        );
+                                    }
+                                }}
                                 onChange={(e) => {
                                     const value = e.currentTarget.value;
                                     if (value) setTitle(value);
