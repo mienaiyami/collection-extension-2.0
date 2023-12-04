@@ -1,3 +1,9 @@
+## v2.0.18
+
+- fixed: disable key shortcut when input on focus
+- moved toast to bottom
+- removed unnecessary permission
+
 ## v2.0.17
 
 - improved items reordering.
