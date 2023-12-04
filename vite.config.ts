@@ -30,7 +30,6 @@ const manifest: chrome.runtime.ManifestV3 = {
         "activeTab",
         "storage",
         "scripting",
-        "webRequest",
         "unlimitedStorage",
         "alarms",
         "sidePanel",
