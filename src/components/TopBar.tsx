@@ -193,6 +193,8 @@ const TopBar = () => {
                             online because of quota limit, so you will lose them
                             if you delete profile or browser or logout.
                         </DialogDescription>
+                    </DialogHeader>
+                    <div className="w-full overflow-auto max-h-[65vh] flex flex-col gap-2">
                         <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
                             <span className="font-semibold">Theme</span>
                             <Button
@@ -207,30 +209,6 @@ const TopBar = () => {
                                 {theme === "dark" ? "Dark" : "Light"}
                             </Button>
                         </div>
-                        {/* <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
-                            <span className="font-semibold">
-                                Open In Side-panel
-                            </span>
-                            <Label className="flex flex-row gap-2 items-center ml-auto cursor-pointer">
-                                {openInSidePanel ? "On" : "Off"}
-                                <Switch
-                                    checked={openInSidePanel}
-                                    onCheckedChange={(c) => {
-                                        if (c) {
-                                            chrome.sidePanel.setPanelBehavior({
-                                                openPanelOnActionClick: true,
-                                            });
-                                            setOpenInSidePanel(true);
-                                        } else {
-                                            chrome.sidePanel.setPanelBehavior({
-                                                openPanelOnActionClick: false,
-                                            });
-                                            setOpenInSidePanel(false);
-                                        }
-                                    }}
-                                />
-                            </Label>
-                        </div> */}
                         <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
                             <span className="font-semibold">Version</span>
                             <div className="flex flex-row gap-2 ml-auto">
@@ -261,7 +239,7 @@ const TopBar = () => {
                         </div>
                         <div className="flex flex-row flex-wrap items-center gap-2 p-2 border rounded-md">
                             <span className="font-semibold">Links</span>
-                            <div className="flex flex-row gap-2 ml-auto">
+                            <div className="flex flex-row gap-2 ml-auto flex-wrap">
                                 <Button
                                     variant={"outline"}
                                     className="flex flex-row gap-2 items-center"
@@ -278,13 +256,23 @@ const TopBar = () => {
                                     className="flex flex-row gap-2 items-center"
                                     onClick={() => {
                                         chrome.tabs.create({
+                                            url: "https://github.com/mienaiyami/collection-extension-2.0#shortcut-keys",
+                                        });
+                                    }}
+                                >
+                                    Shortcuts
+                                </Button>
+                                <Button
+                                    variant={"outline"}
+                                    className="flex flex-row gap-2 items-center"
+                                    onClick={() => {
+                                        chrome.tabs.create({
                                             url: "https://github.com/mienaiyami/collection-extension-2.0/blob/main/CHANGELOG.md",
                                         });
                                     }}
                                 >
                                     Changelog
                                 </Button>
-
                                 <Button
                                     variant={"outline"}
                                     className="flex flex-row gap-2 items-center"
@@ -344,7 +332,7 @@ const TopBar = () => {
                                 </code>
                             </DialogDescription>
                         </div>
-                    </DialogHeader>
+                    </div>
                 </DialogContent>
                 <AlertDialogContent>
                     <AlertDialogHeader>
