@@ -27,7 +27,7 @@ Local (**NO AUTO UPDATES**) : download `build.zip` from releases and unzip it, o
 ## Todo
 
 - online synced collection.
-- shortcut keys for collections view.
+- better shortcuts.
 - selectable collections (similar to links inside collection).
 
 ## Shortcut keys
