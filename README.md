@@ -47,9 +47,7 @@ Local (**NO AUTO UPDATES**) : download `build.zip` from releases and unzip it, o
 
 ## Screenshots
 
-<https://github.com/mienaiyami/collection-extension-2.0/assets/84740082/2e9d760d-7ee5-42dc-b838-375172e71e40>
-
-<https://github.com/mienaiyami/collection-extension-2.0/assets/84740082/27d5b17d-c4b1-4f6c-9478-b27af1f42589>
+https://github.com/mienaiyami/collection-extension-2.0/assets/84740082/1f2b496e-30eb-46e8-977b-dbd5daa671db
 
 ![Alt text](github/image2.png)
 
