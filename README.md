@@ -4,13 +4,15 @@ Enhanced version of <https://github.com/mienaiyami/collections-chrome-extension>
 
 It is recommended to use store version for auto updates (but version is only updated after around 10days of releasing).
 
-If you want to try this extension, download `build.zip` from releases and unzip it, open extension option in your browser, enable developer mode, load unpacked and select extracted `/dist`. You can turn off developer mode now.
+<!-- If you want to try this extension, download `build.zip` from releases and unzip it, open extension option in your browser, enable developer mode, load unpacked and select extracted `/dist`. You can turn off developer mode now. -->
 
 Microsoft Edge Store Link (works in all chromium browser) : <https://microsoftedge.microsoft.com/addons/detail/collections/fpolmkmcokpklimmekilomdghljpmpcf>
 
 > Microsoft Edge extension updates usually take over 7 days. So it is possible for important updates to longer to be delivered.
 
 Chrome Store : is not available now, chrome store require registration fees. Will be available soon.
+
+Local (**NO AUTO UPDATES**) : download `build.zip` from releases and unzip it, open extension option in your browser, enable developer mode, load unpacked and select extracted `/dist`. You can turn off developer mode now.
 
 ## Features
 
