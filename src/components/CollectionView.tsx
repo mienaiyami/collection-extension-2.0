@@ -34,7 +34,15 @@ const CollectionView = () => {
     const ref = useRef<HTMLDivElement>(null);
 
     useLayoutEffect(() => {
-        ref.current?.scrollTo(0, scrollPos);
+        const timeout = setTimeout(() => {
+            ref.current?.scrollTo({
+                top: scrollPos,
+                behavior: "instant",
+            });
+        }, 0);
+        return () => {
+            clearTimeout(timeout);
+        };
     }, []);
 
     return (
