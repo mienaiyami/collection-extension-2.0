@@ -59,3 +59,15 @@ chrome.alarms.onAlarm.addListener((alarm) => {
         });
     }
 });
+
+// browser keyboard shortcuts
+chrome.commands.onCommand.addListener((command) => {
+    if (command === "add-current-tab-to-active-collection") {
+        //todo later do all collection storing function in background.ts
+        chrome.runtime
+            .sendMessage({
+                type: "add-current-tab-to-active-collection",
+            })
+            .catch(console.error);
+    }
+});

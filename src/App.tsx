@@ -422,16 +422,19 @@ const App = () => {
                     setFirstDone(true);
                 });
 
-            const fn = (changes: {
+            const onStorageChangeListener = (changes: {
                 [key: string]: chrome.storage.StorageChange;
             }) => {
                 const c = changes.collectionData;
                 if (c && !(c.newValue.length === 0 && c.oldValue.length !== 0))
                     setCollectionData(c.newValue);
             };
-            chrome.storage.local.onChanged.addListener(fn);
+
+            chrome.storage.local.onChanged.addListener(onStorageChangeListener);
             return () => {
-                chrome.storage.local.onChanged.removeListener(fn);
+                chrome.storage.local.onChanged.removeListener(
+                    onStorageChangeListener
+                );
             };
         }
     }, []);
@@ -500,6 +503,7 @@ const App = () => {
         await stream.close();
     };
 
+    //todo move all these to background.ts
     const importData = async () => {
         const handle = await window.showOpenFilePicker({
             types: [

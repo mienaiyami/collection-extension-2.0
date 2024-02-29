@@ -47,6 +47,8 @@ Local (**NO AUTO UPDATES**) : download `build.zip` from releases and unzip it, o
   - if the first items is selected then it will perform a "select" operation on the range.
   - if the first items is de-selected then it will perform a "de-select" operation on the range.
   - this function also works with shift+enter/space.
+- Browser shortcuts:
+  - add current tab to active collection (opened in side-panel). Must be enabled from your browser's extension settings.
 
 ## Screenshots
 

@@ -14,14 +14,6 @@
 	"side_panel": {
 		"default_path": "side_panel.html"
 	},
-	"commands": {
-		"add-current-tab-to-active-collection": {
-			"suggested_key": {
-				"default": "Ctrl+Shift+A"
-			},
-			"description": "Add current tab to active/opened collection in side panel"
-		}
-	},
 	"permissions": [
 		"tabs",
 		"activeTab",
@@ -31,6 +23,14 @@
 		"alarms",
 		"sidePanel"
 	],
+	"commands": {
+		"add-current-tab-to-active-collection": {
+			"suggested_key": {
+				"default": "Ctrl+Shift+A"
+			},
+			"description": "Add current tab to active/opened collection in side panel"
+		}
+	},
 	"host_permissions": [
 		"<all_urls>"
 	],

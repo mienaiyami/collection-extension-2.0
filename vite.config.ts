@@ -37,6 +37,15 @@ const manifest: chrome.runtime.ManifestV3 = {
         "alarms",
         "sidePanel",
     ],
+    commands: {
+        "add-current-tab-to-active-collection": {
+            suggested_key: {
+                default: "Ctrl+Shift+A",
+            },
+            description:
+                "Add current tab to active/opened collection in side panel",
+        },
+    },
     host_permissions: ["<all_urls>"],
     icons: {
         16: "/icon16.png",

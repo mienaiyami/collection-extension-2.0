@@ -134,11 +134,56 @@ const CollectionItemView = () => {
                     break;
             }
         };
+        // only here till storage functions are moved to background.ts
+        const onMessage = (message: unknown) => {
+            if (!message) {
+                console.error("onMessage: message is undefined.");
+                return;
+            }
+            if (typeof message === "object" && "type" in message) {
+                if (message.type === "add-current-tab-to-active-collection") {
+                    if (inCollectionView)
+                        chrome.tabs
+                            .query({
+                                currentWindow: true,
+                                active: true,
+                            })
+                            .then((tabs) => {
+                                const date = new Date();
+                                if (tabs[0]) {
+                                    getImgFromTab(tabs[0]).then((img) => {
+                                        const item: CollectionItem = {
+                                            date: date.toISOString(),
+                                            id: crypto.randomUUID(),
+                                            img,
+                                            title: tabs[0].title || "title",
+                                            url: tabs[0].url || "",
+                                        };
+                                        addToCollection(inCollectionView, item);
+                                    });
+                                }
+                            });
+                }
+            } else {
+                console.error(
+                    "onMessage: message is of unknown type.",
+                    message
+                );
+            }
+        };
         window.addEventListener("keydown", keyHandler);
+        chrome.runtime.onMessage.addListener(onMessage);
         return () => {
             window.removeEventListener("keydown", keyHandler);
+            chrome.runtime.onMessage.removeListener(onMessage);
         };
-    }, [collectionData, inCollectionView, currentCollection, openCollection]);
+    }, [
+        collectionData,
+        inCollectionView,
+        currentCollection,
+        openCollection,
+        addToCollection,
+    ]);
 
     return currentCollection ? (
         <AlertDialog>
