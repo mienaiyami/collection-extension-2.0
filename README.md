@@ -42,6 +42,11 @@ Local (**NO AUTO UPDATES**) : download `build.zip` from releases and unzip it, o
     | `escape` | deselect items |
     | `ctrl + a` | select all |
     | `c` | copy urls |
+- Shift click function:
+  - click on first item (can be either, select or de-select), hold shift and click on another item perform a range selection.
+  - if the first items is selected then it will perform a "select" operation on the range.
+  - if the first items is de-selected then it will perform a "de-select" operation on the range.
+  - this function also works with shift+enter/space.
 
 ## Screenshots
 

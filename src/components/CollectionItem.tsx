@@ -17,6 +17,7 @@ type PropType = CollectionItem & {
     anySelected: boolean;
     index: number;
     onDragEnd: () => void;
+    onShiftPlusClick: (id: UUID) => void;
 };
 const CollectionItem = (props: PropType) => {
     const { removeFromCollection, inCollectionView } = useAppContext();
@@ -83,6 +84,7 @@ const CollectionItem = (props: PropType) => {
                             return;
                         }
                         if (props.anySelected) return;
+                        //todo take the formatter key approach from yomikiru
                         switch (e.code) {
                             //todo or not?
                             case "Delete":
@@ -175,11 +177,19 @@ const CollectionItem = (props: PropType) => {
                                 e.stopPropagation();
                                 // e.currentTarget.focus();
                             }}
+                            onClick={(e) => {
+                                if (window.shiftKeyHeld) {
+                                    e.preventDefault();
+                                    props.onShiftPlusClick(props.id);
+                                }
+                            }}
                             onKeyDown={(e) => {
                                 if ([" ", "Enter"].includes(e.key)) {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    e.currentTarget.click();
+                                    if (e.shiftKey) {
+                                        props.onShiftPlusClick(props.id);
+                                    } else e.currentTarget.click();
                                 }
                             }}
                             tabIndex={0}

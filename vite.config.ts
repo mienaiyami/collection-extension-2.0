@@ -25,6 +25,9 @@ const manifest: chrome.runtime.ManifestV3 = {
     action: {
         default_popup: "index.html",
     },
+    side_panel: {
+        default_path: "side_panel.html",
+    },
     permissions: [
         "tabs",
         "activeTab",
@@ -40,9 +43,6 @@ const manifest: chrome.runtime.ManifestV3 = {
         32: "/icon32.png",
         48: "/icon48.png",
         128: "/icon128.png",
-    },
-    side_panel: {
-        default_path: "side_panel.html",
     },
 };
 

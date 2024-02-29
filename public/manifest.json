@@ -11,6 +11,17 @@
 	"action": {
 		"default_popup": "index.html"
 	},
+	"side_panel": {
+		"default_path": "side_panel.html"
+	},
+	"commands": {
+		"add-current-tab-to-active-collection": {
+			"suggested_key": {
+				"default": "Ctrl+Shift+A"
+			},
+			"description": "Add current tab to active/opened collection in side panel"
+		}
+	},
 	"permissions": [
 		"tabs",
 		"activeTab",
@@ -28,8 +39,5 @@
 		"32": "/icon32.png",
 		"48": "/icon48.png",
 		"128": "/icon128.png"
-	},
-	"side_panel": {
-		"default_path": "side_panel.html"
 	}
 }

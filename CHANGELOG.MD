@@ -1,3 +1,8 @@
+## v2.0.19
+
+- added: select/de-select multiple items easily by holding shift and click start and ending item, also works with shift+enter/space.
+- fixed : scroll back to old position after exiting collection
+
 ## v2.0.18
 
 - fixed: disable key shortcut when input on focus

@@ -1,4 +1,10 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, {
+    useCallback,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { Button } from "./ui/button";
 import { useAppContext } from "@/App";
 import CollectionItem from "./CollectionItem";
@@ -29,12 +35,27 @@ const CollectionItemView = () => {
     const [selected, setSelected] = useState<UUID[]>([]);
 
     const [itemsOrder, setItemsOrder] = useState<UUID[]>([]);
+    // will be used to as starting point when using shift+click
+    const [lastChanged, setLastChanged] = useState<{
+        id: UUID;
+        type: "select" | "deselect";
+    } | null>(null);
     const selected_deleteRef = useRef<HTMLButtonElement>(null);
     const selected_open = useRef<HTMLButtonElement>(null);
     const selected_openNewWindow = useRef<HTMLButtonElement>(null);
     const selected_openIncognito = useRef<HTMLButtonElement>(null);
     const selected_copy = useRef<HTMLButtonElement>(null);
+    const currentCollection = useMemo(() => {
+        if (inCollectionView) {
+            return collectionData.find((e) => e.id === inCollectionView);
+        }
+    }, [collectionData, inCollectionView]);
+
     const changeSelected = (id: UUID, checked: boolean) => {
+        setLastChanged({
+            id,
+            type: checked ? "select" : "deselect",
+        });
         setSelected((init) => {
             if (!checked) {
                 const index = init.findIndex((e) => e === id);
@@ -44,11 +65,36 @@ const CollectionItemView = () => {
         });
     };
 
-    const currentCollection = useMemo(() => {
-        if (inCollectionView) {
-            return collectionData.find((e) => e.id === inCollectionView);
-        }
-    }, [collectionData, inCollectionView]);
+    const onShiftPlusClick = useCallback(
+        (onItem: UUID) => {
+            // if(!currentCollection) {
+            //     console.error("currentCollection is null");
+            //     return;
+            // }
+            if (!lastChanged) return;
+            const indexInMain = itemsOrder.findIndex((e) => e === onItem);
+            const indexOfLastChanged = itemsOrder.findIndex(
+                (e) => e === lastChanged.id
+            );
+            if (indexInMain === -1 || indexOfLastChanged === -1) return;
+            const start = Math.min(indexInMain, indexOfLastChanged);
+            const end = Math.max(indexInMain, indexOfLastChanged);
+            // const selectedItems = itemsOrder.slice(start, end + 1);
+            setSelected((init) => {
+                const dup = [...init];
+                if (lastChanged.type === "select") {
+                    dup.push(...itemsOrder.slice(start, end + 1));
+                } else {
+                    for (let i = start; i <= end; i++) {
+                        const index = dup.findIndex((e) => e === itemsOrder[i]);
+                        if (index >= 0) dup.splice(index, 1);
+                    }
+                }
+                return [...new Set(dup)];
+            });
+        },
+        [itemsOrder, lastChanged]
+    );
 
     useLayoutEffect(() => {
         setItemsOrder(currentCollection?.items.map((e) => e.id) || []);
@@ -307,6 +353,7 @@ const CollectionItemView = () => {
                                         isSelected={selected.includes(e.id)}
                                         anySelected={selected.length > 0}
                                         index={i}
+                                        onShiftPlusClick={onShiftPlusClick}
                                         onDragEnd={() => {
                                             inCollectionView &&
                                                 changeCollectionItemOrder(

@@ -437,6 +437,27 @@ const App = () => {
     }, []);
 
     useLayoutEffect(() => {
+        const onShiftHeld = (e: KeyboardEvent) => {
+            if (e.repeat) return;
+            if (e.shiftKey) {
+                window.shiftKeyHeld = true;
+            }
+        };
+        const onShiftReleased = (e: KeyboardEvent) => {
+            if (e.key === "Shift") {
+                window.shiftKeyHeld = false;
+            }
+        };
+
+        window.addEventListener("keydown", onShiftHeld);
+        window.addEventListener("keyup", onShiftReleased);
+        return () => {
+            window.removeEventListener("keydown", onShiftHeld);
+            window.removeEventListener("keyup", onShiftReleased);
+        };
+    }, []);
+
+    useLayoutEffect(() => {
         if (import.meta.env.DEV) {
             setCollectionData(testData);
         } else {
@@ -694,6 +715,7 @@ const App = () => {
         } else
             toastError(`renameCollection: Collection with id ${id} not found.`);
     };
+
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
             <AppContext.Provider

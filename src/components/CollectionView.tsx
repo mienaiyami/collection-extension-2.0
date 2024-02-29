@@ -37,7 +37,6 @@ const CollectionView = () => {
         const timeout = setTimeout(() => {
             ref.current?.scrollTo({
                 top: scrollPos,
-                behavior: "instant",
             });
         }, 0);
         return () => {
