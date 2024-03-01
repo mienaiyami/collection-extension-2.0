@@ -1,7 +1,7 @@
 {
   "name": "collection-extension",
   "productName": "Collections",
-  "version": "2.0.18",
+  "version": "2.1.0",
   "type": "module",
   "description": "Chromium Extension to keep URLs in a ordered way.",
   "author": {

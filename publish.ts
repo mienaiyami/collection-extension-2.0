@@ -1,5 +1,9 @@
 import fs from "fs";
 import querystring from "querystring";
+
+//todo publish for chrome store
+// why is chrome store so annoying
+
 const publishUpdate = async (token: string) => {
     const productID = "ec4f1f74-fb61-474b-b553-1866c924a7f9";
     const url = `https://api.addons.microsoftedge.microsoft.com/v1/products/${productID}/submissions/draft/package`;
