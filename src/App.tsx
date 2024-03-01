@@ -523,6 +523,12 @@ const App = () => {
                 reader.onloadend = () => {
                     const raw = reader.result;
                     const data = JSON.parse(raw as string) as Collection[];
+                    /*
+                     doing this because importing exported data get reversed, and its not good idea to `push`
+                     instead of `unshift` in general coz it will make new items appear at the bottom of the list
+                    */
+
+                    data.reverse();
                     setCollectionData((init) => {
                         data.forEach((e) => {
                             const index = init.findIndex((a) => a.id === e.id);
