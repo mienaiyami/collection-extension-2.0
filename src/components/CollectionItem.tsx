@@ -10,6 +10,7 @@ import { useAppContext } from "@/App";
 import { AppWindow, Check } from "lucide-react";
 
 import { Reorder, motion } from "framer-motion";
+import { toast } from "./ui/use-toast";
 
 type PropType = CollectionItem & {
     changeSelected: (id: UUID, checked: boolean) => void;
@@ -54,7 +55,7 @@ const CollectionItem = (props: PropType) => {
                     onMouseUp={(e) => {
                         if (e.button === 1) {
                             e.preventDefault();
-                            chrome.tabs.create({
+                            window.browser.tabs.create({
                                 url: props.url,
                                 active: false,
                             });
@@ -63,11 +64,14 @@ const CollectionItem = (props: PropType) => {
                             if (draggingRef.current) return;
                             try {
                                 if (e.ctrlKey)
-                                    chrome.tabs.create({
+                                    window.browser.tabs.create({
                                         url: props.url,
                                         active: false,
                                     });
-                                else chrome.tabs.update({ url: props.url });
+                                else
+                                    window.browser.tabs.update({
+                                        url: props.url,
+                                    });
                             } catch {
                                 console.error("Use as extension.");
                             }
@@ -77,7 +81,7 @@ const CollectionItem = (props: PropType) => {
                         if ([" ", "Enter"].includes(e.key)) {
                             e.preventDefault();
                             if (e.target instanceof HTMLElement)
-                                chrome.tabs.create({
+                                window.browser.tabs.create({
                                     url: props.url,
                                     active: false,
                                 });
@@ -99,20 +103,20 @@ const CollectionItem = (props: PropType) => {
                                 break;
                             case "KeyN":
                                 if (e.shiftKey) {
-                                    chrome.windows.create({
+                                    window.browser.windows.create({
                                         url: props.url,
                                         state: "maximized",
                                         incognito: true,
                                     });
                                     break;
                                 }
-                                chrome.windows.create({
+                                window.browser.windows.create({
                                     url: props.url,
                                     state: "maximized",
                                 });
                                 break;
                             case "KeyT":
-                                chrome.tabs.create({
+                                window.browser.tabs.create({
                                     url: props.url,
                                     active: false,
                                 });
@@ -235,7 +239,7 @@ const CollectionItem = (props: PropType) => {
                     <ContextMenuItem
                         onClick={() => {
                             (async () => {
-                                chrome.tabs.create({
+                                window.browser.tabs.create({
                                     url: props.url,
                                     active: false,
                                 });
@@ -247,7 +251,7 @@ const CollectionItem = (props: PropType) => {
                     <ContextMenuItem
                         onClick={() => {
                             (async () => {
-                                chrome.windows.create({
+                                window.browser.windows.create({
                                     url: props.url,
                                     state: "maximized",
                                 });
@@ -259,11 +263,19 @@ const CollectionItem = (props: PropType) => {
                     <ContextMenuItem
                         onClick={() => {
                             (async () => {
-                                chrome.windows.create({
-                                    url: props.url,
-                                    state: "maximized",
-                                    incognito: true,
-                                });
+                                window.browser.windows
+                                    .create({
+                                        url: props.url,
+                                        state: "maximized",
+                                        incognito: true,
+                                    })
+                                    .catch((e) => {
+                                        toast({
+                                            title: "Error",
+                                            description: e,
+                                            variant: "destructive",
+                                        });
+                                    });
                             })();
                         }}
                     >

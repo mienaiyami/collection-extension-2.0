@@ -1,3 +1,5 @@
+import browser from "webextension-polyfill";
+
 declare global {
     type UUID = ReturnType<Window["crypto"]["randomUUID"]>;
     type CollectionItem = {
@@ -19,6 +21,7 @@ declare global {
         wait: (ms: number) => Promise<unknown>;
         isSidePanel: boolean;
         shiftKeyHeld: boolean;
+        browser: typeof browser;
     }
 }
 export {};

@@ -88,7 +88,7 @@ const Collection = ({
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    chrome.tabs
+                                    window.browser.tabs
                                         .query({
                                             active: true,
                                             currentWindow: true,
@@ -146,7 +146,7 @@ const Collection = ({
                                         ) {
                                             const url = collection.items[i].url;
                                             if (url)
-                                                chrome.tabs.create({
+                                                window.browser.tabs.create({
                                                     url,
                                                     active: false,
                                                 });
@@ -166,7 +166,7 @@ const Collection = ({
                                         const urls = collection.items.map(
                                             (e) => e.url
                                         );
-                                        chrome.windows.create({
+                                        window.browser.windows.create({
                                             url: urls,
                                             state: "maximized",
                                         });
@@ -186,7 +186,7 @@ const Collection = ({
                                         const urls = collection.items.map(
                                             (e) => e.url
                                         );
-                                        chrome.windows.create({
+                                        window.browser.windows.create({
                                             url: urls,
                                             state: "maximized",
                                             incognito: true,

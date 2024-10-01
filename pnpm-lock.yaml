@@ -70,6 +70,9 @@ devDependencies:
   '@types/react-dom':
     specifier: ^18.2.7
     version: 18.2.7
+  '@types/webextension-polyfill':
+    specifier: ^0.12.1
+    version: 0.12.1
   '@types/wicg-file-system-access':
     specifier: ^2020.9.6
     version: 2020.9.6
@@ -106,6 +109,9 @@ devDependencies:
   vite:
     specifier: ^4.4.5
     version: 4.4.5(@types/node@20.5.9)
+  webextension-polyfill:
+    specifier: ^0.12.0
+    version: 0.12.0
 
 packages:
 
@@ -1520,6 +1526,10 @@ packages:
 
   /@types/semver@7.5.1:
     resolution: {integrity: sha512-cJRQXpObxfNKkFAZbJl2yjWtJCqELQIdShsogr1d2MilP8dKD9TE/nEKHkJgUNHdGKCQaf9HbIynuV2csLGVLg==}
+    dev: true
+
+  /@types/webextension-polyfill@0.12.1:
+    resolution: {integrity: sha512-xPTFWwQ8BxPevPF2IKsf4hpZNss4LxaOLZXypQH4E63BDLmcwX/RMGdI4tB4VO4Nb6xDBH3F/p4gz4wvof1o9w==}
     dev: true
 
   /@types/wicg-file-system-access@2020.9.6:
@@ -3004,6 +3014,10 @@ packages:
       rollup: 3.28.1
     optionalDependencies:
       fsevents: 2.3.3
+    dev: true
+
+  /webextension-polyfill@0.12.0:
+    resolution: {integrity: sha512-97TBmpoWJEE+3nFBQ4VocyCdLKfw54rFaJ6EVQYLBCXqCIpLSZkwGgASpv4oPt9gdKCJ80RJlcmNzNn008Ag6Q==}
     dev: true
 
   /which@2.0.2:

@@ -40,9 +40,10 @@ export function ThemeProvider({
         if (!import.meta.env.DEV) {
             if (!first) {
                 setFirst(true);
-                chrome.storage.local.get().then(({ theme: _theme }) => {
-                    if (_theme) setTheme(_theme);
-                    else chrome.storage.local.set({ theme: theme });
+                window.browser.storage.local.get().then(({ theme: _theme }) => {
+                    if (_theme && typeof _theme === "string")
+                        setTheme(_theme as Theme);
+                    else window.browser.storage.local.set({ theme: theme });
                 });
             }
         }
@@ -70,7 +71,7 @@ export function ThemeProvider({
         theme,
         setTheme: (theme: Theme) => {
             if (import.meta.env.DEV) localStorage.setItem(storageKey, theme);
-            else chrome.storage.local.set({ theme });
+            else window.browser.storage.local.set({ theme });
             setTheme(theme);
         },
     };

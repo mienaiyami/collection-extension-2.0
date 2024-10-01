@@ -28,27 +28,29 @@
 // });
 
 // backup
+import browser from "webextension-polyfill";
 
 const backup = () =>
-    chrome.storage.local.get("collectionData").then(({ collectionData }) => {
+    browser.storage.local.get("collectionData").then(({ collectionData }) => {
         if (collectionData)
-            chrome.storage.local.set({ backup: collectionData }).then(() => {
-                chrome.storage.local.set({
+            browser.storage.local.set({ backup: collectionData }).then(() => {
+                browser.storage.local.set({
                     lastBackup: new Date().toJSON(),
                 });
             });
     });
 
-chrome.runtime.onInstalled.addListener(() => {
-    chrome.alarms.create("backup", {
+browser.runtime.onInstalled.addListener(() => {
+    browser.alarms.create("backup", {
         delayInMinutes: 10,
         periodInMinutes: 10,
     });
 });
-chrome.alarms.onAlarm.addListener((alarm) => {
+browser.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === "backup") {
-        chrome.storage.local.get("lastBackup", ({ lastBackup }) => {
-            if (lastBackup) {
+        //todo test
+        browser.storage.local.get("lastBackup").then(({ lastBackup }) => {
+            if (lastBackup && typeof lastBackup === "string") {
                 const last = new Date(lastBackup);
                 const now = new Date();
                 if (now.getTime() - last.getTime() >= 1000 * 60 * 60 * 6) {
@@ -61,10 +63,10 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 // browser keyboard shortcuts
-chrome.commands.onCommand.addListener((command) => {
+browser.commands.onCommand.addListener((command) => {
     if (command === "add-current-tab-to-active-collection") {
         //todo later do all collection storing function in background.ts
-        chrome.runtime
+        browser.runtime
             .sendMessage({
                 type: "add-current-tab-to-active-collection",
             })

@@ -69,11 +69,15 @@ const TopBar = () => {
 
     useLayoutEffect(() => {
         if (!import.meta.env.DEV) {
-            chrome.storage.local.get("lastBackup").then(({ lastBackup }) => {
-                if (lastBackup)
-                    setLastBackup(new Date(lastBackup as string).toString());
-                else setLastBackup("Not found");
-            });
+            window.browser.storage.local
+                .get("lastBackup")
+                .then(({ lastBackup }) => {
+                    if (lastBackup)
+                        setLastBackup(
+                            new Date(lastBackup as string).toString()
+                        );
+                    else setLastBackup("Not found");
+                });
         }
     }, []);
 
@@ -136,7 +140,7 @@ const TopBar = () => {
                         <Button
                             variant={"ghost"}
                             onClick={() => {
-                                chrome.tabs.create({
+                                window.browser.tabs.create({
                                     url: window.location.href,
                                 });
                             }}
@@ -157,19 +161,20 @@ const TopBar = () => {
                             size={"icon"}
                             onClick={async () => {
                                 if (window.isSidePanel) {
-                                    chrome.sidePanel.setPanelBehavior({
-                                        openPanelOnActionClick: false,
-                                    });
-                                    window.close();
-                                    return;
+                                    //todo test sidebar in both browser
+                                    if (chrome) {
+                                        chrome.sidePanel.setPanelBehavior({
+                                            openPanelOnActionClick: false,
+                                        });
+                                        window.close();
+                                        return;
+                                    }
                                 }
-                                const windowId = (
-                                    await chrome.windows.getCurrent()
-                                ).id;
-                                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                                //@ts-ignore
-                                chrome.sidePanel.open({ windowId });
-                                chrome.sidePanel.setPanelBehavior({
+                                // const windowId = (
+                                //     await window.browser.windows.getCurrent()
+                                // ).id;
+                                window.browser.sidebarAction.open();
+                                chrome?.sidePanel.setPanelBehavior({
                                     openPanelOnActionClick: true,
                                 });
                             }}
@@ -214,7 +219,8 @@ const TopBar = () => {
                             <div className="flex flex-row gap-2 ml-auto">
                                 {window.location.protocol ===
                                 "chrome-extension:"
-                                    ? chrome.runtime.getManifest().version
+                                    ? window.browser.runtime.getManifest()
+                                          .version
                                     : "dev"}
                             </div>
                         </div>
@@ -244,7 +250,7 @@ const TopBar = () => {
                                     variant={"outline"}
                                     className="flex flex-row gap-2 items-center"
                                     onClick={() => {
-                                        chrome.tabs.create({
+                                        window.browser.tabs.create({
                                             url: "https://github.com/mienaiyami/collection-extension-2.0",
                                         });
                                     }}
@@ -255,7 +261,7 @@ const TopBar = () => {
                                     variant={"outline"}
                                     className="flex flex-row gap-2 items-center"
                                     onClick={() => {
-                                        chrome.tabs.create({
+                                        window.browser.tabs.create({
                                             url: "https://github.com/mienaiyami/collection-extension-2.0#shortcut-keys",
                                         });
                                     }}
@@ -266,7 +272,7 @@ const TopBar = () => {
                                     variant={"outline"}
                                     className="flex flex-row gap-2 items-center"
                                     onClick={() => {
-                                        chrome.tabs.create({
+                                        window.browser.tabs.create({
                                             url: "https://github.com/mienaiyami/collection-extension-2.0/blob/main/CHANGELOG.md",
                                         });
                                     }}
@@ -277,7 +283,7 @@ const TopBar = () => {
                                     variant={"outline"}
                                     className="flex flex-row gap-2 items-center"
                                     onClick={() => {
-                                        chrome.tabs.create({
+                                        window.browser.tabs.create({
                                             url: "https://github.com/mienaiyami/collection-extension-2.0/issues",
                                         });
                                     }}
@@ -294,16 +300,18 @@ const TopBar = () => {
                                         variant={"outline"}
                                         className="flex flex-row gap-2 items-center"
                                         onClick={() => {
-                                            chrome.storage.local
+                                            window.browser.storage.local
                                                 .set({
                                                     backup: collectionData,
                                                 })
                                                 .then(() => {
                                                     const date = new Date();
-                                                    chrome.storage.local.set({
-                                                        lastBackup:
-                                                            date.toJSON(),
-                                                    });
+                                                    window.browser.storage.local.set(
+                                                        {
+                                                            lastBackup:
+                                                                date.toJSON(),
+                                                        }
+                                                    );
                                                     setLastBackup(
                                                         date.toString()
                                                     );

@@ -6,7 +6,12 @@ import packageJson from "./package.json";
 
 const isDev = process.env.NODE_ENV === "development";
 
-const manifest: chrome.runtime.ManifestV3 = {
+const manifest: chrome.runtime.ManifestV3 & {
+    // to support firefox
+    background: {
+        scripts: string[];
+    };
+} = {
     manifest_version: 3,
     name: packageJson.productName,
     author: packageJson.author.name,
@@ -15,10 +20,12 @@ const manifest: chrome.runtime.ManifestV3 = {
     description: packageJson.description,
     background: {
         service_worker: "background.js",
+        scripts: ["background.js"],
+        type: "module",
     },
     // content_scripts: [
     //     {
-    // matches: ["<all_urls>"],
+    //         matches: ["<all_urls>"],
     //         js: ["content.js"],
     //     },
     // ],

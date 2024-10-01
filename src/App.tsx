@@ -12,353 +12,12 @@ import { Toaster } from "@/components/ui/toaster";
 import CollectionItemView from "./components/CollectionItemView";
 import { useToast } from "./components/ui/use-toast";
 import { ToastAction } from "./components/ui/toast";
+import Browser from "webextension-polyfill";
+import testData from "./testData";
+
 /**
  // todo, use toast for console.error
 */
-
-const testData: Collection[] = [
-    {
-        id: "60d883a3-1af1-414f-8b10-a30885be4aa3",
-        items: [
-            {
-                date: "2023-09-06T04:02:43.359Z",
-                id: "1d1ec1e7-8229-4668-a01d-049b9f029712",
-                img: "https://web.whatsapp.com/img/favicon_c5088e888c97ad440a61d247596f88e5.png",
-                title: "WhatsApp",
-                url: "https://web.whatsapp.com/",
-            },
-            {
-                date: "2023-09-06T04:02:43.359Z",
-                id: "a2aa8f95-32d9-4993-a4e4-2e5c4597f0e0",
-                img: "https://doc.rust-lang.org/stable/book/favicon.svg",
-                title: "Storing UTF-8 Encoded Text with Strings - The Rust Programming Language",
-                url: "https://doc.rust-lang.org/stable/book/ch08-02-strings.html",
-            },
-            {
-                date: "2023-09-06T04:02:43.359Z",
-                id: "1d74280d-e389-49d2-8b32-6a9b8ad9e615",
-                img: "",
-                title: "Collection",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "2023-09-06T04:02:43.359Z",
-                id: "57263c84-43a7-48a1-906a-8163a55f5a84",
-                img: "https://ui.shadcn.com/favicon.ico",
-                title: "Checkbox - shadcn/ui",
-                url: "https://ui.shadcn.com/docs/components/checkbox",
-            },
-            {
-                date: "2023-09-06T04:02:43.359Z",
-                id: "0bf57283-f037-40c3-918a-0dc6bdf2e5b1",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:43.359Z",
-                id: "bedb44e8-a68e-4b6e-821c-d5e29bdfa9e5",
-                img: "https://lucide.dev/favicon.ico",
-                title: "Lucide | Lucide",
-                url: "https://lucide.dev/icons/categories#charts",
-            },
-            {
-                date: "2023-09-06T04:02:40.578Z",
-                id: "1cf050a8-1e04-40c3-acf6-ea9987bd6d1a",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:40.475Z",
-                id: "b9ca92f3-9fb8-4477-a069-dc8020bff05a",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:40.247Z",
-                id: "e4727814-5d95-4e9c-9485-38ecdba6163f",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:40.152Z",
-                id: "eca3645f-35a2-4419-8adc-a32b7fa81090",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:39.932Z",
-                id: "8cdb8c25-c1ef-4634-a7e9-59e3e7e75b23",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:39.815Z",
-                id: "7b4c2e91-b3e2-4fa4-9703-034b06288436",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:39.580Z",
-                id: "88f653fb-0db8-4f26-bdd2-60fc90c560b5",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:39.478Z",
-                id: "50ec3cb5-f250-40ae-8a46-2d0d68b6fd4d",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:39.259Z",
-                id: "d9ae248f-6fdc-49ca-ac1c-6404de732d8b",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:39.147Z",
-                id: "a605b4d0-6096-48c5-81be-79a51f334743",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:38.920Z",
-                id: "403d957a-ba84-4a51-b6b8-543938a8ea35",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:38.817Z",
-                id: "013d12cd-16f7-492c-a54a-89872023f9d3",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:38.560Z",
-                id: "289cc4de-c5f5-485c-b9c2-fe99a325ff9c",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:38.453Z",
-                id: "ab6c2107-c437-4e7e-97e8-ce90351a8db1",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-            {
-                date: "2023-09-06T04:02:37.166Z",
-                id: "9332e2cb-d08d-4973-8733-b71f5c5ea4e3",
-                img: "",
-                title: "Extensions",
-                url: "edge://extensions/",
-            },
-        ],
-        title: "06/09/2023, 09:32:35",
-    },
-    {
-        id: crypto.randomUUID(),
-        title: "testtetesttesttesttestteststtesttesttesttesttesttest",
-        items: [
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1test1test1test1test1test1test1test1test1test1test1test1test1test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-        ],
-    },
-    {
-        id: crypto.randomUUID(),
-        title: "test",
-        items: [
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-        ],
-    },
-    {
-        id: crypto.randomUUID(),
-        title: "test",
-        items: [
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-            {
-                date: "",
-                id: crypto.randomUUID(),
-                img: "",
-                title: "test1",
-                url: "http://localhost:5173/",
-            },
-        ],
-    },
-    {
-        id: crypto.randomUUID(),
-        title: "test324234",
-        items: [],
-    },
-    {
-        id: crypto.randomUUID(),
-        title: "test324234",
-        items: [],
-    },
-    {
-        id: crypto.randomUUID(),
-        title: "test324234",
-        items: [],
-    },
-    {
-        id: crypto.randomUUID(),
-        title: "test324234",
-        items: [],
-    },
-    {
-        id: crypto.randomUUID(),
-        title: "test324234",
-        items: [],
-    },
-    {
-        id: crypto.randomUUID(),
-        title: "test324234",
-        items: [],
-    },
-];
 
 type AppContextType = {
     collectionData: Collection[];
@@ -412,27 +71,35 @@ const App = () => {
         if (import.meta.env.DEV) {
             setCollectionData(testData);
         } else {
-            chrome.storage.local
+            window.browser.storage.local
                 .get("collectionData")
                 .then(({ collectionData: _collectionData }) => {
                     if (_collectionData === undefined) {
                         setCollectionData([]);
-                        chrome.storage.local.set({ collectionData });
-                    } else setCollectionData(_collectionData);
+                        window.browser.storage.local.set({ collectionData });
+                    } else setCollectionData(_collectionData as Collection[]);
                     setFirstDone(true);
                 });
 
             const onStorageChangeListener = (changes: {
-                [key: string]: chrome.storage.StorageChange;
+                [key: string]: Browser.Storage.StorageChange;
             }) => {
                 const c = changes.collectionData;
-                if (c && !(c.newValue.length === 0 && c.oldValue.length !== 0))
-                    setCollectionData(c.newValue);
+                if (
+                    c &&
+                    !(
+                        (c.newValue as Collection[]).length === 0 &&
+                        (c.oldValue as Collection[]).length !== 0
+                    )
+                )
+                    setCollectionData(c.newValue as Collection[]);
             };
 
-            chrome.storage.local.onChanged.addListener(onStorageChangeListener);
+            window.browser.storage.local.onChanged.addListener(
+                onStorageChangeListener
+            );
             return () => {
-                chrome.storage.local.onChanged.removeListener(
+                window.browser.storage.local.onChanged.removeListener(
                     onStorageChangeListener
                 );
             };
@@ -469,7 +136,7 @@ const App = () => {
                 openCollection(openColOnCreate);
                 setOpenColOnCreate(null);
             }
-            if (firstDone) chrome.storage.local.set({ collectionData });
+            if (firstDone) window.browser.storage.local.set({ collectionData });
         }
     }, [collectionData, firstDone]);
 
@@ -554,9 +221,9 @@ const App = () => {
         }
     };
     const restoreBackup = async () => {
-        chrome.storage.local.get("backup").then(({ backup }) => {
+        window.browser.storage.local.get("backup").then(({ backup }) => {
             if (backup) {
-                chrome.storage.local.set({ collectionData: backup });
+                window.browser.storage.local.set({ collectionData: backup });
                 toast({
                     title: "Restored Backup",
                 });

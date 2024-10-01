@@ -1,13 +1,15 @@
+import browser from "webextension-polyfill";
 window.isSidePanel = window.location.href.includes("side_panel.html");
 window.isSidePanel && document.body.classList.add("sidePanel");
 
+window.browser = browser;
 window.wait = (ms: number) =>
     new Promise((res) => {
         setTimeout(res, ms);
     });
-export const getImgFromTab = (tab: chrome.tabs.Tab): Promise<string> => {
+export const getImgFromTab = (tab: browser.Tabs.Tab): Promise<string> => {
     if (tab.id && !(tab.url && /(chrome|edge|brave):\/\//gi.test(tab.url)))
-        return chrome.scripting
+        return window.browser.scripting
             .executeScript({
                 target: {
                     tabId: tab.id,
@@ -26,9 +28,9 @@ export const getImgFromTab = (tab: chrome.tabs.Tab): Promise<string> => {
                 },
             })
             .then((e) => {
-                if (e && e[0].result) return e[0].result;
+                if (e && e[0].result) return e[0].result as string;
                 if (tab.active)
-                    return chrome.tabs.captureVisibleTab().then((e) => {
+                    return window.browser.tabs.captureVisibleTab().then((e) => {
                         return new Promise((res: (value: string) => void) => {
                             const canvas = document.createElement("canvas");
                             const w = tab.width || 128,

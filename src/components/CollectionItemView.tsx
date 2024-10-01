@@ -22,6 +22,7 @@ import {
 } from "./ui/alert-dialog";
 import { getImgFromTab } from "@/utils";
 import { Reorder } from "framer-motion";
+import { toast, useToast } from "./ui/use-toast";
 const CollectionItemView = () => {
     const {
         collectionData,
@@ -50,6 +51,7 @@ const CollectionItemView = () => {
             return collectionData.find((e) => e.id === inCollectionView);
         }
     }, [collectionData, inCollectionView]);
+    // const {toast} = useToast();
 
     const changeSelected = (id: UUID, checked: boolean) => {
         setLastChanged({
@@ -143,7 +145,7 @@ const CollectionItemView = () => {
             if (typeof message === "object" && "type" in message) {
                 if (message.type === "add-current-tab-to-active-collection") {
                     if (inCollectionView)
-                        chrome.tabs
+                        return window.browser.tabs
                             .query({
                                 currentWindow: true,
                                 active: true,
@@ -172,10 +174,10 @@ const CollectionItemView = () => {
             }
         };
         window.addEventListener("keydown", keyHandler);
-        chrome.runtime.onMessage.addListener(onMessage);
+        window.browser.runtime.onMessage.addListener(onMessage);
         return () => {
             window.removeEventListener("keydown", keyHandler);
-            chrome.runtime.onMessage.removeListener(onMessage);
+            window.browser.runtime.onMessage.removeListener(onMessage);
         };
     }, [
         collectionData,
@@ -193,7 +195,7 @@ const CollectionItemView = () => {
                         <Button
                             variant={"ghost"}
                             onClick={() => {
-                                chrome.tabs
+                                window.browser.tabs
                                     .query({
                                         currentWindow: true,
                                         active: true,
@@ -230,7 +232,7 @@ const CollectionItemView = () => {
                         <Button
                             variant={"ghost"}
                             onClick={() => {
-                                chrome.tabs
+                                window.browser.tabs
                                     .query({
                                         currentWindow: true,
                                     })
@@ -288,7 +290,7 @@ const CollectionItemView = () => {
                                     for (let i = 0; i < items.length; i++) {
                                         const url = items[i].url;
                                         if (url)
-                                            chrome.tabs.create({
+                                            window.browser.tabs.create({
                                                 url,
                                                 active: false,
                                             });
@@ -308,7 +310,7 @@ const CollectionItemView = () => {
                                         selected.includes(e.id)
                                     );
                                 if (items)
-                                    chrome.windows.create({
+                                    window.browser.windows.create({
                                         url: items.map((e) => e.url),
                                         //todo check
                                         state: "normal",
@@ -328,11 +330,19 @@ const CollectionItemView = () => {
                                         selected.includes(e.id)
                                     );
                                 if (items)
-                                    chrome.windows.create({
-                                        url: items.map((e) => e.url),
-                                        state: "maximized",
-                                        incognito: true,
-                                    });
+                                    window.browser.windows
+                                        .create({
+                                            url: items.map((e) => e.url),
+                                            state: "maximized",
+                                            incognito: true,
+                                        })
+                                        .catch((e) => {
+                                            toast({
+                                                title: "Error",
+                                                description: e,
+                                                variant: "destructive",
+                                            });
+                                        });
                             }}
                         >
                             Incognito

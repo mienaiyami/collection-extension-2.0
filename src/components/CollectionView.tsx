@@ -59,7 +59,7 @@ const CollectionView = () => {
                 <Button
                     variant={"ghost"}
                     onClick={() => {
-                        chrome.tabs
+                        window.browser.tabs
                             .query({
                                 currentWindow: true,
                             })
