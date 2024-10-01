@@ -1,8 +1,14 @@
-# Collection extension for chromium based browser
+# Collection extension for all browsers
 
 Enhanced version of <https://github.com/mienaiyami/collections-chrome-extension>
 
+Organize and manage tabs effortlessly with collections, batch operations, keyboard shortcuts, and export/import features, compatible with all browsers.
+
+This extension simplifies tab management by allowing users to group multiple open tabs into collections, accessible through a side panel. It offers features like batch opening of URLs, keyboard shortcuts for quick actions, and support for incognito mode. Additionally, users can easily export and import collections for backup or sharing purposes. Compatible with all major browsers, it ensures a streamlined browsing experience with the convenience of installation and updates through official browser stores.
+
 Chrome Store : <https://chromewebstore.google.com/detail/collections/kcijpmmfajideceadmcihckmodaiehpm>
+
+Firefox Store : Soon
 
 > I recommend using Chrome store to get benefits of online backup (will be implemented soon.)
 
@@ -11,6 +17,8 @@ Microsoft Edge Store Link (works in all chromium browser) : <https://microsofted
 > Microsoft Edge extension updates usually take over 7 days. So it is possible for important updates to longer to be delivered.
 
 Local (**NO AUTO UPDATES**) : download `build.zip` from releases and unzip it, open extension option in your browser, enable developer mode, load unpacked and select extracted `/dist`. You can turn off developer mode now.
+
+## [Build Instruction](/docs/guide.md#build-instructions)
 
 ## Features
 
@@ -32,6 +40,7 @@ Local (**NO AUTO UPDATES**) : download `build.zip` from releases and unzip it, o
 
 - use tab to navigate.
 - inside collection
+
 - | keys | action |
     |---|---|
     |`alt + arrowLeft` | go back|
@@ -42,6 +51,7 @@ Local (**NO AUTO UPDATES**) : download `build.zip` from releases and unzip it, o
     | `escape` | deselect items |
     | `ctrl + a` | select all |
     | `c` | copy urls |
+
 - Shift click function:
   - click on first item (can be either, select or de-select), hold shift and click on another item perform a range selection.
   - if the first items is selected then it will perform a "select" operation on the range.

@@ -40,6 +40,12 @@ const manifest: chrome.runtime.ManifestV3 & {
         default_panel: "side_panel.html",
         default_title: "Collections",
     },
+    browser_specific_settings: {
+        gecko: {
+            id: "collections@mienaiyami.extensions",
+            strict_min_version: "109.0",
+        },
+    },
     permissions: [
         "tabs",
         "activeTab",

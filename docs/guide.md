@@ -1,25 +1,21 @@
 # Guides
 
-## Build
+## Build Instructions
 
-```sh
+npm or pnpm is required to build the extension.
+
+```bash
+# install dependencies
 pnpm install
-pnpm run dev
+
+# build extension  (output in /dist)
+pnpm build
+
+# build extension zipped (output to ./build.zip)
+pnpm build:zip
 ```
 
-## Run in Browser
+To load the extension in your browser:
 
-For simple ui testing, just open the url in browser.
-
-For test as real extension.
-
-1. Build the extension.
-
-    ```sh
-        pnpm run build
-    ```
-
-2. Open Browser.
-3. Go to extension page from settings.
-4. Enable developer mode.
-5. Load unpacked extension.
+- Chrome: Open `chrome://extensions/`, enable developer mode, load unpacked and select `/dist`.
+- Firefox: Open `about:debugging`, click on `This Firefox`, click on `Load Temporary Add-on` and select `/dist/manifest.json`.

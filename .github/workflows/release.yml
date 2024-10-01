@@ -2,42 +2,44 @@ name: release
 run-name: release
 
 permissions:
-  contents: write
+    contents: write
 
 # on: workflow_dispatch
-on: 
-  push:
-    tags:
-      - "v*.*.*"
+on:
+    push:
+        tags:
+            - "v*.*.*"
 
 jobs:
-  build:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.15.0
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-      - name: Install dependencies
-        run: pnpm install
-      - name: build
-        run: pnpm build:zip
+    build:
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v3
+            - name: Use Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 18.15.0
+            - uses: pnpm/action-setup@v2
+              with:
+                  version: 8
+            - name: Install dependencies
+              run: pnpm install
+            - name: build
+              run: pnpm build:zip
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          tag_name: ${{github.ref}}
-          name: ${{github.ref_name}}
-          files: |
-            ./build.zip
-          generate_release_notes: true
-      
-      - name: Publish
-        env: 
-          MS_SECRET: ${{ secrets.MS_SECRET }}
-        run: pnpm run publish
+            - name: Release
+              uses: softprops/action-gh-release@v1
+              if: startsWith(github.ref, 'refs/tags/')
+              with:
+                  tag_name: ${{github.ref}}
+                  name: ${{github.ref_name}}
+                  files: |
+                      ./build.zip
+                  generate_release_notes: true
+                  body: |
+                      "For more details, see the [CHANGELOG](https://github.com/mienaiyami/collection-extension-2.0/blob/main/CHANGELOG.MD)."
+
+            - name: Publish
+              env:
+                  MS_SECRET: ${{ secrets.MS_SECRET }}
+              run: pnpm run publish

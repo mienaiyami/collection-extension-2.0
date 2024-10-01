@@ -1,3 +1,11 @@
+## v2.2.0
+
+**Collections now work in Firefox!!**
+
+- added : Firefox support.
+- improved performance, sidebar experience.
+- fixed: random loops when updating collection data.
+
 ## v2.1.0
 
 - added : select/de-select multiple items easily by holding shift and click start and ending item, also works with shift+enter/space.
