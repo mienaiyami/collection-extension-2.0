@@ -90,11 +90,12 @@ const App = () => {
                     !(
                         (c.newValue as Collection[]).length === 0 &&
                         (c.oldValue as Collection[]).length !== 0
-                    )
+                    ) &&
+                    //! todo : temp fix, need to find a better way to compare or move to background.ts
+                    JSON.stringify(c.newValue) !== JSON.stringify(c.oldValue)
                 )
                     setCollectionData(c.newValue as Collection[]);
             };
-
             window.browser.storage.local.onChanged.addListener(
                 onStorageChangeListener
             );
@@ -278,26 +279,42 @@ const App = () => {
         setOpenColOnCreate(id);
     };
     const removeCollections = (id: UUID | UUID[]) => {
-        const init = [...collectionData];
-        const remove = (_id: UUID) => {
-            const index = collectionData.findIndex((e) => e.id === _id);
-            if (index >= 0) {
-                init.splice(index, 1);
+        setCollectionData((init) => {
+            const newCol = [...init];
+            const remove = (_id: UUID) => {
+                const index = newCol.findIndex((e) => e.id === _id);
+                if (index >= 0) {
+                    newCol.splice(index, 1);
+                } else {
+                    toastError(
+                        `removeCollections: Collection with id ${_id} not found.`
+                    );
+                }
+            };
+            if (id instanceof Array) {
+                id.forEach((_id) => {
+                    remove(_id);
+                });
             } else {
-                toastError(
-                    `removeCollections: Collection with id ${_id} not found.`
-                );
+                remove(id);
             }
-        };
-        if (id instanceof Array) {
-            id.forEach((_id) => {
-                remove(_id);
+            toast({
+                title: "Removed Collection",
+                description: `Collection removed.`,
+                duration: 10000,
+                action: (
+                    <ToastAction
+                        altText="Undo"
+                        onClick={() => {
+                            setCollectionData([...init]);
+                        }}
+                    >
+                        Undo Changes
+                    </ToastAction>
+                ),
             });
-        } else {
-            remove(id);
-        }
-        //todo, provide undo?
-        setCollectionData(init);
+            return newCol;
+        });
     };
 
     const addToCollection = (
@@ -323,37 +340,57 @@ const App = () => {
         collectionId: UUID,
         itemId: UUID | UUID[]
     ) => {
-        const collection = collectionData.find((e) => e.id === collectionId);
-        if (collection) {
-            const items = collection.items;
-            const remove = (_id: UUID) => {
-                const index = collection.items.findIndex((e) => e.id === _id);
-                if (index >= 0) {
-                    items.splice(index, 1);
-                } else {
-                    toastError(
-                        `removeFromCollection: CollectionItem with id ${_id} not found.`
+        //todo, provide undo?
+        setCollectionData((init) => {
+            // need this because splice is on deep
+            const dup = JSON.parse(JSON.stringify(init)) as Collection[];
+            const collection = dup.find((e) => e.id === collectionId);
+            if (collection) {
+                const items = collection.items;
+                let count = 0;
+                const remove = (_id: UUID) => {
+                    const index = collection.items.findIndex(
+                        (e) => e.id === _id
                     );
+                    if (index >= 0) {
+                        items.splice(index, 1);
+                        count++;
+                    } else {
+                        toastError(
+                            `removeFromCollection: CollectionItem with id ${_id} not found.`
+                        );
+                    }
+                };
+                if (itemId instanceof Array) {
+                    itemId.forEach((_id) => {
+                        remove(_id);
+                    });
+                } else {
+                    remove(itemId);
                 }
-            };
-            if (itemId instanceof Array) {
-                itemId.forEach((_id) => {
-                    remove(_id);
+                toast({
+                    title: "Removed from Collection",
+                    description: `Removed ${count} item(s) from collection.`,
+                    duration: count > 10 ? 10000 : 5000,
+                    action: (
+                        <ToastAction
+                            altText="Undo"
+                            onClick={() => {
+                                setCollectionData(init);
+                            }}
+                        >
+                            Undo Changes
+                        </ToastAction>
+                    ),
                 });
-            } else {
-                remove(itemId);
-            }
-            //todo, provide undo?
-            setCollectionData((init) => {
-                const dup = [...init];
-                dup.find((e) => e.id === collectionId)!.items = items;
                 return dup;
-            });
-        } else {
-            toastError(
-                `removeFromCollection: Collection with id ${collectionId} not found.`
-            );
-        }
+            } else {
+                toastError(
+                    `removeFromCollection: Collection with id ${collectionId} not found.`
+                );
+                return init;
+            }
+        });
     };
 
     // const changeCollectionOrder = (id: UUID, newIndex: number) => {
@@ -368,10 +405,12 @@ const App = () => {
     // };
     const changeCollectionOrder = (newOrder: UUID[]) => {
         try {
-            const newColItems = [...collectionData].sort(
-                (a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id)
-            );
-            setCollectionData(newColItems);
+            setCollectionData((init) => {
+                init.sort(
+                    (a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id)
+                );
+                return [...init];
+            });
         } catch {
             toastError("Couldn't reorder.");
         }
