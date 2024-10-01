@@ -154,70 +154,103 @@ const App = () => {
     };
 
     const exportData = async () => {
-        const handle = await window.showSaveFilePicker({
-            types: [
-                {
-                    accept: {
-                        "application/json": [".json"],
+        //eslint-disable-next-line
+        //@ts-ignore
+        if (window.showOpenFilePicker) {
+            const handle = await window.showSaveFilePicker({
+                types: [
+                    {
+                        accept: {
+                            "application/json": [".json"],
+                        },
+                        description: "JSON File",
                     },
-                    description: "JSON File",
-                },
-            ],
-            suggestedName: "collection_data",
-        });
-        const stream = await handle.createWritable();
-        await stream.write(JSON.stringify(collectionData, null, "\t"));
-        await stream.close();
+                ],
+                suggestedName: "collection_data",
+            });
+            const stream = await handle.createWritable();
+            await stream.write(JSON.stringify(collectionData, null, "\t"));
+            await stream.close();
+        } else {
+            const data = JSON.stringify(collectionData, null, "\t");
+            const blob = new Blob([data], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "collection_data.json";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
     };
 
     //todo move all these to background.ts
     const importData = async () => {
-        const handle = await window.showOpenFilePicker({
-            types: [
-                {
-                    accept: {
-                        "application/json": [".json"],
-                    },
-                    description: "JSON File",
-                },
-            ],
-            multiple: false,
-        });
-        try {
-            if (handle[0]) {
-                const file = await handle[0].getFile();
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    const raw = reader.result;
-                    const data = JSON.parse(raw as string) as Collection[];
-                    /*
+        const withFile = (file: File) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const raw = reader.result;
+                const data = JSON.parse(raw as string) as Collection[];
+                /*
                      doing this because importing exported data get reversed, and its not good idea to `push`
                      instead of `unshift` in general coz it will make new items appear at the bottom of the list
                     */
-
-                    data.reverse();
-                    setCollectionData((init) => {
-                        data.forEach((e) => {
-                            const index = init.findIndex((a) => a.id === e.id);
-                            if (index >= 0) {
-                                const aa = init[index].items.map((e) => e.id);
-                                e.items.forEach((c) => {
-                                    if (!aa.includes(c.id)) {
-                                        init[index].items.unshift(c);
-                                    }
-                                });
-                            } else init.unshift(e);
-                        });
-                        toast({
-                            title: "Imported Successfully",
-                        });
-                        return [...init];
+                data.reverse();
+                setCollectionData((init) => {
+                    data.forEach((e) => {
+                        const index = init.findIndex((a) => a.id === e.id);
+                        if (index >= 0) {
+                            const aa = init[index].items.map((e) => e.id);
+                            e.items.forEach((c) => {
+                                if (!aa.includes(c.id)) {
+                                    init[index].items.unshift(c);
+                                }
+                            });
+                        } else init.unshift(e);
                     });
-                };
-                reader.readAsText(file, "utf8");
+                    toast({
+                        title: "Imported Successfully",
+                    });
+                    return [...init];
+                });
+            };
+            reader.readAsText(file, "utf8");
+        };
+        //eslint-disable-next-line
+        //@ts-ignore
+        if (window.showOpenFilePicker) {
+            const handle = await window.showOpenFilePicker({
+                types: [
+                    {
+                        accept: {
+                            "application/json": [".json"],
+                        },
+                        description: "JSON File",
+                    },
+                ],
+                multiple: false,
+            });
+            try {
+                if (handle[0]) {
+                    const file = await handle[0].getFile();
+                    withFile(file);
+                }
+            } catch {
+                toastError("Couldn't load file.");
             }
-        } catch {
-            toastError("Couldn't load file.");
+        } else {
+            try {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = ".json";
+                input.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (!file) return;
+                    withFile(file);
+                };
+                input.click();
+            } catch (e) {
+                toastError("Couldn't load file.");
+            }
         }
     };
     const restoreBackup = async () => {

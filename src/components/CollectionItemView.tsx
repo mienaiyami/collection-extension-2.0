@@ -51,7 +51,6 @@ const CollectionItemView = () => {
             return collectionData.find((e) => e.id === inCollectionView);
         }
     }, [collectionData, inCollectionView]);
-    // const {toast} = useToast();
 
     const changeSelected = (id: UUID, checked: boolean) => {
         setLastChanged({

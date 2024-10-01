@@ -170,13 +170,18 @@ const TopBar = () => {
                                         return;
                                     }
                                 }
-                                // const windowId = (
-                                //     await window.browser.windows.getCurrent()
-                                // ).id;
-                                window.browser.sidebarAction.open();
-                                chrome?.sidePanel.setPanelBehavior({
-                                    openPanelOnActionClick: true,
-                                });
+                                const windowId = (
+                                    await window.browser.windows.getCurrent()
+                                ).id;
+                                // window.browser.sidebarAction.open();
+                                if (chrome) {
+                                    //eslint-disable-next-line
+                                    //@ts-ignore
+                                    chrome.sidePanel.open({ windowId });
+                                    chrome.sidePanel.setPanelBehavior({
+                                        openPanelOnActionClick: true,
+                                    });
+                                }
                             }}
                         >
                             {window.isSidePanel ? <PinOff /> : <Pin />}
@@ -224,24 +229,43 @@ const TopBar = () => {
                                     : "dev"}
                             </div>
                         </div>
-                        <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
-                            <span className="font-semibold">Data</span>
-                            <div className="flex flex-row gap-2 ml-auto">
-                                <Button
-                                    variant={"outline"}
-                                    className="flex flex-row gap-2 items-center"
-                                    onClick={exportData}
-                                >
-                                    Export
-                                </Button>
-                                <Button
-                                    variant={"outline"}
-                                    className="flex flex-row gap-2 items-center"
-                                    onClick={importData}
-                                >
-                                    Import
-                                </Button>
+                        <div className="flex flex-col gap-2 p-2 border rounded-md">
+                            <div className="flex flex-row gap-2 items-center w-full">
+                                <span className="font-semibold">Data</span>
+                                <div className="flex flex-row gap-2 ml-auto">
+                                    <Button
+                                        variant={"outline"}
+                                        className="flex flex-row gap-2 items-center"
+                                        onClick={exportData}
+                                    >
+                                        Export
+                                    </Button>
+                                    <Button
+                                        variant={"outline"}
+                                        className="flex flex-row gap-2 items-center"
+                                        onClick={importData}
+                                    >
+                                        Import
+                                    </Button>
+                                </div>
                             </div>
+                            {!window.navigator.userAgent.includes("Chrome") && (
+                                <p className="text-xs">
+                                    To import on non-chromium browsers, first go
+                                    to{" "}
+                                    <a
+                                        className="cursor-pointer underline hover:opacity-80"
+                                        onClick={() => {
+                                            window.browser.tabs.create({
+                                                url: window.location.href,
+                                            });
+                                        }}
+                                    >
+                                        Collections page
+                                    </a>{" "}
+                                    (not popup) then click import in settings.
+                                </p>
+                            )}
                         </div>
                         <div className="flex flex-row flex-wrap items-center gap-2 p-2 border rounded-md">
                             <span className="font-semibold">Links</span>
