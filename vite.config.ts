@@ -35,6 +35,11 @@ const manifest: chrome.runtime.ManifestV3 & {
     side_panel: {
         default_path: "side_panel.html",
     },
+    //firefox support
+    sidebar_action: {
+        default_panel: "side_panel.html",
+        default_title: "Collections",
+    },
     permissions: [
         "tabs",
         "activeTab",
@@ -51,6 +56,12 @@ const manifest: chrome.runtime.ManifestV3 & {
             },
             description:
                 "Add current tab to active/opened collection in side panel",
+        },
+        _execute_sidebar_action: {
+            suggested_key: {
+                default: "Ctrl+Shift+Y",
+            },
+            description: "Open side panel",
         },
     },
     host_permissions: ["<all_urls>"],

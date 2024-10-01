@@ -159,28 +159,41 @@ const TopBar = () => {
                         <Button
                             variant={"ghost"}
                             size={"icon"}
+                            title="Sidebar"
+                            style={{
+                                display: chrome.sidePanel
+                                    ? "flex"
+                                    : // checking only when firefox
+                                    window.isSidePanel
+                                    ? "none"
+                                    : "flex",
+                            }}
                             onClick={async () => {
                                 if (window.isSidePanel) {
-                                    //todo test sidebar in both browser
-                                    if (chrome) {
+                                    // note to self, `chrome.sidePanel` is not on `window.browser`, and only available on chromium
+                                    if (chrome.sidePanel) {
                                         chrome.sidePanel.setPanelBehavior({
                                             openPanelOnActionClick: false,
                                         });
                                         window.close();
-                                        return;
+                                    } else {
+                                        window.browser.sidebarAction.close();
                                     }
+                                    return;
                                 }
-                                const windowId = (
-                                    await window.browser.windows.getCurrent()
-                                ).id;
-                                // window.browser.sidebarAction.open();
-                                if (chrome) {
+                                if (chrome.sidePanel) {
+                                    const windowId = (
+                                        await window.browser.windows.getCurrent()
+                                    ).id;
                                     //eslint-disable-next-line
                                     //@ts-ignore
                                     chrome.sidePanel.open({ windowId });
                                     chrome.sidePanel.setPanelBehavior({
                                         openPanelOnActionClick: true,
                                     });
+                                } else {
+                                    window.browser.sidebarAction.open();
+                                    window.close();
                                 }
                             }}
                         >
@@ -189,7 +202,10 @@ const TopBar = () => {
                         <Button
                             variant={"ghost"}
                             size={"icon"}
-                            onClick={window.close}
+                            onClick={() => {
+                                window.close();
+                                window.browser.sidebarAction.close();
+                            }}
                         >
                             <X />
                         </Button>
@@ -263,7 +279,9 @@ const TopBar = () => {
                                     >
                                         Collections page
                                     </a>{" "}
-                                    (not popup) then click import in settings.
+                                    (not popup) or inside a{" "}
+                                    <strong>Sidebar</strong> then click import
+                                    in settings.
                                 </p>
                             )}
                         </div>
