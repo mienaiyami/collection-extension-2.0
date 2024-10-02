@@ -8,13 +8,13 @@ This extension simplifies tab management by allowing users to group multiple ope
 
 Chrome Store : <https://chromewebstore.google.com/detail/collections/kcijpmmfajideceadmcihckmodaiehpm>
 
-Firefox Store : Soon
-
 > I recommend using Chrome store to get benefits of online backup (will be implemented soon.)
 
 Microsoft Edge Store Link (works in all chromium browser) : <https://microsoftedge.microsoft.com/addons/detail/collections/fpolmkmcokpklimmekilomdghljpmpcf>
 
 > Microsoft Edge extension updates usually take over 7 days. So it is possible for important updates to longer to be delivered.
+
+Firefox : <https://addons.mozilla.org/en-US/firefox/addon/collections>
 
 Local (**NO AUTO UPDATES**) : download `build.zip` from releases and unzip it, open extension option in your browser, enable developer mode, load unpacked and select extracted `/dist`. You can turn off developer mode now.
 

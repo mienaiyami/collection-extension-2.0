@@ -3,7 +3,7 @@
   "productName": "Collections",
   "version": "2.2.0",
   "type": "module",
-  "description": "Organize and manage tabs effortlessly with collections, batch operations, keyboard shortcuts, and export/import features, compatible with all browsers",
+  "description": "Organize and manage tabs effortlessly with collections, batch operations, keyboard shortcuts, and export/import features.",
   "author": {
     "name": "mienaiyami",
     "url": "https://github.com/mienaiyami/collection-extension-2.0"
