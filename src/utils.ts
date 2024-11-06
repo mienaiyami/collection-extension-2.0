@@ -71,16 +71,30 @@ export const getAllTabsData = async () => {
     const date = new Date();
     const tabsData: CollectionItem[] = await Promise.all(
         tabs.map(async (tab) => {
+            if (tab.status === "loading") await window.wait(1000);
+            if (tab.status === "loading") await window.wait(500);
             const img = await Promise.race([
                 getImgFromTab(tab),
                 window.wait(500).then(() => tab.favIconUrl || ""),
             ]);
+            if (tab.status === "loading") console.warn("Tab didn't load", tab);
+            if (!tab.title || !tab.url)
+                console.warn("Unable to get tab title or url.");
+            let url = tab.url || tab.pendingUrl || "Unable to get url";
+            // this is for firefox only, as it do not have `tab.pendingUrl`
+            if (tab.url === "about:blank")
+                url = tab.title || "Unable to get url";
+
             return {
                 date: date.toISOString(),
                 id: crypto.randomUUID(),
                 img,
-                title: tab.title || "title",
-                url: tab.url || "",
+                title:
+                    tab.title ||
+                    `No title${
+                        tab.status === "loading" ? " (tab didn't load)" : ""
+                    }`,
+                url,
             };
         })
     );
