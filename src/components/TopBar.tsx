@@ -2,12 +2,11 @@ import { useAppContext } from "@/App";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Input } from "./ui/input";
 import { useTheme } from "@/hooks/theme-provider";
+import { useAppSetting } from "@/hooks/appSetting-provider";
 import {
     ChevronLeft,
-    ExternalLink,
-    Github,
+    Info,
     Moon,
-    PanelRight,
     Pin,
     PinOff,
     Settings,
@@ -34,8 +33,14 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "./ui/alert-dialog";
-import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "./ui/tooltip";
+import { initAppSetting } from "@/utils";
 
 const TopBar = () => {
     const {
@@ -48,6 +53,7 @@ const TopBar = () => {
     } = useAppContext();
     const { theme, setTheme } = useTheme();
     const { collectionData } = useAppContext();
+    const { appSetting, setAppSetting } = useAppSetting();
     const [title, setTitle] = useState("");
     const [first, setFirst] = useState(true);
     const [lastBackup, setLastBackup] = useState("");
@@ -243,6 +249,138 @@ const TopBar = () => {
                                     ? window.browser.runtime.getManifest()
                                           .version
                                     : "dev"}
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-2 p-2 border rounded-md">
+                            <div className="flex flex-col gap-2 items-start w-full">
+                                <span className="font-semibold">
+                                    Font Options
+                                </span>
+                                <div className="flex flex-col gap-2 px-4 py-2">
+                                    <TooltipProvider>
+                                        <Tooltip
+                                            delayDuration={0}
+                                            disableHoverableContent
+                                        >
+                                            <TooltipTrigger className="cursor-default">
+                                                <Label className="flex flex-row items-center justify-start gap-2">
+                                                    <span className="min-w-[6rem] text-left">
+                                                        Font Size
+                                                    </span>
+                                                    <Input
+                                                        type="number"
+                                                        value={
+                                                            appSetting.font.size
+                                                        }
+                                                        onKeyDown={(e) => {
+                                                            if (
+                                                                [
+                                                                    "ArrowUp",
+                                                                    "ArrowDown",
+                                                                ].includes(
+                                                                    e.key
+                                                                )
+                                                            )
+                                                                return;
+                                                            e.preventDefault();
+                                                        }}
+                                                        min={10}
+                                                        max={30}
+                                                        step={0.2}
+                                                        onChange={(e) => {
+                                                            setAppSetting(
+                                                                (init) => {
+                                                                    const newSetting =
+                                                                        window.cloneJSON(
+                                                                            init
+                                                                        );
+                                                                    let size =
+                                                                        Number(
+                                                                            e
+                                                                                .currentTarget
+                                                                                .value
+                                                                        );
+                                                                    if (
+                                                                        size <
+                                                                        10
+                                                                    )
+                                                                        size = 10;
+                                                                    if (
+                                                                        size >
+                                                                        30
+                                                                    )
+                                                                        size = 30;
+                                                                    newSetting.font.size =
+                                                                        size;
+                                                                    return newSetting;
+                                                                }
+                                                            );
+                                                        }}
+                                                        className="p-2 py-0.5"
+                                                    />
+                                                </Label>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p className="max-w-[16rem]">
+                                                    You can use arrow up/down to
+                                                    increase/decrease font size.
+                                                </p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                    <TooltipProvider>
+                                        <Tooltip
+                                            delayDuration={0}
+                                            disableHoverableContent
+                                        >
+                                            <TooltipTrigger className="cursor-default">
+                                                <Label className="flex flex-row items-center justify-start gap-2">
+                                                    <span className="min-w-[6rem] text-left">
+                                                        Font Family
+                                                    </span>
+                                                    <Input
+                                                        type="text"
+                                                        value={
+                                                            appSetting.font
+                                                                .family
+                                                        }
+                                                        onChange={(e) => {
+                                                            setAppSetting(
+                                                                (init) => {
+                                                                    const newSetting =
+                                                                        window.cloneJSON(
+                                                                            init
+                                                                        );
+                                                                    newSetting.font.family =
+                                                                        e.currentTarget.value;
+                                                                    return newSetting;
+                                                                }
+                                                            );
+                                                        }}
+                                                        className="p-2 py-0.5"
+                                                    />
+                                                </Label>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p className="max-w-[16rem]">
+                                                    Enter full name of a local
+                                                    font, like "Inter", "Inter
+                                                    Black".
+                                                </p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                    <div className="flex flex-row items-stretch gap-2">
+                                        <Button
+                                            variant={"outline"}
+                                            onClick={() => {
+                                                setAppSetting(initAppSetting);
+                                            }}
+                                        >
+                                            Reset
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div className="flex flex-col gap-2 p-2 border rounded-md">

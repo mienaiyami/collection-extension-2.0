@@ -7,7 +7,7 @@ window.wait = (ms: number) =>
     new Promise((res) => {
         setTimeout(res, ms);
     });
-
+window.cloneJSON = (obj) => JSON.parse(JSON.stringify(obj));
 const systemUrlPattern =
     /^(about|chrome|edge|brave|opera|vivaldi|firefox):\/\//i;
 export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
@@ -99,4 +99,11 @@ export const getAllTabsData = async () => {
         })
     );
     return tabsData;
+};
+
+export const initAppSetting = {
+    font: {
+        size: 16,
+        family: "Inter",
+    },
 };

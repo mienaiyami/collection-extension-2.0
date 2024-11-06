@@ -6,6 +6,7 @@ import React, {
     useState,
 } from "react";
 import { ThemeProvider } from "@/hooks/theme-provider";
+import { AppSettingProvider } from "@/hooks/appSetting-provider";
 import CollectionView from "./components/CollectionView";
 import TopBar from "./components/TopBar";
 import CollectionItemView from "./components/CollectionItemView";
@@ -445,35 +446,37 @@ const App = () => {
 
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-            <AppContext.Provider
-                value={{
-                    collectionData,
-                    inCollectionView,
-                    addToCollection,
-                    openCollection,
-                    makeNewCollection,
-                    removeCollections,
-                    removeFromCollection,
-                    renameCollection,
-                    changeCollectionOrder,
-                    changeCollectionItemOrder,
-                    exportData,
-                    importData,
-                    restoreBackup,
-                    setScrollPos,
-                    scrollPos,
-                }}
-            >
-                <div className="w-full h-full border grid grid-rows-[65px_auto]">
-                    <TopBar />
-                    {inCollectionView ? (
-                        <CollectionItemView />
-                    ) : (
-                        <CollectionView />
-                    )}
-                </div>
-                <Toaster richColors />
-            </AppContext.Provider>
+            <AppSettingProvider>
+                <AppContext.Provider
+                    value={{
+                        collectionData,
+                        inCollectionView,
+                        addToCollection,
+                        openCollection,
+                        makeNewCollection,
+                        removeCollections,
+                        removeFromCollection,
+                        renameCollection,
+                        changeCollectionOrder,
+                        changeCollectionItemOrder,
+                        exportData,
+                        importData,
+                        restoreBackup,
+                        setScrollPos,
+                        scrollPos,
+                    }}
+                >
+                    <div className="w-full h-full border grid grid-rows-[65px_auto]">
+                        <TopBar />
+                        {inCollectionView ? (
+                            <CollectionItemView />
+                        ) : (
+                            <CollectionView />
+                        )}
+                    </div>
+                    <Toaster richColors />
+                </AppContext.Provider>
+            </AppSettingProvider>
         </ThemeProvider>
     );
 };

@@ -28,6 +28,7 @@
 // });
 
 import browser from "webextension-polyfill";
+import { initAppSetting } from "./utils";
 
 const backup = () =>
     browser.storage.local.get("collectionData").then(({ collectionData }) => {
@@ -38,6 +39,7 @@ const backup = () =>
                 });
             });
     });
+
 browser.runtime.onInstalled.addListener((e) => {
     if (
         e.reason === "update" &&
@@ -46,6 +48,11 @@ browser.runtime.onInstalled.addListener((e) => {
         browser.tabs.create({
             active: true,
             url: "https://github.com/mienaiyami/collection-extension-2.0/blob/main/CHANGELOG.MD",
+        });
+    }
+    if (e.reason === "install") {
+        browser.storage.local.set({
+            appSetting: initAppSetting,
         });
     }
     browser.alarms.create("backup", {

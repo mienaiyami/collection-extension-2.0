@@ -22,6 +22,7 @@ declare global {
         isSidePanel: boolean;
         shiftKeyHeld: boolean;
         browser: typeof browser;
+        cloneJSON: <T>(obj: T) => T;
     }
 }
 export {};
