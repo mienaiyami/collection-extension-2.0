@@ -20,7 +20,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "./ui/alert-dialog";
-import { getImgFromTab } from "@/utils";
+import { getAllTabsData, getImgFromTab } from "@/utils";
 import { Reorder } from "framer-motion";
 import { toast, useToast } from "./ui/use-toast";
 const CollectionItemView = () => {
@@ -231,39 +231,18 @@ const CollectionItemView = () => {
                         <Button
                             variant={"ghost"}
                             onClick={() => {
-                                window.browser.tabs
-                                    .query({
-                                        currentWindow: true,
+                                getAllTabsData()
+                                    .then((items) => {
+                                        addToCollection(
+                                            currentCollection.id,
+                                            items
+                                        );
                                     })
-                                    .then((tabs) => {
-                                        const date = new Date();
-                                        const items: CollectionItem[] = [];
-                                        let done = 0;
-                                        tabs.forEach((tab) => {
-                                            const add = (img: string) => {
-                                                items.push({
-                                                    date: date.toISOString(),
-                                                    id: crypto.randomUUID(),
-                                                    img,
-                                                    title: tab.title || "title",
-                                                    url: tab.url || "",
-                                                });
-                                                done++;
-                                                if (done === tabs.length)
-                                                    addToCollection(
-                                                        currentCollection.id,
-                                                        items
-                                                    );
-                                            };
-                                            // need this because sleeping tabs does not execute script to get img
-                                            // reducing time from 2000
-                                            const timeout = setTimeout(() => {
-                                                add(tab.favIconUrl || "");
-                                            }, 500);
-                                            getImgFromTab(tab).then((img) => {
-                                                clearTimeout(timeout);
-                                                add(img);
-                                            });
+                                    .catch((e) => {
+                                        toast({
+                                            title: "Error while fetching tabs data",
+                                            description: e,
+                                            variant: "destructive",
                                         });
                                     });
                             }}

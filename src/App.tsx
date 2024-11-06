@@ -30,7 +30,7 @@ type AppContextType = {
         newItem: CollectionItem | CollectionItem[]
     ) => void;
     removeFromCollection: (collectionId: UUID, itemId: UUID | UUID[]) => void;
-    toastError: (description: React.ReactNode) => void;
+    toastError: (description: React.ReactNode | string) => void;
     renameCollection: (id: UUID, newName: string) => void;
     // changeCollectionOrder: (id: UUID, newIndex: number) => void;
     changeCollectionOrder: (newOrder: UUID[]) => void;
@@ -60,7 +60,7 @@ const App = () => {
     const [scrollPos, setScrollPos] = useState(0);
 
     const { toast } = useToast();
-    const toastError = (description: React.ReactNode) => {
+    const toastError = (description: React.ReactNode | string) => {
         console.error(description?.toString());
         toast({
             title: "Error",
