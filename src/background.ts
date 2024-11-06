@@ -38,9 +38,11 @@ const backup = () =>
                 });
             });
     });
-
 browser.runtime.onInstalled.addListener((e) => {
-    if (e.reason === "update") {
+    if (
+        e.reason === "update" &&
+        e.previousVersion !== browser.runtime.getManifest().version
+    ) {
         browser.tabs.create({
             active: true,
             url: "https://github.com/mienaiyami/collection-extension-2.0/blob/main/CHANGELOG.MD",
