@@ -8,12 +8,11 @@ import React, {
 import { ThemeProvider } from "@/hooks/theme-provider";
 import CollectionView from "./components/CollectionView";
 import TopBar from "./components/TopBar";
-import { Toaster } from "@/components/ui/toaster";
 import CollectionItemView from "./components/CollectionItemView";
-import { useToast } from "./components/ui/use-toast";
-import { ToastAction } from "./components/ui/toast";
 import Browser from "webextension-polyfill";
 import testData from "./testData";
+import { Toaster } from "./components/ui/sonner";
+import { toast } from "sonner";
 
 /**
  // todo, use toast for console.error
@@ -30,7 +29,6 @@ type AppContextType = {
         newItem: CollectionItem | CollectionItem[]
     ) => void;
     removeFromCollection: (collectionId: UUID, itemId: UUID | UUID[]) => void;
-    toastError: (description: React.ReactNode | string) => void;
     renameCollection: (id: UUID, newName: string) => void;
     // changeCollectionOrder: (id: UUID, newIndex: number) => void;
     changeCollectionOrder: (newOrder: UUID[]) => void;
@@ -59,15 +57,6 @@ const App = () => {
 
     const [scrollPos, setScrollPos] = useState(0);
 
-    const { toast } = useToast();
-    const toastError = (description: React.ReactNode | string) => {
-        console.error(description?.toString());
-        toast({
-            title: "Error",
-            variant: "destructive",
-            description,
-        });
-    };
     useLayoutEffect(() => {
         if (import.meta.env.DEV) {
             setCollectionData(testData);
@@ -209,9 +198,7 @@ const App = () => {
                             });
                         } else init.unshift(e);
                     });
-                    toast({
-                        title: "Imported Successfully",
-                    });
+                    toast.success("Imported Successfully");
                     return [...init];
                 });
             };
@@ -237,7 +224,7 @@ const App = () => {
                     withFile(file);
                 }
             } catch {
-                toastError("Couldn't load file.");
+                toast.error("Couldn't load file.");
             }
         } else {
             try {
@@ -251,7 +238,7 @@ const App = () => {
                 };
                 input.click();
             } catch (e) {
-                toastError("Couldn't load file.");
+                toast.error("Couldn't load file.");
             }
         }
     };
@@ -259,9 +246,7 @@ const App = () => {
         window.browser.storage.local.get("backup").then(({ backup }) => {
             if (backup) {
                 window.browser.storage.local.set({ collectionData: backup });
-                toast({
-                    title: "Restored Backup",
-                });
+                toast.success("Restored Backup");
             }
         });
     };
@@ -282,12 +267,14 @@ const App = () => {
     const removeCollections = (id: UUID | UUID[]) => {
         setCollectionData((init) => {
             const newCol = [...init];
+            let colNames = "";
             const remove = (_id: UUID) => {
                 const index = newCol.findIndex((e) => e.id === _id);
                 if (index >= 0) {
+                    colNames += `${newCol[index].title}, `;
                     newCol.splice(index, 1);
                 } else {
-                    toastError(
+                    toast.error(
                         `removeCollections: Collection with id ${_id} not found.`
                     );
                 }
@@ -299,20 +286,18 @@ const App = () => {
             } else {
                 remove(id);
             }
-            toast({
-                title: "Removed Collection",
-                description: `Collection removed.`,
+            // this is required because more than 2 toast can be shown with actions at the same time
+            toast.dismiss();
+            toast.success("Removed Collection", {
+                description: `[${colNames.slice(0, -2)}] removed.`,
                 duration: 10000,
-                action: (
-                    <ToastAction
-                        altText="Undo"
-                        onClick={() => {
-                            setCollectionData([...init]);
-                        }}
-                    >
-                        Undo Changes
-                    </ToastAction>
-                ),
+                //todo : undo totally restore the collection to old state, meaning thing updated after delete will be lost
+                action: {
+                    label: "Undo",
+                    onClick: () => {
+                        setCollectionData([...init]);
+                    },
+                },
             });
             return newCol;
         });
@@ -332,7 +317,7 @@ const App = () => {
                 return [...init];
             });
         } else {
-            toastError(
+            toast.error(
                 `addToCollection: Collection with id ${collectionId} not found.`
             );
         }
@@ -341,7 +326,6 @@ const App = () => {
         collectionId: UUID,
         itemId: UUID | UUID[]
     ) => {
-        //todo, provide undo?
         setCollectionData((init) => {
             // need this because splice is on deep
             const dup = JSON.parse(JSON.stringify(init)) as Collection[];
@@ -357,7 +341,7 @@ const App = () => {
                         items.splice(index, 1);
                         count++;
                     } else {
-                        toastError(
+                        toast.error(
                             `removeFromCollection: CollectionItem with id ${_id} not found.`
                         );
                     }
@@ -369,24 +353,22 @@ const App = () => {
                 } else {
                     remove(itemId);
                 }
-                toast({
-                    title: "Removed from Collection",
+
+                // this is required because more than 2 toast can be shown with actions at the same time
+                toast.dismiss();
+                toast.success("Removed from Collection", {
                     description: `Removed ${count} item(s) from collection.`,
                     duration: count > 10 ? 10000 : 5000,
-                    action: (
-                        <ToastAction
-                            altText="Undo"
-                            onClick={() => {
-                                setCollectionData(init);
-                            }}
-                        >
-                            Undo Changes
-                        </ToastAction>
-                    ),
+                    action: {
+                        label: "Undo",
+                        onClick: () => {
+                            setCollectionData(init);
+                        },
+                    },
                 });
                 return dup;
             } else {
-                toastError(
+                toast.error(
                     `removeFromCollection: Collection with id ${collectionId} not found.`
                 );
                 return init;
@@ -402,7 +384,7 @@ const App = () => {
     //             init.splice(newIndex, 0, col[0]);
     //             return [...init];
     //         });
-    //     } else toastError("Couldn't reorder.");
+    //     } else toast.error("Couldn't reorder.");
     // };
     const changeCollectionOrder = (newOrder: UUID[]) => {
         try {
@@ -413,7 +395,7 @@ const App = () => {
                 return [...init];
             });
         } catch {
-            toastError("Couldn't reorder.");
+            toast.error("Couldn't reorder.");
         }
     };
     const changeCollectionItemOrder = (colID: UUID, newOrder: UUID[]) => {
@@ -431,7 +413,7 @@ const App = () => {
                 });
             } else throw new Error();
         } catch {
-            toastError("Couldn't reorder.");
+            toast.error("Couldn't reorder.");
         }
     };
     const renameCollection = (id: UUID, newName: string) => {
@@ -440,30 +422,25 @@ const App = () => {
             setCollectionData((init) => {
                 const oldName = init[index].title;
                 init[index].title = newName;
-                toast({
-                    title: "Renamed Collection",
+                toast.success("Renamed Collection", {
                     description: `Collection "${oldName}" renamed to "${newName}".`,
-                    style: {
-                        bottom: 0,
+                    duration: 5000,
+                    action: {
+                        label: "Undo",
+                        onClick: () => {
+                            setCollectionData((init) => {
+                                init[index].title = oldName;
+                                return [...init];
+                            });
+                        },
                     },
-                    action: (
-                        <ToastAction
-                            altText="Undo"
-                            onClick={() => {
-                                setCollectionData((init) => {
-                                    init[index].title = oldName;
-                                    return [...init];
-                                });
-                            }}
-                        >
-                            Undo
-                        </ToastAction>
-                    ),
                 });
                 return [...init];
             });
         } else
-            toastError(`renameCollection: Collection with id ${id} not found.`);
+            toast.error(
+                `renameCollection: Collection with id ${id} not found.`
+            );
     };
 
     return (
@@ -477,7 +454,6 @@ const App = () => {
                     makeNewCollection,
                     removeCollections,
                     removeFromCollection,
-                    toastError,
                     renameCollection,
                     changeCollectionOrder,
                     changeCollectionItemOrder,
@@ -496,7 +472,7 @@ const App = () => {
                         <CollectionView />
                     )}
                 </div>
-                <Toaster />
+                <Toaster richColors />
             </AppContext.Provider>
         </ThemeProvider>
     );

@@ -1,5 +1,4 @@
 import browser from "webextension-polyfill";
-import { toast } from "./components/ui/use-toast";
 window.isSidePanel = window.location.href.includes("side_panel.html");
 window.isSidePanel && document.body.classList.add("sidePanel");
 

@@ -10,7 +10,7 @@ import { useAppContext } from "@/App";
 import Collection from "./Collection";
 import { getAllTabsData } from "@/utils";
 import { Reorder } from "framer-motion";
-import { toast } from "./ui/use-toast";
+import { toast } from "sonner";
 
 const CollectionView = () => {
     const {
@@ -68,10 +68,8 @@ const CollectionView = () => {
                                 );
                             })
                             .catch((e) => {
-                                toast({
-                                    title: "Error while fetching tabs data",
+                                toast.error("Error while fetching tabs data", {
                                     description: e,
-                                    variant: "destructive",
                                 });
                             });
                     }}

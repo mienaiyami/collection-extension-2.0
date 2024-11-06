@@ -22,7 +22,7 @@ import {
 } from "./ui/alert-dialog";
 import { getAllTabsData, getImgFromTab } from "@/utils";
 import { Reorder } from "framer-motion";
-import { toast, useToast } from "./ui/use-toast";
+import { toast } from "sonner";
 const CollectionItemView = () => {
     const {
         collectionData,
@@ -239,11 +239,12 @@ const CollectionItemView = () => {
                                         );
                                     })
                                     .catch((e) => {
-                                        toast({
-                                            title: "Error while fetching tabs data",
-                                            description: e,
-                                            variant: "destructive",
-                                        });
+                                        toast.error(
+                                            "Error while fetching tabs data",
+                                            {
+                                                description: e,
+                                            }
+                                        );
                                     });
                             }}
                         >
@@ -315,10 +316,8 @@ const CollectionItemView = () => {
                                             incognito: true,
                                         })
                                         .catch((e) => {
-                                            toast({
-                                                title: "Error",
+                                            toast.error("Error", {
                                                 description: e,
-                                                variant: "destructive",
                                             });
                                         });
                             }}

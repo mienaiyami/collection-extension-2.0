@@ -10,6 +10,7 @@ import { useAppContext } from "@/App";
 import { AppWindow, Check } from "lucide-react";
 
 import { Reorder, motion } from "framer-motion";
+import { toast } from "sonner";
 
 type PropType = CollectionItem & {
     changeSelected: (id: UUID, checked: boolean) => void;
@@ -20,8 +21,7 @@ type PropType = CollectionItem & {
     onShiftPlusClick: (id: UUID) => void;
 };
 const CollectionItem = (props: PropType) => {
-    const { removeFromCollection, inCollectionView, toastError } =
-        useAppContext();
+    const { removeFromCollection, inCollectionView } = useAppContext();
     const [imgLoaded, setImgLoaded] = useState(false);
 
     const draggingRef = useRef(false);
@@ -270,7 +270,7 @@ const CollectionItem = (props: PropType) => {
                                         incognito: true,
                                     })
                                     .catch((e) => {
-                                        toastError(e);
+                                        toast.error(e);
                                     });
                             })();
                         }}
