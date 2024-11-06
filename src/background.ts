@@ -27,7 +27,6 @@
 //     });
 // });
 
-// backup
 import browser from "webextension-polyfill";
 
 const backup = () =>
@@ -40,12 +39,19 @@ const backup = () =>
             });
     });
 
-browser.runtime.onInstalled.addListener(() => {
+browser.runtime.onInstalled.addListener((e) => {
+    if (e.reason === "update") {
+        browser.tabs.create({
+            active: true,
+            url: "https://github.com/mienaiyami/collection-extension-2.0/blob/main/CHANGELOG.MD",
+        });
+    }
     browser.alarms.create("backup", {
         delayInMinutes: 10,
         periodInMinutes: 10,
     });
 });
+
 browser.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === "backup") {
         //todo test

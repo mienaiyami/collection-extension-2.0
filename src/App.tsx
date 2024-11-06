@@ -44,6 +44,7 @@ type AppContextType = {
 
 const AppContext = createContext<AppContextType | null>(null);
 
+//todo export to file;
 export const useAppContext = () => {
     const context = useContext(AppContext);
     if (!context) throw new Error("AppContextProvider not used.");
