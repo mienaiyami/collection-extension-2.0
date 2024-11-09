@@ -32,12 +32,14 @@ import { appSettingSchema, initAppSetting } from "./utils";
 
 const backup = () =>
     browser.storage.local.get("collectionData").then(({ collectionData }) => {
-        if (collectionData)
-            browser.storage.local.set({ backup: collectionData }).then(() => {
-                browser.storage.local.set({
-                    lastBackup: new Date().toJSON(),
-                });
+        if (!collectionData) return;
+        if (collectionData instanceof Array && collectionData.length === 0)
+            return;
+        browser.storage.local.set({ backup: collectionData }).then(() => {
+            browser.storage.local.set({
+                lastBackup: new Date().toJSON(),
             });
+        });
     });
 
 browser.runtime.onInstalled.addListener((e) => {
@@ -90,6 +92,9 @@ browser.alarms.onAlarm.addListener((alarm) => {
                     console.log("creating backup...");
                     backup();
                 }
+            } else {
+                console.log("creating backup...");
+                backup();
             }
         });
     }
