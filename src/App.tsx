@@ -29,6 +29,7 @@ type AppContextType = {
         collectionId: UUID,
         newItem: CollectionItem | CollectionItem[]
     ) => void;
+    replaceCollection: (id: UUID, newData: CollectionItem[]) => void;
     removeFromCollection: (collectionId: UUID, itemId: UUID | UUID[]) => void;
     renameCollection: (id: UUID, newName: string) => void;
     // changeCollectionOrder: (id: UUID, newIndex: number) => void;
@@ -188,6 +189,7 @@ const App = () => {
                     */
                 data.reverse();
                 setCollectionData((init) => {
+                    const original = window.cloneJSON(init);
                     data.forEach((e) => {
                         const index = init.findIndex((a) => a.id === e.id);
                         if (index >= 0) {
@@ -199,7 +201,16 @@ const App = () => {
                             });
                         } else init.unshift(e);
                     });
-                    toast.success("Imported Successfully");
+                    toast.dismiss();
+                    toast.success("Imported Successfully", {
+                        description: `Imported ${data.length} collection(s).`,
+                        action: {
+                            label: "Undo",
+                            onClick: () => {
+                                setCollectionData(original);
+                            },
+                        },
+                    });
                     return [...init];
                 });
             };
@@ -246,14 +257,28 @@ const App = () => {
     const restoreBackup = async () => {
         window.browser.storage.local.get("backup").then(({ backup }) => {
             if (backup) {
+                const oldData = window.cloneJSON(collectionData);
                 window.browser.storage.local.set({ collectionData: backup });
-                toast.success("Restored Backup");
+
+                toast.dismiss();
+                toast.success("Restored Backup", {
+                    action: {
+                        label: "Undo",
+                        onClick: () => {
+                            window.browser.storage.local.set({
+                                collectionData: oldData,
+                            });
+                        },
+                    },
+                });
             }
         });
     };
 
     const makeNewCollection = (title: string, items: CollectionItem[] = []) => {
         const id = crypto.randomUUID();
+        // required to prevent unwanted behavior when undoing (updated collection will be lost)
+        toast.dismiss();
         setCollectionData((init) => [
             {
                 id,
@@ -315,11 +340,30 @@ const App = () => {
                 newItem instanceof Array
                     ? init[col].items.unshift(...newItem)
                     : init[col].items.unshift(newItem);
+
+                // required to prevent unwanted behavior when undoing (updated collection will be lost)
+                toast.dismiss();
                 return [...init];
             });
         } else {
             toast.error(
                 `addToCollection: Collection with id ${collectionId} not found.`
+            );
+        }
+    };
+    const replaceCollection = (id: UUID, newData: CollectionItem[]) => {
+        const index = collectionData.findIndex((e) => e.id === id);
+        if (index >= 0) {
+            setCollectionData((init) => {
+                init[index].items = newData;
+
+                // required to prevent unwanted behavior when undoing (updated collection will be lost)
+                toast.dismiss();
+                return window.cloneJSON(init);
+            });
+        } else {
+            toast.error(
+                `replaceCollection: Collection with id ${id} not found.`
             );
         }
     };
@@ -393,6 +437,9 @@ const App = () => {
                 init.sort(
                     (a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id)
                 );
+
+                // required to prevent unwanted behavior when undoing (updated collection will be lost)
+                toast.dismiss();
                 return [...init];
             });
         } catch {
@@ -410,6 +457,9 @@ const App = () => {
                             newOrder.indexOf(a.id) - newOrder.indexOf(b.id)
                     );
                     init[colIdx].items = updatedColItems;
+
+                    // required to prevent unwanted behavior when undoing (updated collection will be lost)
+                    toast.dismiss();
                     return [...init];
                 });
             } else throw new Error();
@@ -423,6 +473,8 @@ const App = () => {
             setCollectionData((init) => {
                 const oldName = init[index].title;
                 init[index].title = newName;
+
+                toast.dismiss();
                 toast.success("Renamed Collection", {
                     description: `Collection "${oldName}" renamed to "${newName}".`,
                     duration: 5000,
@@ -456,6 +508,7 @@ const App = () => {
                         makeNewCollection,
                         removeCollections,
                         removeFromCollection,
+                        replaceCollection,
                         renameCollection,
                         changeCollectionOrder,
                         changeCollectionItemOrder,

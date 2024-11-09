@@ -19,8 +19,12 @@ const AddUrlManualDialog = () => {
     const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(
         null
     );
-    const { addToCollection, inCollectionView, collectionData } =
-        useAppContext();
+    const {
+        addToCollection,
+        inCollectionView,
+        collectionData,
+        replaceCollection,
+    } = useAppContext();
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -53,13 +57,13 @@ const AddUrlManualDialog = () => {
                             with
                             <code className="bg-foreground/10 rounded-sm px-2 py-0.5 whitespace-nowrap">
                                 {" "}
-                                | title
+                                || title || imageURL
                             </code>
-                            .
+                            Make sure that the title should not contain "||".
                         </DialogDescription>
                         <textarea
                             className="w-full h-32 p-2 rounded-md bg-foreground/10 max-h-[40vh] whitespace-nowrap"
-                            placeholder="https://example.com | Example"
+                            placeholder="https://example.com | Example | https://image.url.png"
                             ref={(node) => {
                                 inputRef.current = node;
                             }}
@@ -73,10 +77,12 @@ const AddUrlManualDialog = () => {
                         <DialogDescription>
                             Upload a file containing URLs to add to collection.
                             To add url with title, follow the url with
-                            <code> | title</code>. For example:{" "}
+                            <code> | title | imageURL</code>. For example:{" "}
                             <code className="bg-foreground/10 px-2 py-0.5 rounded-lg whitespace-nowrap">
-                                https://example.com | Example
+                                https://example.com || Example ||
+                                https://image.url.png
                             </code>
+                            . Make sure that the title should not contain "||".
                         </DialogDescription>
                         <Input
                             type="file"
@@ -97,14 +103,39 @@ const AddUrlManualDialog = () => {
                                         const urls = str
                                             .split("\n")
                                             .map((e) => e.trim());
-                                        const items = urls.map((e) => ({
-                                            date: new Date().toISOString(),
-                                            id: crypto.randomUUID(),
-                                            img: "",
-                                            title:
-                                                e.split(" | ")[1]?.trim() || e,
-                                            url: e.split(" | ")[0].trim(),
-                                        }));
+                                        const items = urls
+                                            .map((e) => {
+                                                const split = e.split("||");
+                                                console.log(split);
+                                                try {
+                                                    const url = new URL(
+                                                        split[0].trim()
+                                                    );
+                                                    const title =
+                                                        split[1]?.trim() ||
+                                                        url.hostname;
+                                                    const img = split[2]
+                                                        ? new URL(
+                                                              split[2]?.trim()
+                                                          )
+                                                        : "";
+                                                    return {
+                                                        date: new Date().toISOString(),
+                                                        id: crypto.randomUUID(),
+                                                        title,
+                                                        url: url.toString(),
+                                                        img: img.toString(),
+                                                    };
+                                                } catch (e) {
+                                                    toast.error(
+                                                        `Failed to parse: ${e}`
+                                                    );
+                                                    return null;
+                                                }
+                                            })
+                                            .filter(
+                                                (e) => e !== null
+                                            ) as CollectionItem[];
                                         if (items.length === 0)
                                             return toast.error("No URLs found");
                                         if (inCollectionView) {
@@ -119,13 +150,14 @@ const AddUrlManualDialog = () => {
                                                 inCollectionView,
                                                 items
                                             );
+                                            toast.dismiss();
                                             toast.success(
                                                 `${items.length} URLs added to collection`,
                                                 {
                                                     action: {
                                                         label: "Undo",
                                                         onClick: () => {
-                                                            addToCollection(
+                                                            replaceCollection(
                                                                 inCollectionView,
                                                                 oldData
                                                             );
