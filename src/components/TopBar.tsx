@@ -286,7 +286,7 @@ const TopBar = () => {
                                                         }}
                                                         min={10}
                                                         max={30}
-                                                        step={0.2}
+                                                        step={0.1}
                                                         onChange={(e) => {
                                                             setAppSetting(
                                                                 (init) => {
