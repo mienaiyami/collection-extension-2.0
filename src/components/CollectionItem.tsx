@@ -128,7 +128,7 @@ const CollectionItem = (props: PropType) => {
                         // if (e.key === "Escape" && dragging) setDragging(null);
                     }}
                 >
-                    <div className="w-full h-full p-1 overflow-hidden grid place-items-center">
+                    <div className="w-full h-full overflow-hidden grid place-items-center">
                         <AppWindow
                             className="h-full w-full p-3.5"
                             style={{
@@ -137,7 +137,7 @@ const CollectionItem = (props: PropType) => {
                         />
                         <img
                             src={props.img}
-                            className="h-full w-auto object-cover rounded-sm"
+                            className="max-h-24 p-1 w-max rounded-sm"
                             draggable={false}
                             onLoad={(e) => {
                                 setImgLoaded(true);
