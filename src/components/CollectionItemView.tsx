@@ -23,6 +23,7 @@ import {
 import { getAllTabsData, getImgFromTab } from "@/utils";
 import { Reorder } from "framer-motion";
 import { toast } from "sonner";
+import AddUrlManualDialog from "./AddUrlManualDialog";
 const CollectionItemView = () => {
     const {
         collectionData,
@@ -105,6 +106,11 @@ const CollectionItemView = () => {
         setSelected([]);
         const keyHandler = (e: KeyboardEvent) => {
             if (!currentCollection) return;
+            const isTextInput =
+                document.activeElement?.tagName === "INPUT" ||
+                document.activeElement?.tagName === "TEXTAREA" ||
+                (document.activeElement as HTMLElement)?.isContentEditable;
+            if (isTextInput) return;
             switch (e.code) {
                 case "Delete":
                     selected_deleteRef.current?.click();
@@ -190,7 +196,7 @@ const CollectionItemView = () => {
         <AlertDialog>
             <div className="min-h-full grid grid-rows-[3rem_auto]">
                 {selected.length === 0 && (
-                    <div className="p-1 grid grid-cols-2 h-full items-center">
+                    <div className="p-1 grid grid-cols-[1fr_1fr_0.3fr] h-full items-center">
                         <Button
                             variant={"ghost"}
                             onClick={() => {
@@ -225,6 +231,7 @@ const CollectionItemView = () => {
                                         }
                                     });
                             }}
+                            title="Add current tab to collection"
                         >
                             Add Current Tab
                         </Button>
@@ -247,9 +254,11 @@ const CollectionItemView = () => {
                                         );
                                     });
                             }}
+                            title="Add all opened tabs to collection"
                         >
                             Add All Opened Tabs
                         </Button>
+                        <AddUrlManualDialog />
                     </div>
                 )}
                 {selected.length > 0 && (
