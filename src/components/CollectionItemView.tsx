@@ -340,21 +340,24 @@ const CollectionItemView = () => {
                             variant={"ghost"}
                             size={"icon"}
                             ref={selected_copy}
-                            title="Copy"
+                            title="Copy Data"
                             onClick={() => {
                                 const items = collectionData
                                     .find((e) => e.id === inCollectionView)
                                     ?.items.filter((e) =>
                                         selected.includes(e.id)
                                     );
-                                if (items)
-                                    //todo add toast
+                                if (items && items.length > 0) {
                                     navigator.clipboard.writeText(
                                         window.formatCopyData(
                                             appSetting.copyDataFormat,
                                             items
                                         )
                                     );
+                                    toast.success(
+                                        `Copied ${items.length} items`
+                                    );
+                                }
                             }}
                         >
                             <Copy />

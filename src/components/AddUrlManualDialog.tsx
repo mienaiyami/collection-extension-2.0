@@ -106,7 +106,6 @@ const AddUrlManualDialog = () => {
                                         const items = urls
                                             .map((e) => {
                                                 const split = e.split("||");
-                                                console.log(split);
                                                 try {
                                                     const url = new URL(
                                                         split[0].trim()
