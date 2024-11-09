@@ -55,15 +55,15 @@ const AddUrlManualDialog = () => {
                             Enter URLs (new line separated) to add to
                             collection. To add url with title, follow the url
                             with
-                            <code className="bg-foreground/10 rounded-sm px-2 py-0.5 whitespace-nowrap">
+                            <code className="bg-foreground/10 rounded-sm px-2 py-0.5">
                                 {" "}
                                 || title || imageURL
                             </code>
                             Make sure that the title should not contain "||".
                         </DialogDescription>
                         <textarea
-                            className="w-full h-32 p-2 rounded-md bg-foreground/10 max-h-[40vh] whitespace-nowrap"
-                            placeholder="https://example.com | Example | https://image.url.png"
+                            className="w-full h-32 p-2 rounded-md bg-foreground/10 max-h-[40vh] whitespace-nowrap font-mono"
+                            placeholder="https://example.com || Example || https://image.url.png"
                             ref={(node) => {
                                 inputRef.current = node;
                             }}
@@ -78,7 +78,7 @@ const AddUrlManualDialog = () => {
                             Upload a file containing URLs to add to collection.
                             To add url with title, follow the url with
                             <code> | title | imageURL</code>. For example:{" "}
-                            <code className="bg-foreground/10 px-2 py-0.5 rounded-lg whitespace-nowrap">
+                            <code className="bg-foreground/10 px-2 py-0.5 rounded-lg">
                                 https://example.com || Example ||
                                 https://image.url.png
                             </code>

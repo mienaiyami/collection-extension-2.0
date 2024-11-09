@@ -262,6 +262,7 @@ const App = () => {
 
                 toast.dismiss();
                 toast.success("Restored Backup", {
+                    duration: 10000,
                     action: {
                         label: "Undo",
                         onClick: () => {
