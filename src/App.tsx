@@ -73,18 +73,41 @@ const App = () => {
                     setFirstDone(true);
                 });
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const replacer = (key: string, value: any) => {
+                if (key === "") return value;
+                if (Number.isInteger(Number(key))) return value;
+                if (key === "id") return value;
+                if (key === "title") return value;
+                if (key === "items") {
+                    let str = "";
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    value.forEach((e: any) => {
+                        str += e.id;
+                    });
+                    return str;
+                }
+            };
             const onStorageChangeListener = (changes: {
                 [key: string]: Browser.Storage.StorageChange;
             }) => {
                 const c = changes.collectionData;
+                /*
+                benchmark result on 38MB data for stringify
+                1. without replacer: ~300ms
+                2. replacer as  ["id", "title", "items"] : ~1.4ms
+                3. replacer fn : 0.8ms
+                */
                 if (
                     c &&
                     !(
                         (c.newValue as Collection[]).length === 0 &&
                         (c.oldValue as Collection[]).length !== 0
                     ) &&
-                    //! todo : temp fix, need to find a better way to compare or move to background.ts
-                    JSON.stringify(c.newValue) !== JSON.stringify(c.oldValue)
+                    //! todo check for more optimization
+                    // using ["id", "title", "items"]
+                    JSON.stringify(c.newValue, replacer) !==
+                        JSON.stringify(c.oldValue, replacer)
                 )
                     setCollectionData(c.newValue as Collection[]);
             };
