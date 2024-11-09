@@ -225,7 +225,7 @@ const TopBar = () => {
                         </Button>
                     </div>
                 </div>
-                <DialogContent className="max-w-sm">
+                <DialogContent className="max-w-sm sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="text-2xl">Settings</DialogTitle>
                         <DialogDescription>
