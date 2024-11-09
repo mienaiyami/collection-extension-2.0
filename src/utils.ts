@@ -1,19 +1,44 @@
 import browser from "webextension-polyfill";
-window.isSidePanel = window.location.href.includes("side_panel.html");
-window.isSidePanel && document.body.classList.add("sidePanel");
+import { z } from "zod";
 
-window.browser = browser;
-window.wait = (ms: number) =>
-    new Promise((res) => {
-        setTimeout(res, ms);
-    });
-window.cloneJSON = (obj) => JSON.parse(JSON.stringify(obj));
+// need this coz `window` is not defined in the background script
+if (typeof window !== "undefined") {
+    self.isSidePanel =
+        window && window.location.href.includes("side_panel.html");
+    if (self.isSidePanel) document.body.classList.add("sidePanel");
+
+    self.browser = browser;
+    self.wait = (ms: number) =>
+        new Promise((res) => {
+            setTimeout(res, ms);
+        });
+    self.cloneJSON = (obj) => JSON.parse(JSON.stringify(obj));
+    self.formatCopyData = (
+        format: string,
+        data: CollectionItem | CollectionItem[]
+    ) => {
+        if (!format) format = "{{url}}";
+        const formatData = (data: CollectionItem, i?: number) => {
+            return format
+                .replace(/{{id}}/g, data.id)
+                .replace(/{{title}}/g, data.title)
+                .replace(/{{url}}/g, data.url)
+                .replace(/{{img}}/g, data.img)
+                .replace(/{{date}}/g, data.date)
+                .replace(/{{i}}/g, String(i));
+        };
+        if (data instanceof Array) {
+            return data.map((e, i) => formatData(e, i + 1)).join("\n");
+        }
+        return formatData(data);
+    };
+}
 const systemUrlPattern =
     /^(about|chrome|edge|brave|opera|vivaldi|firefox):\/\//i;
 export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
     if (!tab.id || (tab.url && systemUrlPattern.test(tab.url))) return "";
     try {
-        const result = await window.browser.scripting.executeScript({
+        const result = await browser.scripting.executeScript({
             target: {
                 tabId: tab.id,
             },
@@ -29,12 +54,12 @@ export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
             },
         });
         if (result && result[0].result) return result[0].result as string;
-        if (!window.browser.tabs.captureTab! && !tab.active)
+        if (!browser.tabs.captureTab! && !tab.active)
             return tab.favIconUrl || "";
 
         const capture =
-            (await window.browser.tabs.captureTab?.(tab.id)) ||
-            (await window.browser.tabs.captureVisibleTab());
+            (await browser.tabs.captureTab?.(tab.id)) ||
+            (await browser.tabs.captureVisibleTab());
         return new Promise((res: (value: string) => void) => {
             const canvas = document.createElement("canvas");
             const w = tab.width || 128,
@@ -67,15 +92,15 @@ export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
 };
 
 export const getAllTabsData = async () => {
-    const tabs = await window.browser.tabs.query({ currentWindow: true });
+    const tabs = await browser.tabs.query({ currentWindow: true });
     const date = new Date();
     const tabsData: CollectionItem[] = await Promise.all(
         tabs.map(async (tab) => {
-            if (tab.status === "loading") await window.wait(1000);
-            if (tab.status === "loading") await window.wait(500);
+            if (tab.status === "loading") await self.wait(1000);
+            if (tab.status === "loading") await self.wait(500);
             const img = await Promise.race([
                 getImgFromTab(tab),
-                window.wait(500).then(() => tab.favIconUrl || ""),
+                self.wait(500).then(() => tab.favIconUrl || ""),
             ]);
             if (tab.status === "loading") console.warn("Tab didn't load", tab);
             if (!tab.title || !tab.url)
@@ -101,9 +126,16 @@ export const getAllTabsData = async () => {
     return tabsData;
 };
 
-export const initAppSetting = {
-    font: {
-        size: 16,
-        family: "Inter",
-    },
-};
+export const appSettingSchema = z
+    .object({
+        version: z.number().default(1),
+        font: z
+            .object({
+                size: z.number().default(16),
+                family: z.string().default("Inter"),
+            })
+            .default({}),
+        copyDataFormat: z.string().default("{{url}}"),
+    })
+    .strip();
+export const initAppSetting = appSettingSchema.parse({});

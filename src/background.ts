@@ -28,7 +28,7 @@
 // });
 
 import browser from "webextension-polyfill";
-import { initAppSetting } from "./utils";
+import { appSettingSchema, initAppSetting } from "./utils";
 
 const backup = () =>
     browser.storage.local.get("collectionData").then(({ collectionData }) => {
@@ -41,14 +41,28 @@ const backup = () =>
     });
 
 browser.runtime.onInstalled.addListener((e) => {
-    if (
-        e.reason === "update" &&
-        e.previousVersion !== browser.runtime.getManifest().version
-    ) {
-        browser.tabs.create({
-            active: true,
-            url: "https://github.com/mienaiyami/collection-extension-2.0/blob/main/CHANGELOG.MD",
-        });
+    if (e.reason === "update") {
+        (() => {
+            browser.storage.local.get("appSetting").then(({ appSetting }) => {
+                if (appSetting) {
+                    if (
+                        !(appSetting as AppSettingType).version ||
+                        (appSetting as AppSettingType).version <
+                            initAppSetting.version
+                    ) {
+                        const newSettings = appSettingSchema.parse(appSetting);
+                        browser.storage.local.set({
+                            appSetting: newSettings,
+                        });
+                    }
+                }
+            });
+        })();
+        if (e.previousVersion !== browser.runtime.getManifest().version)
+            browser.tabs.create({
+                active: true,
+                url: "https://github.com/mienaiyami/collection-extension-2.0/blob/main/CHANGELOG.MD",
+            });
     }
     if (e.reason === "install") {
         browser.storage.local.set({

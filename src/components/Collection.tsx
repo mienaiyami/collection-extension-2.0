@@ -22,6 +22,7 @@ import {
 } from "./ui/alert-dialog";
 import { getImgFromTab } from "@/utils";
 import { Reorder, motion } from "framer-motion";
+import { useAppSetting } from "@/hooks/appSetting-provider";
 
 type PropType = {
     id: UUID;
@@ -42,6 +43,8 @@ const Collection = ({
         removeCollections,
         openCollection,
     } = useAppContext();
+
+    const { appSetting } = useAppSetting();
 
     const draggingRef = useRef(false);
 
@@ -205,9 +208,10 @@ const Collection = ({
                                         (e) => e.id === item.id
                                     );
                                     if (collection) {
-                                        const data = collection.items
-                                            .map((e) => e.url)
-                                            .join("\n");
+                                        const data = window.formatCopyData(
+                                            appSetting.copyDataFormat,
+                                            collection.items
+                                        );
                                         navigator.clipboard.writeText(data);
                                     }
                                 })();

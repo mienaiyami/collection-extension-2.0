@@ -58,6 +58,14 @@ const TopBar = () => {
     const [first, setFirst] = useState(true);
     const [lastBackup, setLastBackup] = useState("");
 
+    const [copyDataFormat, setCopyDataFormat] = useState({
+        value: appSetting.copyDataFormat,
+        timeout: null as NodeJS.Timeout | null,
+    });
+    useLayoutEffect(() => {
+        if (copyDataFormat.timeout) clearTimeout(copyDataFormat.timeout);
+        setCopyDataFormat({ value: appSetting.copyDataFormat, timeout: null });
+    }, [appSetting.copyDataFormat]);
     useLayoutEffect(() => {
         if (inCollectionView) {
             const current = collectionData.find(
@@ -380,6 +388,45 @@ const TopBar = () => {
                                             Reset
                                         </Button>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-2 p-2 border rounded-md">
+                            <div className="flex flex-col gap-2 items-start w-full">
+                                <span className="font-semibold">
+                                    Copy Data Format
+                                </span>
+                                <div className="flex flex-col gap-2 px-2">
+                                    <pre className="p-2 text-xs rounded-sm font-mono whitespace-break-spaces">
+                                        Available variables:
+                                        {`\n{{i}}, {{title}}, {{url}}, {{img}}, {{date}}, {{id}}`}
+                                    </pre>
+                                    <textarea
+                                        className="p-2 text-sm rounded-md min-h-[2em] max-h-[5em] bg-foreground/5"
+                                        spellCheck={false}
+                                        value={copyDataFormat.value}
+                                        onChange={(e) => {
+                                            if (copyDataFormat.timeout)
+                                                clearTimeout(
+                                                    copyDataFormat.timeout
+                                                );
+                                            const value = e.currentTarget.value;
+                                            setCopyDataFormat({
+                                                value,
+                                                timeout: setTimeout(() => {
+                                                    setAppSetting((init) => {
+                                                        const newSetting =
+                                                            window.cloneJSON(
+                                                                init
+                                                            );
+                                                        newSetting.copyDataFormat =
+                                                            value;
+                                                        return newSetting;
+                                                    });
+                                                }, 2000),
+                                            });
+                                        }}
+                                    ></textarea>
                                 </div>
                             </div>
                         </div>

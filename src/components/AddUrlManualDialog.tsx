@@ -58,7 +58,7 @@ const AddUrlManualDialog = () => {
                             .
                         </DialogDescription>
                         <textarea
-                            className="w-full h-32 p-2 rounded-xl bg-foreground/10 max-h-[40vh] whitespace-nowrap"
+                            className="w-full h-32 p-2 rounded-md bg-foreground/10 max-h-[40vh] whitespace-nowrap"
                             placeholder="https://example.com | Example"
                             ref={(node) => {
                                 inputRef.current = node;

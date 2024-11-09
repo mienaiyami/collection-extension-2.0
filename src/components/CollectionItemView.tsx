@@ -24,6 +24,7 @@ import { getAllTabsData, getImgFromTab } from "@/utils";
 import { Reorder } from "framer-motion";
 import { toast } from "sonner";
 import AddUrlManualDialog from "./AddUrlManualDialog";
+import { useAppSetting } from "@/hooks/appSetting-provider";
 const CollectionItemView = () => {
     const {
         collectionData,
@@ -33,6 +34,7 @@ const CollectionItemView = () => {
         changeCollectionItemOrder,
         openCollection,
     } = useAppContext();
+    const { appSetting } = useAppSetting();
 
     const [selected, setSelected] = useState<UUID[]>([]);
 
@@ -348,7 +350,10 @@ const CollectionItemView = () => {
                                 if (items)
                                     //todo add toast
                                     navigator.clipboard.writeText(
-                                        items.map((e) => e.url).join("\n")
+                                        window.formatCopyData(
+                                            appSetting.copyDataFormat,
+                                            items
+                                        )
                                     );
                             }}
                         >

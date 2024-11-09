@@ -7,22 +7,13 @@ import {
     useState,
 } from "react";
 
-type AppSetting = {
-    font: {
-        /** `px` value */
-        size: number;
-        /** full font name */
-        family: string;
-    };
-};
-
 type AppSettingProviderProps = {
     children: React.ReactNode;
 };
 
 type AppSettingProviderState = {
-    appSetting: AppSetting;
-    setAppSetting: React.Dispatch<React.SetStateAction<AppSetting>>;
+    appSetting: AppSettingType;
+    setAppSetting: React.Dispatch<React.SetStateAction<AppSettingType>>;
 };
 
 const AppSettingContext = createContext<AppSettingProviderState | undefined>(
@@ -40,7 +31,8 @@ export const useAppSetting = () => {
 };
 
 export const AppSettingProvider = ({ children }: AppSettingProviderProps) => {
-    const [appSetting, setAppSetting] = useState<AppSetting>(initAppSetting);
+    const [appSetting, setAppSetting] =
+        useState<AppSettingType>(initAppSetting);
     const [first, setFirst] = useState(false);
 
     useLayoutEffect(() => {
@@ -52,9 +44,9 @@ export const AppSettingProvider = ({ children }: AppSettingProviderProps) => {
                     .then(({ appSetting: _appSetting }) => {
                         if (
                             _appSetting &&
-                            Object.keys(_appSetting).includes("font")
+                            Object.keys(_appSetting).includes("version")
                         )
-                            setAppSetting(_appSetting as AppSetting);
+                            setAppSetting(_appSetting as AppSettingType);
                         else window.browser.storage.local.set({ appSetting });
                     });
             }

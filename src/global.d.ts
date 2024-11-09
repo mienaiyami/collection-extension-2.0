@@ -1,4 +1,6 @@
 import browser from "webextension-polyfill";
+import { appSettingSchema } from "./utils";
+import { z } from "zod";
 
 declare global {
     type UUID = ReturnType<Window["crypto"]["randomUUID"]>;
@@ -23,6 +25,11 @@ declare global {
         shiftKeyHeld: boolean;
         browser: typeof browser;
         cloneJSON: <T>(obj: T) => T;
+        formatCopyData: (
+            format: string,
+            data: CollectionItem | CollectionItem[]
+        ) => string;
     }
+    type AppSettingType = z.infer<typeof appSettingSchema>;
 }
 export {};
