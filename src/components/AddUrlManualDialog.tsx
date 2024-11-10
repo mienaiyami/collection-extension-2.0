@@ -14,6 +14,8 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAppContext } from "@/App";
 import { DialogClose } from "@radix-ui/react-dialog";
+import { Pencil } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 const AddUrlManualDialog = () => {
     const [selectedTab, setSelectedTab] = useState("direct");
     const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(
@@ -27,12 +29,21 @@ const AddUrlManualDialog = () => {
     } = useAppContext();
     return (
         <Dialog>
-            <DialogTrigger asChild>
-                <Button variant="ghost" title="Add urls manually">
-                    manual
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <DialogTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            // title="Add urls manually"
+                        >
+                            {/* <file-pen-line></file-pen-line> */}
+                            <Pencil />
+                        </Button>
+                    </DialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Manually Add URLs</TooltipContent>
+            </Tooltip>
+            <DialogContent className="max-w-sm sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Add Links</DialogTitle>
                 </DialogHeader>
@@ -62,7 +73,7 @@ const AddUrlManualDialog = () => {
                             Make sure that the title should not contain "||".
                         </DialogDescription>
                         <textarea
-                            className="w-full h-32 p-2 rounded-md bg-foreground/10 max-h-[40vh] whitespace-nowrap font-mono"
+                            className="w-full min-w-[4rem] h-32 p-2 rounded-md bg-foreground/10 max-h-[40vh] whitespace-nowrap font-mono"
                             placeholder="https://example.com || Example || https://image.url.png"
                             ref={(node) => {
                                 inputRef.current = node;

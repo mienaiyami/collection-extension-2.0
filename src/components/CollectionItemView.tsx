@@ -8,7 +8,7 @@ import React, {
 import { Button } from "./ui/button";
 import { useAppContext } from "@/App";
 import CollectionItem from "./CollectionItem";
-import { Copy, Trash, X } from "lucide-react";
+import { Copy, CopyPlus, FilePlus, Trash, X } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -25,6 +25,13 @@ import { Reorder } from "framer-motion";
 import { toast } from "sonner";
 import AddUrlManualDialog from "./AddUrlManualDialog";
 import { useAppSetting } from "@/hooks/appSetting-provider";
+import {
+    TooltipProvider,
+    TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+} from "./ui/tooltip";
+import { Separator } from "./ui/separator";
 const CollectionItemView = () => {
     const {
         collectionData,
@@ -198,69 +205,93 @@ const CollectionItemView = () => {
         <AlertDialog>
             <div className="min-h-full grid grid-rows-[3rem_auto]">
                 {selected.length === 0 && (
-                    <div className="p-1 grid grid-cols-[1fr_1fr_0.3fr] h-full items-center">
-                        <Button
-                            variant={"ghost"}
-                            onClick={() => {
-                                window.browser.tabs
-                                    .query({
-                                        currentWindow: true,
-                                        active: true,
-                                    })
-                                    .then((tabs) => {
-                                        const date = new Date();
-                                        if (tabs[0]) {
-                                            getImgFromTab(tabs[0]).then(
-                                                (img) => {
-                                                    const item: CollectionItem =
-                                                        {
-                                                            date: date.toISOString(),
-                                                            id: crypto.randomUUID(),
-                                                            img,
-                                                            title:
-                                                                tabs[0].title ||
-                                                                "title",
-                                                            url:
-                                                                tabs[0].url ||
-                                                                "",
-                                                        };
+                    <div className="p-1 grid grid-cols-[1fr_1px_1fr_1px_0.4fr] h-full items-center">
+                        <TooltipProvider
+                            disableHoverableContent
+                            delayDuration={200}
+                            skipDelayDuration={500}
+                        >
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant={"ghost"}
+                                        onClick={() => {
+                                            window.browser.tabs
+                                                .query({
+                                                    currentWindow: true,
+                                                    active: true,
+                                                })
+                                                .then((tabs) => {
+                                                    const date = new Date();
+                                                    if (tabs[0]) {
+                                                        getImgFromTab(
+                                                            tabs[0]
+                                                        ).then((img) => {
+                                                            const item: CollectionItem =
+                                                                {
+                                                                    date: date.toISOString(),
+                                                                    id: crypto.randomUUID(),
+                                                                    img,
+                                                                    title:
+                                                                        tabs[0]
+                                                                            .title ||
+                                                                        "title",
+                                                                    url:
+                                                                        tabs[0]
+                                                                            .url ||
+                                                                        "",
+                                                                };
+                                                            addToCollection(
+                                                                currentCollection.id,
+                                                                item
+                                                            );
+                                                        });
+                                                    }
+                                                });
+                                        }}
+                                        // title="Add current tab to collection"
+                                    >
+                                        <FilePlus />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">
+                                    Add current tab to collection
+                                </TooltipContent>
+                            </Tooltip>
+                            <Separator orientation="vertical" />
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant={"ghost"}
+                                        onClick={() => {
+                                            getAllTabsData()
+                                                .then((items) => {
                                                     addToCollection(
                                                         currentCollection.id,
-                                                        item
+                                                        items
                                                     );
-                                                }
-                                            );
-                                        }
-                                    });
-                            }}
-                            title="Add current tab to collection"
-                        >
-                            Add Current Tab
-                        </Button>
-                        <Button
-                            variant={"ghost"}
-                            onClick={() => {
-                                getAllTabsData()
-                                    .then((items) => {
-                                        addToCollection(
-                                            currentCollection.id,
-                                            items
-                                        );
-                                    })
-                                    .catch((e) => {
-                                        toast.error(
-                                            "Error while fetching tabs data",
-                                            {
-                                                description: e,
-                                            }
-                                        );
-                                    });
-                            }}
-                            title="Add all opened tabs to collection"
-                        >
-                            Add All Opened Tabs
-                        </Button>
-                        <AddUrlManualDialog />
+                                                })
+                                                .catch((e) => {
+                                                    toast.error(
+                                                        "Error while fetching tabs data",
+                                                        {
+                                                            description: e,
+                                                        }
+                                                    );
+                                                });
+                                        }}
+                                        // title="Add all opened tabs to collection"
+                                    >
+                                        <CopyPlus />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">
+                                    Add all opened tabs to collection
+                                </TooltipContent>
+                            </Tooltip>
+                            <Separator orientation="vertical" />
+                            <AddUrlManualDialog />
+                        </TooltipProvider>
                     </div>
                 )}
                 {selected.length > 0 && (
