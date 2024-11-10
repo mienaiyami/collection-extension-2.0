@@ -3,6 +3,8 @@
 **Dropping support for Microsoft Add-ons store.**
 Microsoft Add-ons store support was dropped due to their 1 week review process, while Chrome and Firefox only takes less than a day. You can still use the extension from chrome web store, it works in Edge as well.
 
+Extension version in firefox is showing "dev", it is not a dev version, it is just something I missed while adding firefox support. It has been fixed for next scheduled update.
+
 - added: new app font settings and additional settings for more customization.
 - added: option to format copied data.
 - added: option to manually add items to collection.

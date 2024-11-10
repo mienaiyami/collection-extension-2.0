@@ -252,11 +252,7 @@ const TopBar = () => {
                         <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
                             <span className="font-semibold">Version</span>
                             <div className="flex flex-row gap-2 ml-auto">
-                                {window.location.protocol ===
-                                "chrome-extension:"
-                                    ? window.browser.runtime.getManifest()
-                                          .version
-                                    : "dev"}
+                                {window.browser.runtime.getManifest().version}
                             </div>
                         </div>
                         <div className="flex flex-col gap-2 p-2 border rounded-md">
