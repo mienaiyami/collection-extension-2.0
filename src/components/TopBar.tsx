@@ -265,11 +265,11 @@ const TopBar = () => {
                                     Font Options
                                 </span>
                                 <div className="flex flex-col gap-2 px-4 py-2">
-                                    <TooltipProvider>
-                                        <Tooltip
-                                            delayDuration={0}
-                                            disableHoverableContent
-                                        >
+                                    <TooltipProvider
+                                        delayDuration={100}
+                                        disableHoverableContent
+                                    >
+                                        <Tooltip>
                                             <TooltipTrigger className="cursor-default">
                                                 <Label className="flex flex-row items-center justify-start gap-2">
                                                     <span className="min-w-[6rem] text-left">
@@ -281,16 +281,22 @@ const TopBar = () => {
                                                             appSetting.font.size
                                                         }
                                                         onKeyDown={(e) => {
-                                                            if (
+                                                            const allowedKeys =
                                                                 [
                                                                     "ArrowUp",
                                                                     "ArrowDown",
-                                                                ].includes(
+                                                                    "Tab",
+                                                                    "Control",
+                                                                    "Shift",
+                                                                    "Alt",
+                                                                    "Escape",
+                                                                ];
+                                                            if (
+                                                                !allowedKeys.includes(
                                                                     e.key
                                                                 )
                                                             )
-                                                                return;
-                                                            e.preventDefault();
+                                                                e.preventDefault();
                                                         }}
                                                         min={10}
                                                         max={30}
@@ -335,12 +341,7 @@ const TopBar = () => {
                                                 </p>
                                             </TooltipContent>
                                         </Tooltip>
-                                    </TooltipProvider>
-                                    <TooltipProvider>
-                                        <Tooltip
-                                            delayDuration={0}
-                                            disableHoverableContent
-                                        >
+                                        <Tooltip>
                                             <TooltipTrigger className="cursor-default">
                                                 <Label className="flex flex-row items-center justify-start gap-2">
                                                     <span className="min-w-[6rem] text-left">
