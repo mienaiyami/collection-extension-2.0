@@ -1,7 +1,10 @@
 ## v2.3.0
 
-**Dropping support for Microsoft Add-ons store.**
+### **Dropping support for Microsoft Add-ons store.**
+
 Microsoft Add-ons store support was dropped due to their 1 week review process, while Chrome and Firefox only takes less than a day. You can still use the extension from chrome web store, it works in Edge as well.
+
+Chrome Store (works on all chromium browsers) : <https://chromewebstore.google.com/detail/collections/kcijpmmfajideceadmcihckmodaiehpm>
 
 Extension version in firefox is showing "dev", it is not a dev version, it is just something I missed while adding firefox support. It has been fixed for next scheduled update.
 
