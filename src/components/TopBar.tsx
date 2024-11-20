@@ -145,7 +145,7 @@ const TopBar = () => {
                                     }
                                 }}
                                 onChange={(e) => {
-                                    const value = e.currentTarget.value;
+                                    const value = e.currentTarget?.value;
                                     if (value) setTitle(value);
                                 }}
                             />
@@ -300,6 +300,10 @@ const TopBar = () => {
                                                         onChange={(e) => {
                                                             setAppSetting(
                                                                 (init) => {
+                                                                    if (
+                                                                        !e.currentTarget
+                                                                    )
+                                                                        return init;
                                                                     const newSetting =
                                                                         window.cloneJSON(
                                                                             init
@@ -356,6 +360,10 @@ const TopBar = () => {
                                                                         window.cloneJSON(
                                                                             init
                                                                         );
+                                                                    if (
+                                                                        !e.currentTarget
+                                                                    )
+                                                                        return init;
                                                                     newSetting.font.family =
                                                                         e.currentTarget.value;
                                                                     return newSetting;
@@ -407,6 +415,7 @@ const TopBar = () => {
                                                 clearTimeout(
                                                     copyDataFormat.timeout
                                                 );
+                                            if (!e.currentTarget) return;
                                             const value = e.currentTarget.value;
                                             setCopyDataFormat({
                                                 value,

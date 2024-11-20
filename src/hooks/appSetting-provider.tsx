@@ -1,11 +1,6 @@
 import { initAppSetting } from "@/utils";
-import {
-    createContext,
-    useContext,
-    useEffect,
-    useLayoutEffect,
-    useState,
-} from "react";
+import { createContext, useContext, useLayoutEffect, useState } from "react";
+import Browser from "webextension-polyfill";
 
 type AppSettingProviderProps = {
     children: React.ReactNode;
@@ -36,21 +31,40 @@ export const AppSettingProvider = ({ children }: AppSettingProviderProps) => {
     const [first, setFirst] = useState(false);
 
     useLayoutEffect(() => {
-        if (!import.meta.env.DEV) {
-            if (!first) {
-                setFirst(true);
-                window.browser.storage.local
-                    .get()
-                    .then(({ appSetting: _appSetting }) => {
-                        if (
-                            _appSetting &&
-                            Object.keys(_appSetting).includes("version")
-                        )
-                            setAppSetting(_appSetting as AppSettingType);
-                        else window.browser.storage.local.set({ appSetting });
-                    });
-            }
+        if (!first) {
+            setFirst(true);
+            window.browser.storage.local
+                .get()
+                .then(({ appSetting: _appSetting }) => {
+                    if (
+                        _appSetting &&
+                        Object.keys(_appSetting).includes("version")
+                    )
+                        setAppSetting(_appSetting as AppSettingType);
+                    else window.browser.storage.local.set({ appSetting });
+                });
         }
+        const onStorageChangeListener = (changes: {
+            [key: string]: Browser.Storage.StorageChange;
+        }) => {
+            if (changes.appSetting) {
+                if (
+                    JSON.stringify(changes.appSetting.newValue) !==
+                    JSON.stringify(appSetting)
+                )
+                    setAppSetting(
+                        changes.appSetting.newValue as AppSettingType
+                    );
+            }
+        };
+        window.browser.storage.local.onChanged.addListener(
+            onStorageChangeListener
+        );
+        return () => {
+            window.browser.storage.local.onChanged.removeListener(
+                onStorageChangeListener
+            );
+        };
     }, []);
     useLayoutEffect(() => {
         if (first) {
