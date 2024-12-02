@@ -156,6 +156,13 @@ const App = () => {
         }
     }, [collectionData, firstDone]);
 
+    const updateRecentlyUsed = async (id: UUID) => {
+        window.browser.runtime.sendMessage({
+            type: "update-recently-used-collections",
+            payload: id,
+        });
+    };
+
     const openCollection = (uuid: UUID | null) => {
         if (uuid) {
             const index = collectionData.findIndex((e) => e.id === uuid);
@@ -312,10 +319,12 @@ const App = () => {
             },
             ...init,
         ]);
+        updateRecentlyUsed(id);
         setOpenColOnCreate(id);
     };
     const removeCollections = (id: UUID | UUID[]) => {
         setCollectionData((init) => {
+            //todo fix performance for all duplicate
             const newCol = [...init];
             let colNames = "";
             const remove = (_id: UUID) => {
@@ -369,6 +378,7 @@ const App = () => {
                 toast.dismiss();
                 return [...init];
             });
+            updateRecentlyUsed(collectionId);
         } else {
             toast.error(
                 `addToCollection: Collection with id ${collectionId} not found.`
@@ -443,6 +453,7 @@ const App = () => {
                 return init;
             }
         });
+        updateRecentlyUsed(collectionId);
     };
 
     // const changeCollectionOrder = (id: UUID, newIndex: number) => {
@@ -486,6 +497,7 @@ const App = () => {
                     toast.dismiss();
                     return [...init];
                 });
+                updateRecentlyUsed(colID);
             } else throw new Error();
         } catch {
             toast.error("Couldn't reorder.");
@@ -514,6 +526,7 @@ const App = () => {
                 });
                 return [...init];
             });
+            updateRecentlyUsed(id);
         } else
             toast.error(
                 `renameCollection: Collection with id ${id} not found.`

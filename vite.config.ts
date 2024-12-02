@@ -54,6 +54,7 @@ const manifest: chrome.runtime.ManifestV3 & {
         "unlimitedStorage",
         "alarms",
         "sidePanel",
+        "contextMenus",
     ],
     commands: {
         "add-current-tab-to-active-collection": {

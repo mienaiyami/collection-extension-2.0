@@ -1,34 +1,61 @@
-// const menu = [{
-//     id:"collection-add-URL",action(info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab | undefined){
-//         console.log(info, tab?.url);
-//     },
-//     title:"Add page to Collection"
-// }]
-
-//! problem here, submenu should contain all collections name
-
-// const subMenu1 = [{
-
-// }]
-
-// chrome.runtime.onInstalled.addListener(async () => {
-//     menu.forEach(e=>{
-
-//         chrome.contextMenus.create({
-//             id: e.id,
-//             title: e.title,
-//             type: "radio",
-//             contexts: ["all"],
-//             // parentId:
-//         });
-//     })
-//     chrome.contextMenus.onClicked.addListener((info, tab) => {
-//         console.log(info, tab?.url);
-//     });
-// });
-
 import browser from "webextension-polyfill";
 import { appSettingSchema, initAppSetting } from "./utils";
+
+/** for both recently used and updated*/
+const RECENTLY_USED_COLLECTIONS_LIMIT = 10;
+const setAddPageToCollectionContextMenu = async () => {
+    await browser.contextMenus.removeAll();
+    const { recentlyUsedCollections, collectionData } =
+        (await browser.storage.local.get([
+            "recentlyUsedCollections",
+            "collectionData",
+        ])) as {
+            recentlyUsedCollections: UUID[];
+            collectionData: Collection[];
+        };
+    if (!collectionData && !recentlyUsedCollections) {
+        console.error(
+            "collectionData and recentlyUsedCollections not found in storage"
+        );
+        return;
+    }
+    const parentId = "add-page-to-collections";
+    browser.contextMenus.create({
+        id: parentId,
+        title: "Add page to collections",
+        contexts: ["all"],
+    });
+    browser.contextMenus.create({
+        id: `collection-new`,
+        title: "Add to new Collection",
+        contexts: ["all"],
+        parentId,
+    });
+    if (Array.isArray(recentlyUsedCollections)) {
+        const collectionsBasic = collectionData.reduce((prev, curr) => {
+            prev.set(curr.id, curr.title);
+            return prev;
+        }, new Map<UUID, string>());
+        const collectionsToShow = recentlyUsedCollections
+            .map((id) => {
+                if (!collectionsBasic.has(id)) return null;
+                return { id, title: collectionsBasic.get(id) as string };
+            })
+            .filter((col) => col !== null);
+        collectionsBasic.forEach((title, id) => {
+            if (recentlyUsedCollections.includes(id)) return;
+            collectionsToShow.push({ id, title });
+        });
+        collectionsToShow.forEach((col) => {
+            browser.contextMenus.create({
+                id: `collection-${col.id}`,
+                title: col.title,
+                contexts: ["all"],
+                parentId,
+            });
+        });
+    }
+};
 
 const backup = () =>
     browser.storage.local.get("collectionData").then(({ collectionData }) => {
@@ -43,6 +70,7 @@ const backup = () =>
     });
 
 browser.runtime.onInstalled.addListener((e) => {
+    console.log(e);
     if (e.reason === "update") {
         (() => {
             browser.storage.local.get("appSetting").then(({ appSetting }) => {
@@ -59,6 +87,15 @@ browser.runtime.onInstalled.addListener((e) => {
                     }
                 }
             });
+            browser.storage.local
+                .get("recentlyUsedCollections")
+                .then(({ recentlyUsedCollections }) => {
+                    if (!recentlyUsedCollections) {
+                        browser.storage.local.set({
+                            recentlyUsedCollections: [],
+                        });
+                    }
+                });
         })();
         if (e.previousVersion !== browser.runtime.getManifest().version)
             browser.tabs.create({
@@ -79,6 +116,54 @@ browser.runtime.onInstalled.addListener((e) => {
         delayInMinutes: 10,
         periodInMinutes: 10,
     });
+    browser.contextMenus.onClicked.addListener((info, tab) => {
+        if (!info.frameUrl) return;
+        const id = info.menuItemId.toString();
+        if (id === "collection-new") {
+            browser.storage.local
+                .get("collectionData")
+                .then(({ collectionData }) => {
+                    if (!collectionData) return;
+                    //todo make functions for these and then use those for saving from frontend as well
+                    const newCollection: Collection = {
+                        title: new Date().toLocaleString(),
+                        id: globalThis.crypto.randomUUID(),
+                        items: [
+                            {
+                                url: info.frameUrl as string,
+                                title: tab?.title as string,
+                                date: new Date().toISOString(),
+                                id: globalThis.crypto.randomUUID(),
+                                //todo get page ss
+                                img: tab?.favIconUrl as string,
+                            },
+                        ],
+                    };
+                    (collectionData as Collection[]).unshift(newCollection);
+                    browser.storage.local.set({ collectionData });
+                });
+            return;
+        }
+        if (id.startsWith("collection-")) {
+            browser.storage.local
+                .get("collectionData")
+                .then(({ collectionData }) => {
+                    if (!collectionData) return;
+                    (collectionData as Collection[])
+                        .find((col) => col.id === id.replace("collection-", ""))
+                        ?.items.unshift({
+                            url: info.frameUrl as string,
+                            title: tab?.title as string,
+                            date: new Date().toISOString(),
+                            id: globalThis.crypto.randomUUID(),
+                            img: tab?.favIconUrl as string,
+                        });
+                    browser.storage.local.set({ collectionData });
+                });
+            return;
+        }
+    });
+    setAddPageToCollectionContextMenu();
 });
 
 browser.alarms.onAlarm.addListener((alarm) => {
@@ -109,5 +194,52 @@ browser.commands.onCommand.addListener((command) => {
                 type: "add-current-tab-to-active-collection",
             })
             .catch(console.error);
+    }
+});
+
+const updateRecentlyUsedCollections = (collectionId: string) => {
+    browser.storage.local
+        .get("recentlyUsedCollections")
+        .then(({ recentlyUsedCollections }) => {
+            const collections = (recentlyUsedCollections || []) as string[];
+            if (collections.includes(collectionId)) return;
+            if (collections.length >= RECENTLY_USED_COLLECTIONS_LIMIT)
+                collections.pop();
+            collections.unshift(collectionId);
+            browser.storage.local.set({
+                recentlyUsedCollections: collections,
+            });
+        });
+};
+
+interface Message {
+    type: string;
+    payload?: unknown;
+}
+//todo migrate from appjs to here
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    const { type, payload } = message as Message;
+    if (!type) {
+        console.error("message type is not defined");
+        return;
+    }
+    console.log(message);
+    switch (type) {
+        case "update-recently-used-collections": {
+            const collectionId = payload as string;
+            if (!collectionId) return;
+            updateRecentlyUsedCollections(collectionId);
+            break;
+        }
+    }
+    return true;
+});
+
+browser.storage.local.onChanged.addListener(async (change) => {
+    if (change.recentlyUsedCollections) {
+        await browser.contextMenus.removeAll();
+        console.log(browser.contextMenus);
+        //todo test
+        setAddPageToCollectionContextMenu();
     }
 });
