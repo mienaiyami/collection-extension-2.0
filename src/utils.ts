@@ -1,6 +1,8 @@
 import browser from "webextension-polyfill";
 import { z } from "zod";
 
+export const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
 // need this coz `window` is not defined in the background script
 if (typeof window !== "undefined") {
     self.isSidePanel =
@@ -8,10 +10,7 @@ if (typeof window !== "undefined") {
     if (self.isSidePanel) document.body.classList.add("sidePanel");
 
     self.browser = browser;
-    self.wait = (ms: number) =>
-        new Promise((res) => {
-            setTimeout(res, ms);
-        });
+    self.wait = wait;
     self.cloneJSON = (obj) => JSON.parse(JSON.stringify(obj));
     self.formatCopyData = (
         format: string,
@@ -53,8 +52,8 @@ export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
                 );
             },
         });
-        if (result && result[0].result) return result[0].result as string;
-        if (!browser.tabs.captureTab! && !tab.active)
+        if (result[0] && result[0].result) return result[0].result as string;
+        if (!browser.tabs.captureTab && !tab.active)
             return tab.favIconUrl || "";
 
         const capture =
@@ -91,39 +90,29 @@ export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
     }
 };
 
-export const getAllTabsData = async () => {
-    const tabs = await browser.tabs.query({ currentWindow: true });
-    const date = new Date();
-    const tabsData: CollectionItem[] = await Promise.all(
-        tabs.map(async (tab) => {
-            if (tab.status === "loading") await self.wait(1000);
-            if (tab.status === "loading") await self.wait(500);
-            const img = await Promise.race([
-                getImgFromTab(tab),
-                self.wait(500).then(() => tab.favIconUrl || ""),
-            ]);
-            if (tab.status === "loading") console.warn("Tab didn't load", tab);
-            if (!tab.title || !tab.url)
-                console.warn("Unable to get tab title or url.");
-            let url = tab.url || tab.pendingUrl || "Unable to get url";
-            // this is for firefox only, as it do not have `tab.pendingUrl`
-            if (tab.url === "about:blank")
-                url = tab.title || "Unable to get url";
+export const getDataFromTab = async (
+    tab: browser.Tabs.Tab
+): Promise<CollectionItem> => {
+    if (tab.status === "loading") await wait(1000);
+    if (tab.status === "loading") await wait(500);
+    const img = await Promise.race([
+        getImgFromTab(tab),
+        wait(500).then(() => tab.favIconUrl || ""),
+    ]);
+    if (tab.status === "loading") console.warn("Tab didn't load", tab);
+    if (!tab.title || !tab.url) console.warn("Unable to get tab title or url.");
+    let url = tab.url || tab.pendingUrl || "Unable to get url";
+    if (tab.url === "about:blank") url = tab.title || "Unable to get url";
 
-            return {
-                date: date.toISOString(),
-                id: crypto.randomUUID(),
-                img,
-                title:
-                    tab.title ||
-                    `No title${
-                        tab.status === "loading" ? " (tab didn't load)" : ""
-                    }`,
-                url,
-            };
-        })
-    );
-    return tabsData;
+    return {
+        date: new Date().toISOString(),
+        id: crypto.randomUUID(),
+        img,
+        title:
+            tab.title ||
+            `No title${tab.status === "loading" ? " (tab didn't load)" : ""}`,
+        url,
+    };
 };
 
 export const appSettingSchema = z

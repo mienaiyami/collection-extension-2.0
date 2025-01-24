@@ -10,23 +10,20 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAppContext } from "@/App";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Pencil } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
+import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 const AddUrlManualDialog = () => {
     const [selectedTab, setSelectedTab] = useState("direct");
     const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(
         null
     );
-    const {
-        addToCollection,
-        inCollectionView,
-        collectionData,
-        replaceCollection,
-    } = useAppContext();
+    const { inCollectionView } = useAppContext();
+    const operations = useCollectionOperations();
     return (
         <Dialog>
             <Tooltip>
@@ -149,31 +146,10 @@ const AddUrlManualDialog = () => {
                                         if (items.length === 0)
                                             return toast.error("No URLs found");
                                         if (inCollectionView) {
-                                            const oldData = window.cloneJSON(
-                                                collectionData.find(
-                                                    (e) =>
-                                                        e.id ===
-                                                        inCollectionView
-                                                )!.items
-                                            );
-                                            addToCollection(
+                                            //todo : test
+                                            operations.addToCollection(
                                                 inCollectionView,
                                                 items
-                                            );
-                                            toast.dismiss();
-                                            toast.success(
-                                                `${items.length} URLs added to collection`,
-                                                {
-                                                    action: {
-                                                        label: "Undo",
-                                                        onClick: () => {
-                                                            replaceCollection(
-                                                                inCollectionView,
-                                                                oldData
-                                                            );
-                                                        },
-                                                    },
-                                                }
                                             );
                                         }
                                     };

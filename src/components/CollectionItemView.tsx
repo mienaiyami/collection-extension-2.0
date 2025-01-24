@@ -20,7 +20,6 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "./ui/alert-dialog";
-import { getAllTabsData, getImgFromTab } from "@/utils";
 import { Reorder } from "framer-motion";
 import { toast } from "sonner";
 import AddUrlManualDialog from "./AddUrlManualDialog";
@@ -32,15 +31,11 @@ import {
     TooltipContent,
 } from "./ui/tooltip";
 import { Separator } from "./ui/separator";
+import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 const CollectionItemView = () => {
-    const {
-        collectionData,
-        inCollectionView,
-        addToCollection,
-        removeFromCollection,
-        changeCollectionItemOrder,
-        openCollection,
-    } = useAppContext();
+    const { collectionData, inCollectionView, openCollection } =
+        useAppContext();
+    const operations = useCollectionOperations();
     const { appSetting } = useAppSetting();
 
     const [selected, setSelected] = useState<UUID[]>([]);
@@ -111,6 +106,7 @@ const CollectionItemView = () => {
         setItemsOrder(currentCollection?.items.map((e) => e.id) || []);
     }, [currentCollection]);
 
+    // todo : fix for performance
     useLayoutEffect(() => {
         setSelected([]);
         const keyHandler = (e: KeyboardEvent) => {
@@ -156,29 +152,14 @@ const CollectionItemView = () => {
                 console.error("onMessage: message is undefined.");
                 return;
             }
+            //! this relies on inCollectionView to work, so keep in mind before moving to background.ts
             if (typeof message === "object" && "type" in message) {
                 if (message.type === "add-current-tab-to-active-collection") {
                     if (inCollectionView)
-                        return window.browser.tabs
-                            .query({
-                                currentWindow: true,
-                                active: true,
-                            })
-                            .then((tabs) => {
-                                const date = new Date();
-                                if (tabs[0]) {
-                                    getImgFromTab(tabs[0]).then((img) => {
-                                        const item: CollectionItem = {
-                                            date: date.toISOString(),
-                                            id: crypto.randomUUID(),
-                                            img,
-                                            title: tabs[0].title || "title",
-                                            url: tabs[0].url || "",
-                                        };
-                                        addToCollection(inCollectionView, item);
-                                    });
-                                }
-                            });
+                        //todo : test
+                        return operations.addActiveTabToCollection(
+                            inCollectionView
+                        );
                 }
             } else {
                 console.error(
@@ -193,13 +174,7 @@ const CollectionItemView = () => {
             window.removeEventListener("keydown", keyHandler);
             window.browser.runtime.onMessage.removeListener(onMessage);
         };
-    }, [
-        collectionData,
-        inCollectionView,
-        currentCollection,
-        openCollection,
-        addToCollection,
-    ]);
+    }, [collectionData, inCollectionView, currentCollection, openCollection]);
 
     return currentCollection ? (
         <AlertDialog>
@@ -216,38 +191,9 @@ const CollectionItemView = () => {
                                     <Button
                                         variant={"ghost"}
                                         onClick={() => {
-                                            window.browser.tabs
-                                                .query({
-                                                    currentWindow: true,
-                                                    active: true,
-                                                })
-                                                .then((tabs) => {
-                                                    const date = new Date();
-                                                    if (tabs[0]) {
-                                                        getImgFromTab(
-                                                            tabs[0]
-                                                        ).then((img) => {
-                                                            const item: CollectionItem =
-                                                                {
-                                                                    date: date.toISOString(),
-                                                                    id: crypto.randomUUID(),
-                                                                    img,
-                                                                    title:
-                                                                        tabs[0]
-                                                                            .title ||
-                                                                        "title",
-                                                                    url:
-                                                                        tabs[0]
-                                                                            .url ||
-                                                                        "",
-                                                                };
-                                                            addToCollection(
-                                                                currentCollection.id,
-                                                                item
-                                                            );
-                                                        });
-                                                    }
-                                                });
+                                            operations.addActiveTabToCollection(
+                                                currentCollection.id
+                                            );
                                         }}
                                         // title="Add current tab to collection"
                                     >
@@ -264,21 +210,9 @@ const CollectionItemView = () => {
                                     <Button
                                         variant={"ghost"}
                                         onClick={() => {
-                                            getAllTabsData()
-                                                .then((items) => {
-                                                    addToCollection(
-                                                        currentCollection.id,
-                                                        items
-                                                    );
-                                                })
-                                                .catch((e) => {
-                                                    toast.error(
-                                                        "Error while fetching tabs data",
-                                                        {
-                                                            description: e,
-                                                        }
-                                                    );
-                                                });
+                                            operations.addAllTabsToCollection(
+                                                currentCollection.id
+                                            );
                                         }}
                                         // title="Add all opened tabs to collection"
                                     >
@@ -436,7 +370,7 @@ const CollectionItemView = () => {
                                         onShiftPlusClick={onShiftPlusClick}
                                         onDragEnd={() => {
                                             inCollectionView &&
-                                                changeCollectionItemOrder(
+                                                operations.changeCollectionItemOrder(
                                                     inCollectionView,
                                                     itemsOrder
                                                 );
@@ -468,10 +402,8 @@ const CollectionItemView = () => {
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
                         onClick={() => {
-                            // todo, test
-
                             inCollectionView &&
-                                removeFromCollection(
+                                operations.removeFromCollection(
                                     inCollectionView,
                                     selected
                                 );

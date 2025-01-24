@@ -3,16 +3,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Input } from "./ui/input";
 import { useTheme } from "@/hooks/theme-provider";
 import { useAppSetting } from "@/hooks/appSetting-provider";
-import {
-    ChevronLeft,
-    Info,
-    Moon,
-    Pin,
-    PinOff,
-    Settings,
-    Sun,
-    X,
-} from "lucide-react";
+import { ChevronLeft, Info, Moon, Pin, PinOff, Settings, Sun, X } from "lucide-react";
 import { Button } from "./ui/button";
 import {
     Dialog,
@@ -34,26 +25,16 @@ import {
     AlertDialogTrigger,
 } from "./ui/alert-dialog";
 import { Label } from "./ui/label";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { initAppSetting } from "@/utils";
+import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 
 const TopBar = () => {
-    const {
-        inCollectionView,
-        openCollection,
-        renameCollection,
-        exportData,
-        importData,
-        restoreBackup,
-    } = useAppContext();
+    const { inCollectionView, openCollection } = useAppContext();
+    const operations = useCollectionOperations();
     const { theme, setTheme } = useTheme();
     const { collectionData } = useAppContext();
-    const { appSetting, setAppSetting } = useAppSetting();
+    const { appSetting } = useAppSetting();
     const [title, setTitle] = useState("");
     const [first, setFirst] = useState(true);
     const [lastBackup, setLastBackup] = useState("");
@@ -68,9 +49,7 @@ const TopBar = () => {
     }, [appSetting.copyDataFormat]);
     useLayoutEffect(() => {
         if (inCollectionView) {
-            const current = collectionData.find(
-                (e) => e.id === inCollectionView
-            );
+            const current = collectionData.find((e) => e.id === inCollectionView);
             if (current) {
                 setTitle(current.title);
             }
@@ -83,15 +62,10 @@ const TopBar = () => {
 
     useLayoutEffect(() => {
         if (!import.meta.env.DEV) {
-            window.browser.storage.local
-                .get("lastBackup")
-                .then(({ lastBackup }) => {
-                    if (lastBackup)
-                        setLastBackup(
-                            new Date(lastBackup as string).toString()
-                        );
-                    else setLastBackup("Not found");
-                });
+            window.browser.storage.local.get("lastBackup").then(({ lastBackup }) => {
+                if (lastBackup) setLastBackup(new Date(lastBackup as string).toString());
+                else setLastBackup("Not found");
+            });
         }
     }, []);
 
@@ -99,20 +73,17 @@ const TopBar = () => {
         if (first) setFirst(false);
     }, [first]);
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         if (first) return;
         const timeout = setTimeout(() => {
-            if (
-                collectionData.find((e) => e.id === inCollectionView)?.title ===
-                title
-            )
-                return;
-            if (inCollectionView) renameCollection(inCollectionView, title);
+            const found = collectionData.find((e) => e.id === inCollectionView);
+            if (!found || found.title === title) return;
+            if (inCollectionView) operations.renameCollection(inCollectionView, title);
         }, 2000);
         return () => {
             clearTimeout(timeout);
         };
-    }, [title]);
+    }, [title, collectionData, inCollectionView, operations, first]);
 
     return (
         <Dialog>
@@ -138,10 +109,7 @@ const TopBar = () => {
                                         e.stopPropagation();
                                     }
                                     if (e.key === "Enter") {
-                                        renameCollection(
-                                            inCollectionView,
-                                            title
-                                        );
+                                        operations.renameCollection(inCollectionView, title);
                                     }
                                 }}
                                 onChange={(e) => {
@@ -196,9 +164,7 @@ const TopBar = () => {
                                     return;
                                 }
                                 if (chrome.sidePanel) {
-                                    const windowId = (
-                                        await window.browser.windows.getCurrent()
-                                    ).id;
+                                    const windowId = (await window.browser.windows.getCurrent()).id;
                                     //eslint-disable-next-line
                                     //@ts-ignore
                                     chrome.sidePanel.open({ windowId });
@@ -229,9 +195,8 @@ const TopBar = () => {
                     <DialogHeader>
                         <DialogTitle className="text-2xl">Settings</DialogTitle>
                         <DialogDescription>
-                            Note that it is not possible to sync collections
-                            online because of quota limit, so you will lose them
-                            if you delete profile or browser or logout.
+                            Note that it is not possible to sync collections online because of quota
+                            limit, so you will lose them if you delete profile or browser or logout.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="w-full overflow-auto max-h-[65vh] flex flex-col gap-2">
@@ -257,14 +222,9 @@ const TopBar = () => {
                         </div>
                         <div className="flex flex-col gap-2 p-2 border rounded-md">
                             <div className="flex flex-col gap-2 items-start w-full">
-                                <span className="font-semibold">
-                                    Font Options
-                                </span>
+                                <span className="font-semibold">Font Options</span>
                                 <div className="flex flex-col gap-2 px-4 py-2">
-                                    <TooltipProvider
-                                        delayDuration={100}
-                                        disableHoverableContent
-                                    >
+                                    <TooltipProvider delayDuration={100} disableHoverableContent>
                                         <Tooltip>
                                             <TooltipTrigger className="cursor-default">
                                                 <Label className="flex flex-row items-center justify-start gap-2">
@@ -273,62 +233,36 @@ const TopBar = () => {
                                                     </span>
                                                     <Input
                                                         type="number"
-                                                        value={
-                                                            appSetting.font.size
-                                                        }
+                                                        value={appSetting.font.size}
                                                         onKeyDown={(e) => {
-                                                            const allowedKeys =
-                                                                [
-                                                                    "ArrowUp",
-                                                                    "ArrowDown",
-                                                                    "Tab",
-                                                                    "Control",
-                                                                    "Shift",
-                                                                    "Alt",
-                                                                    "Escape",
-                                                                ];
-                                                            if (
-                                                                !allowedKeys.includes(
-                                                                    e.key
-                                                                )
-                                                            )
+                                                            const allowedKeys = [
+                                                                "ArrowUp",
+                                                                "ArrowDown",
+                                                                "Tab",
+                                                                "Control",
+                                                                "Shift",
+                                                                "Alt",
+                                                                "Escape",
+                                                            ];
+                                                            if (!allowedKeys.includes(e.key))
                                                                 e.preventDefault();
                                                         }}
                                                         min={10}
                                                         max={30}
                                                         step={0.1}
                                                         onChange={(e) => {
-                                                            setAppSetting(
-                                                                (init) => {
-                                                                    if (
-                                                                        !e.currentTarget
-                                                                    )
-                                                                        return init;
-                                                                    const newSetting =
-                                                                        window.cloneJSON(
-                                                                            init
-                                                                        );
-                                                                    let size =
-                                                                        Number(
-                                                                            e
-                                                                                .currentTarget
-                                                                                .value
-                                                                        );
-                                                                    if (
-                                                                        size <
-                                                                        10
-                                                                    )
-                                                                        size = 10;
-                                                                    if (
-                                                                        size >
-                                                                        30
-                                                                    )
-                                                                        size = 30;
-                                                                    newSetting.font.size =
-                                                                        size;
-                                                                    return newSetting;
-                                                                }
+                                                            if (!e.currentTarget) return;
+                                                            let size = Number(
+                                                                e.currentTarget.value
                                                             );
+                                                            if (size < 10) size = 10;
+                                                            if (size > 30) size = 30;
+                                                            operations.setAppSetting({
+                                                                font: {
+                                                                    ...appSetting.font,
+                                                                    size,
+                                                                },
+                                                            });
                                                         }}
                                                         className="p-2 py-0.5"
                                                     />
@@ -336,8 +270,8 @@ const TopBar = () => {
                                             </TooltipTrigger>
                                             <TooltipContent>
                                                 <p className="max-w-[16rem]">
-                                                    You can use arrow up/down to
-                                                    increase/decrease font size.
+                                                    You can use arrow up/down to increase/decrease
+                                                    font size.
                                                 </p>
                                             </TooltipContent>
                                         </Tooltip>
@@ -349,26 +283,15 @@ const TopBar = () => {
                                                     </span>
                                                     <Input
                                                         type="text"
-                                                        value={
-                                                            appSetting.font
-                                                                .family
-                                                        }
+                                                        value={appSetting.font.family}
                                                         onChange={(e) => {
-                                                            setAppSetting(
-                                                                (init) => {
-                                                                    const newSetting =
-                                                                        window.cloneJSON(
-                                                                            init
-                                                                        );
-                                                                    if (
-                                                                        !e.currentTarget
-                                                                    )
-                                                                        return init;
-                                                                    newSetting.font.family =
-                                                                        e.currentTarget.value;
-                                                                    return newSetting;
-                                                                }
-                                                            );
+                                                            if (!e.currentTarget) return;
+                                                            operations.setAppSetting({
+                                                                font: {
+                                                                    ...appSetting.font,
+                                                                    family: e.currentTarget.value,
+                                                                },
+                                                            });
                                                         }}
                                                         className="p-2 py-0.5"
                                                     />
@@ -376,9 +299,8 @@ const TopBar = () => {
                                             </TooltipTrigger>
                                             <TooltipContent>
                                                 <p className="max-w-[16rem]">
-                                                    Enter full name of a local
-                                                    font, like "Inter", "Inter
-                                                    Black".
+                                                    Enter full name of a local font, like "Inter",
+                                                    "Inter Black".
                                                 </p>
                                             </TooltipContent>
                                         </Tooltip>
@@ -387,7 +309,7 @@ const TopBar = () => {
                                         <Button
                                             variant={"outline"}
                                             onClick={() => {
-                                                setAppSetting(initAppSetting);
+                                                operations.setAppSetting(initAppSetting);
                                             }}
                                         >
                                             Reset
@@ -398,9 +320,7 @@ const TopBar = () => {
                         </div>
                         <div className="flex flex-col gap-2 p-2 border rounded-md">
                             <div className="flex flex-col gap-2 items-start w-full">
-                                <span className="font-semibold">
-                                    Copy Data Format
-                                </span>
+                                <span className="font-semibold">Copy Data Format</span>
                                 <div className="flex flex-col gap-2 px-2">
                                     <pre className="p-2 text-xs rounded-sm font-mono whitespace-break-spaces">
                                         Available variables:
@@ -412,22 +332,14 @@ const TopBar = () => {
                                         value={copyDataFormat.value}
                                         onChange={(e) => {
                                             if (copyDataFormat.timeout)
-                                                clearTimeout(
-                                                    copyDataFormat.timeout
-                                                );
+                                                clearTimeout(copyDataFormat.timeout);
                                             if (!e.currentTarget) return;
                                             const value = e.currentTarget.value;
                                             setCopyDataFormat({
                                                 value,
                                                 timeout: setTimeout(() => {
-                                                    setAppSetting((init) => {
-                                                        const newSetting =
-                                                            window.cloneJSON(
-                                                                init
-                                                            );
-                                                        newSetting.copyDataFormat =
-                                                            value;
-                                                        return newSetting;
+                                                    operations.setAppSetting({
+                                                        copyDataFormat: value,
                                                     });
                                                 }, 2000),
                                             });
@@ -443,14 +355,14 @@ const TopBar = () => {
                                     <Button
                                         variant={"outline"}
                                         className="flex flex-row gap-2 items-center"
-                                        onClick={exportData}
+                                        onClick={operations.exportData}
                                     >
                                         Export
                                     </Button>
                                     <Button
                                         variant={"outline"}
                                         className="flex flex-row gap-2 items-center"
-                                        onClick={importData}
+                                        onClick={operations.importData}
                                     >
                                         Import
                                     </Button>
@@ -458,8 +370,7 @@ const TopBar = () => {
                             </div>
                             {!window.navigator.userAgent.includes("Chrome") && (
                                 <p className="text-xs">
-                                    To import on non-chromium browsers, first go
-                                    to{" "}
+                                    To import on non-chromium browsers, first go to{" "}
                                     <a
                                         className="cursor-pointer underline hover:opacity-80"
                                         onClick={() => {
@@ -470,9 +381,8 @@ const TopBar = () => {
                                     >
                                         Collections page
                                     </a>{" "}
-                                    (not popup) or inside a{" "}
-                                    <strong>Sidebar</strong> then click import
-                                    in settings.
+                                    (not popup) or inside a <strong>Sidebar</strong> then click
+                                    import in settings.
                                 </p>
                             )}
                         </div>
@@ -539,15 +449,10 @@ const TopBar = () => {
                                                 })
                                                 .then(() => {
                                                     const date = new Date();
-                                                    window.browser.storage.local.set(
-                                                        {
-                                                            lastBackup:
-                                                                date.toJSON(),
-                                                        }
-                                                    );
-                                                    setLastBackup(
-                                                        date.toString()
-                                                    );
+                                                    window.browser.storage.local.set({
+                                                        lastBackup: date.toJSON(),
+                                                    });
+                                                    setLastBackup(date.toString());
                                                 });
                                         }}
                                     >
@@ -565,9 +470,8 @@ const TopBar = () => {
                                 </div>
                             </div>
                             <DialogDescription className="text-left">
-                                Local backup is made every 6 hours (if browser
-                                is open). Choose this option if some error
-                                caused all collections to vanish. <br />
+                                Local backup is made every 6 hours (if browser is open). Choose this
+                                option if some error caused all collections to vanish. <br />
                                 <code className="rounded-md bg-secondary">
                                     Last Backup : {lastBackup}
                                 </code>
@@ -579,14 +483,13 @@ const TopBar = () => {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Restore backup?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action will remove all collections and restore
-                            from backup.
+                            This action will remove all collections and restore from backup.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                            onClick={restoreBackup}
+                            onClick={operations.restoreBackup}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
                             Restore Backup

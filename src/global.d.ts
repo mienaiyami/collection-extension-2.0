@@ -18,6 +18,7 @@ declare global {
         id: UUID;
         title: string;
         items: CollectionItem[];
+        date: string;
     };
     interface Window {
         wait: (ms: number) => Promise<unknown>;
@@ -32,4 +33,5 @@ declare global {
     }
     type AppSettingType = z.infer<typeof appSettingSchema>;
 }
+
 export {};

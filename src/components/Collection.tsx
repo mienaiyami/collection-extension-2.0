@@ -23,6 +23,7 @@ import {
 import { getImgFromTab } from "@/utils";
 import { Reorder, motion } from "framer-motion";
 import { useAppSetting } from "@/hooks/appSetting-provider";
+import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 
 type PropType = {
     id: UUID;
@@ -37,12 +38,8 @@ const Collection = ({
     item: PropType;
     onDragEnd: () => void;
 }) => {
-    const {
-        addToCollection,
-        collectionData,
-        removeCollections,
-        openCollection,
-    } = useAppContext();
+    const { collectionData, openCollection } = useAppContext();
+    const operations = useCollectionOperations();
 
     const { appSetting } = useAppSetting();
 
@@ -91,24 +88,9 @@ const Collection = ({
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    window.browser.tabs
-                                        .query({
-                                            active: true,
-                                            currentWindow: true,
-                                        })
-                                        .then((tabs) => {
-                                            const tab = tabs[0];
-                                            getImgFromTab(tab).then((img) => {
-                                                addToCollection(item.id, {
-                                                    //todo, mayabve move id to fn?
-                                                    id: crypto.randomUUID(),
-                                                    date: new Date().toISOString(),
-                                                    img,
-                                                    title: tab.title || "title",
-                                                    url: tab.url || "",
-                                                });
-                                            });
-                                        });
+                                    operations.addActiveTabToCollection(
+                                        item.id
+                                    );
                                 }}
                             >
                                 <Plus />
@@ -241,7 +223,7 @@ const Collection = ({
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={() => {
-                                removeCollections(item.id);
+                                operations.removeCollections(item.id);
                             }}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >

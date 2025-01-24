@@ -1,25 +1,19 @@
-import React, {
-    useEffect,
-    useLayoutEffect,
-    useMemo,
-    useRef,
-    useState,
-} from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { useAppContext } from "@/App";
 import Collection from "./Collection";
-import { getAllTabsData } from "@/utils";
 import { Reorder } from "framer-motion";
-import { toast } from "sonner";
+import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 
 const CollectionView = () => {
     const {
         collectionData,
-        makeNewCollection,
         setScrollPos,
         scrollPos,
-        changeCollectionOrder,
+        openCollection,
+        setOpenColOnCreate,
     } = useAppContext();
+    const operations = useCollectionOperations();
     const [collectionOrder, setCollectionOrder] = useState<
         { id: UUID; title: string; itemLen: number }[]
     >([]);
@@ -50,28 +44,30 @@ const CollectionView = () => {
             <div className="p-1 grid grid-cols-2 h-full items-center">
                 <Button
                     variant={"ghost"}
-                    onClick={() => {
+                    onClick={async () => {
                         //todo, open and focus name input
-                        makeNewCollection(new Date().toLocaleString());
+                        const response = await operations.makeNewCollection(
+                            new Date().toLocaleString()
+                        );
+                        if (response.success) {
+                            setOpenColOnCreate(response.data.collection.id);
+                        }
                     }}
                 >
                     New Empty
                 </Button>
                 <Button
                     variant={"ghost"}
-                    onClick={() => {
-                        getAllTabsData()
-                            .then((items) => {
-                                makeNewCollection(
-                                    new Date().toLocaleString(),
-                                    items
-                                );
-                            })
-                            .catch((e) => {
-                                toast.error("Error while fetching tabs data", {
-                                    description: e,
-                                });
-                            });
+                    onClick={async () => {
+                        operations.makeNewCollection(
+                            new Date().toLocaleString(),
+                            [],
+                            {
+                                activeWindowId: (
+                                    await window.browser.windows.getCurrent()
+                                ).id,
+                            }
+                        );
                     }}
                 >
                     New from Opened tabs
@@ -102,8 +98,7 @@ const CollectionView = () => {
                                 key={e.id}
                                 item={e}
                                 onDragEnd={() => {
-                                    //todo impl
-                                    changeCollectionOrder(
+                                    operations.changeCollectionOrder(
                                         collectionOrder.map((e) => e.id)
                                     );
                                 }}

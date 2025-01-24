@@ -9,8 +9,9 @@ import {
 import { useAppContext } from "@/App";
 import { AppWindow, Check } from "lucide-react";
 
-import { Reorder, motion } from "framer-motion";
+import { Reorder } from "framer-motion";
 import { toast } from "sonner";
+import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 
 type PropType = CollectionItem & {
     changeSelected: (id: UUID, checked: boolean) => void;
@@ -21,7 +22,8 @@ type PropType = CollectionItem & {
     onShiftPlusClick: (id: UUID) => void;
 };
 const CollectionItem = (props: PropType) => {
-    const { removeFromCollection, inCollectionView } = useAppContext();
+    const { inCollectionView } = useAppContext();
+    const operations = useCollectionOperations();
     const [imgLoaded, setImgLoaded] = useState(false);
 
     const draggingRef = useRef(false);
@@ -93,7 +95,7 @@ const CollectionItem = (props: PropType) => {
                             //todo or not?
                             case "Delete":
                                 inCollectionView &&
-                                    removeFromCollection(
+                                    operations.removeFromCollection(
                                         inCollectionView,
                                         props.id
                                     );
@@ -290,7 +292,7 @@ const CollectionItem = (props: PropType) => {
                     <ContextMenuItem
                         onClick={() => {
                             inCollectionView &&
-                                removeFromCollection(
+                                operations.removeFromCollection(
                                     inCollectionView,
                                     props.id
                                 );

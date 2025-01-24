@@ -1,22 +1,24 @@
 import browser from "webextension-polyfill";
-import { appSettingSchema, initAppSetting } from "./utils";
+import { appSettingSchema, getDataFromTab, initAppSetting, wait } from "./utils";
+import {
+    CollectionOperation,
+    CollectionResponse,
+    MessageResponse,
+    CollectionMessage,
+} from "./types/messages";
 
-/** for both recently used and updated*/
-const RECENTLY_USED_COLLECTIONS_LIMIT = 10;
 const setAddPageToCollectionContextMenu = async () => {
     await browser.contextMenus.removeAll();
-    const { recentlyUsedCollections, collectionData } =
-        (await browser.storage.local.get([
-            "recentlyUsedCollections",
-            "collectionData",
-        ])) as {
-            recentlyUsedCollections: UUID[];
-            collectionData: Collection[];
-        };
+    //! this collectionData can be older compared to recentUsedCollections.
+    const { recentlyUsedCollections, collectionData } = (await browser.storage.local.get([
+        "recentlyUsedCollections",
+        "collectionData",
+    ])) as {
+        recentlyUsedCollections: UUID[];
+        collectionData: Collection[];
+    };
     if (!collectionData && !recentlyUsedCollections) {
-        console.error(
-            "collectionData and recentlyUsedCollections not found in storage"
-        );
+        console.error("collectionData and recentlyUsedCollections not found in storage");
         return;
     }
     const parentId = "add-page-to-collections";
@@ -32,6 +34,8 @@ const setAddPageToCollectionContextMenu = async () => {
         parentId,
     });
     if (Array.isArray(recentlyUsedCollections)) {
+        //! can be heavy
+        //todo optimize
         const collectionsBasic = collectionData.reduce((prev, curr) => {
             prev.set(curr.id, curr.title);
             return prev;
@@ -57,11 +61,11 @@ const setAddPageToCollectionContextMenu = async () => {
     }
 };
 
+//todo : make better backup system
 const backup = () =>
     browser.storage.local.get("collectionData").then(({ collectionData }) => {
         if (!collectionData) return;
-        if (collectionData instanceof Array && collectionData.length === 0)
-            return;
+        if (collectionData instanceof Array && collectionData.length === 0) return;
         browser.storage.local.set({ backup: collectionData }).then(() => {
             browser.storage.local.set({
                 lastBackup: new Date().toJSON(),
@@ -69,16 +73,19 @@ const backup = () =>
         });
     });
 
+browser.storage.local.onChanged.addListener(async (change) => {
+    if (change.recentlyUsedCollections) {
+        setAddPageToCollectionContextMenu();
+    }
+});
 browser.runtime.onInstalled.addListener((e) => {
-    console.log(e);
     if (e.reason === "update") {
         (() => {
             browser.storage.local.get("appSetting").then(({ appSetting }) => {
                 if (appSetting) {
                     if (
                         !(appSetting as AppSettingType).version ||
-                        (appSetting as AppSettingType).version <
-                            initAppSetting.version
+                        (appSetting as AppSettingType).version < initAppSetting.version
                     ) {
                         const newSettings = appSettingSchema.parse(appSetting);
                         browser.storage.local.set({
@@ -116,50 +123,27 @@ browser.runtime.onInstalled.addListener((e) => {
         delayInMinutes: 10,
         periodInMinutes: 10,
     });
-    browser.contextMenus.onClicked.addListener((info, tab) => {
-        if (!info.frameUrl) return;
+    browser.contextMenus.onClicked.addListener(async (info, tab) => {
+        // info.frameUrl does not exist in firefox
+        const url = info.frameUrl || info.pageUrl;
+        if (!tab || !url) return;
+
         const id = info.menuItemId.toString();
         if (id === "collection-new") {
-            browser.storage.local
-                .get("collectionData")
-                .then(({ collectionData }) => {
-                    if (!collectionData) return;
-                    //todo make functions for these and then use those for saving from frontend as well
-                    const newCollection: Collection = {
-                        title: new Date().toLocaleString(),
-                        id: globalThis.crypto.randomUUID(),
-                        items: [
-                            {
-                                url: info.frameUrl as string,
-                                title: tab?.title as string,
-                                date: new Date().toISOString(),
-                                id: globalThis.crypto.randomUUID(),
-                                //todo get page ss
-                                img: tab?.favIconUrl as string,
-                            },
-                        ],
-                    };
-                    (collectionData as Collection[]).unshift(newCollection);
-                    browser.storage.local.set({ collectionData });
-                });
+            const response = await CollectionManager.makeNewCollection(new Date().toLocaleString());
+            if (response.success) {
+                await CollectionManager.addToCollection(
+                    response.data.collection.id,
+                    await getDataFromTab(tab)
+                );
+            } else {
+                console.error(response.error);
+            }
             return;
         }
         if (id.startsWith("collection-")) {
-            browser.storage.local
-                .get("collectionData")
-                .then(({ collectionData }) => {
-                    if (!collectionData) return;
-                    (collectionData as Collection[])
-                        .find((col) => col.id === id.replace("collection-", ""))
-                        ?.items.unshift({
-                            url: info.frameUrl as string,
-                            title: tab?.title as string,
-                            date: new Date().toISOString(),
-                            id: globalThis.crypto.randomUUID(),
-                            img: tab?.favIconUrl as string,
-                        });
-                    browser.storage.local.set({ collectionData });
-                });
+            const collectionId = id.replace("collection-", "") as UUID;
+            await CollectionManager.addToCollection(collectionId, await getDataFromTab(tab));
             return;
         }
     });
@@ -168,7 +152,6 @@ browser.runtime.onInstalled.addListener((e) => {
 
 browser.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === "backup") {
-        //todo test
         browser.storage.local.get("lastBackup").then(({ lastBackup }) => {
             if (lastBackup && typeof lastBackup === "string") {
                 const last = new Date(lastBackup);
@@ -188,7 +171,7 @@ browser.alarms.onAlarm.addListener((alarm) => {
 // browser keyboard shortcuts
 browser.commands.onCommand.addListener((command) => {
     if (command === "add-current-tab-to-active-collection") {
-        //todo later do all collection storing function in background.ts
+        // need to do this because background do not know about active collection;
         browser.runtime
             .sendMessage({
                 type: "add-current-tab-to-active-collection",
@@ -197,49 +180,452 @@ browser.commands.onCommand.addListener((command) => {
     }
 });
 
-const updateRecentlyUsedCollections = (collectionId: string) => {
-    browser.storage.local
-        .get("recentlyUsedCollections")
-        .then(({ recentlyUsedCollections }) => {
-            const collections = (recentlyUsedCollections || []) as string[];
-            if (collections.includes(collectionId)) return;
-            if (collections.length >= RECENTLY_USED_COLLECTIONS_LIMIT)
-                collections.pop();
-            collections.unshift(collectionId);
-            browser.storage.local.set({
-                recentlyUsedCollections: collections,
-            });
-        });
-};
+//---------------------------------------------------------------
 
-interface Message {
-    type: string;
-    payload?: unknown;
-}
-//todo migrate from appjs to here
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    const { type, payload } = message as Message;
-    if (!type) {
-        console.error("message type is not defined");
-        return;
+class CollectionManager {
+    /** used when operations like rename,new so it need to be called after the item have been updated in store */
+    private static WAIT_TIME_BEFORE_UPDATING_RECENTLY_USED = 3000;
+
+    static async getCollectionData(): Promise<Collection[]> {
+        const { collectionData } = await browser.storage.local.get("collectionData");
+        return (collectionData as Collection[]) || [];
     }
-    console.log(message);
-    switch (type) {
-        case "update-recently-used-collections": {
-            const collectionId = payload as string;
-            if (!collectionId) return;
-            updateRecentlyUsedCollections(collectionId);
-            break;
+
+    static async setCollectionData(data: Collection[]): Promise<void> {
+        await browser.storage.local.set({ collectionData: data });
+    }
+
+    static async makeNewCollection(
+        title: string,
+        items: CollectionItem[] = [],
+        fillByData = {
+            /**pass activeTabId to fill active tab only */
+            activeTabId: undefined as number | undefined,
+            /** pass activeWindowId to fill with all tabs  */
+            activeWindowId: undefined as number | undefined,
+        }
+    ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "MAKE_NEW_COLLECTION" }>>> {
+        try {
+            const collections = await this.getCollectionData();
+            const newCollection: Collection = {
+                id: crypto.randomUUID(),
+                title,
+                items,
+                date: new Date().toISOString(),
+            };
+            if (fillByData.activeTabId) {
+                const tab = await browser.tabs.get(fillByData.activeTabId);
+                if (tab) {
+                    newCollection.items.push(await getDataFromTab(tab));
+                }
+            } else if (fillByData.activeWindowId) {
+                const tabs = await browser.tabs.query({
+                    windowId: fillByData.activeWindowId,
+                });
+                newCollection.items.push(
+                    ...(await Promise.all(
+                        tabs.map(async (tab) => {
+                            return await getDataFromTab(tab);
+                        })
+                    ))
+                );
+            }
+
+            await this.setCollectionData([newCollection, ...collections]);
+            this.updateRecentlyUsed(newCollection.id);
+
+            return { success: true, data: { collection: newCollection } };
+        } catch (error) {
+            return { success: false, error: String(error) };
         }
     }
-    return true;
-});
 
-browser.storage.local.onChanged.addListener(async (change) => {
-    if (change.recentlyUsedCollections) {
-        await browser.contextMenus.removeAll();
-        console.log(browser.contextMenus);
-        //todo test
-        setAddPageToCollectionContextMenu();
+    static async removeCollections(
+        ids: UUID | UUID[]
+    ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "REMOVE_COLLECTIONS" }>>> {
+        try {
+            const collections = await this.getCollectionData();
+            const idsToRemove = Array.isArray(ids) ? ids : [ids];
+            const collectionsRemoved: string[] = [];
+            const updatedCollections = collections.filter((col) => {
+                if (idsToRemove.includes(col.id)) {
+                    collectionsRemoved.push(col.title);
+                    return false;
+                }
+                return true;
+            });
+
+            await this.setCollectionData(updatedCollections);
+            // not awaited coz it make other things slow
+            this.updateRecentlyUsed("deleted");
+
+            return {
+                success: true,
+                data: { removedCollections: collectionsRemoved },
+            };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
     }
-});
+
+    static async addTabToCollection(
+        collectionId: UUID,
+        tabId: number
+    ): Promise<
+        CollectionResponse<Extract<CollectionOperation, { type: "ADD_TAB_TO_COLLECTION" }>>
+    > {
+        try {
+            const tab = await browser.tabs.get(tabId);
+            if (!tab) {
+                return { success: false, error: "No active tab found" };
+            }
+            const data = await getDataFromTab(tab);
+            return await this.addToCollection(collectionId, data);
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+    static async addAllTabsToCollection(
+        collectionId: UUID,
+        windowId: number
+    ): Promise<
+        CollectionResponse<Extract<CollectionOperation, { type: "ADD_ALL_TABS_TO_COLLECTION" }>>
+    > {
+        try {
+            const tabs = await browser.tabs.query({
+                windowId,
+            });
+            if (tabs.length === 0) {
+                return { success: false, error: "No active tab found" };
+            }
+            const data = await Promise.all(
+                tabs.map(async (tab) => {
+                    return await getDataFromTab(tab);
+                })
+            );
+            return await this.addToCollection(collectionId, data);
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+
+    static async addToCollection(
+        collectionId: UUID,
+        items: CollectionItem | CollectionItem[]
+    ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "ADD_TO_COLLECTION" }>>> {
+        try {
+            const collections = await this.getCollectionData();
+            const collection = collections.find((e) => e.id === collectionId);
+            if (!collection) {
+                return { success: false, error: "Collection not found" };
+            }
+
+            const itemsToAdd = Array.isArray(items) ? items : [items];
+            collection.items.unshift(...itemsToAdd);
+            await this.setCollectionData(collections);
+            this.updateRecentlyUsed(collectionId, 0);
+
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+
+    // static async replaceCollection(
+    //     id: UUID,
+    //     items: CollectionItem[]
+    // ): Promise<
+    //     CollectionResponse<
+    //         Extract<CollectionOperation, { type: "REPLACE_COLLECTION" }>
+    //     >
+    // > {
+    //     try {
+    //         const collections = await this.getCollectionData();
+    //         const collection = collections.find((e) => e.id === id);
+    //         if (!collection) {
+    //             return { success: false, error: "Collection not found" };
+    //         }
+
+    //         collection.items = items;
+    //         await this.setCollectionData(collections);
+
+    //         return { success: true };
+    //     } catch (error) {
+    //         return { success: false, error: String(error) };
+    //     }
+    // }
+
+    static async removeFromCollection(
+        collectionId: UUID,
+        itemId: UUID | UUID[]
+    ): Promise<
+        CollectionResponse<Extract<CollectionOperation, { type: "REMOVE_FROM_COLLECTION" }>>
+    > {
+        try {
+            const collections = await this.getCollectionData();
+            const collection = collections.find((e) => e.id === collectionId);
+            if (!collection) {
+                return { success: false, error: "Collection not found" };
+            }
+
+            const itemIds = Array.isArray(itemId) ? itemId : [itemId];
+            collection.items = collection.items.filter((item) => !itemIds.includes(item.id));
+
+            await this.setCollectionData(collections);
+            this.updateRecentlyUsed(collectionId, 0);
+
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+
+    static async renameCollection(
+        id: UUID,
+        newName: string
+    ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "RENAME_COLLECTION" }>>> {
+        try {
+            const collections = await this.getCollectionData();
+            const collection = collections.find((e) => e.id === id);
+            if (!collection) {
+                return { success: false, error: "Collection not found" };
+            }
+            const oldName = collection.title;
+            collection.title = newName;
+            await this.setCollectionData(collections);
+            this.updateRecentlyUsed("renamed");
+
+            return {
+                success: true,
+                data: {
+                    oldName,
+                    newName,
+                },
+            };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+
+    static async changeCollectionOrder(
+        newOrder: UUID[]
+    ): Promise<
+        CollectionResponse<Extract<CollectionOperation, { type: "CHANGE_COLLECTION_ORDER" }>>
+    > {
+        try {
+            const collections = await this.getCollectionData();
+            collections.sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
+            await this.setCollectionData(collections);
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+
+    static async changeCollectionItemOrder(
+        colID: UUID,
+        newOrder: UUID[]
+    ): Promise<
+        CollectionResponse<Extract<CollectionOperation, { type: "CHANGE_COLLECTION_ITEM_ORDER" }>>
+    > {
+        try {
+            const collections = await this.getCollectionData();
+            const collection = collections.find((e) => e.id === colID);
+            if (!collection) {
+                return { success: false, error: "Collection not found" };
+            }
+
+            collection.items.sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
+
+            await this.setCollectionData(collections);
+            this.updateRecentlyUsed(colID, 0);
+
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+
+    static async exportData(): Promise<
+        CollectionResponse<Extract<CollectionOperation, { type: "EXPORT_DATA" }>>
+    > {
+        try {
+            const collections = await this.getCollectionData();
+            return { success: true, data: { data: collections } };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+
+    static async importData(
+        data: Collection[]
+    ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "IMPORT_DATA" }>>> {
+        try {
+            const collections = await this.getCollectionData();
+            data.reverse().forEach((newCol) => {
+                const existingIndex = collections.findIndex((col) => col.id === newCol.id);
+                if (existingIndex >= 0) {
+                    const existingItemIds = collections[existingIndex].items.map((e) => e.id);
+                    newCol.items.forEach((item) => {
+                        if (!existingItemIds.includes(item.id)) {
+                            collections[existingIndex].items.unshift(item);
+                        }
+                    });
+                } else {
+                    collections.unshift(newCol);
+                }
+            });
+
+            await this.setCollectionData(collections);
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+
+    static async restoreBackup(): Promise<
+        CollectionResponse<Extract<CollectionOperation, { type: "RESTORE_BACKUP" }>>
+    > {
+        try {
+            const { backup } = (await browser.storage.local.get("backup")) as {
+                backup: Collection[];
+            };
+            if (!backup) {
+                return { success: false, error: "No backup found" };
+            }
+
+            await this.setCollectionData(backup);
+            return { success: true, data: { restoredData: backup } };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+
+    private static async updateRecentlyUsed(
+        id: UUID | "deleted" | "renamed",
+        delay = this.WAIT_TIME_BEFORE_UPDATING_RECENTLY_USED
+    ): Promise<void> {
+        if (delay) {
+            await wait(delay);
+        }
+
+        const { recentlyUsedCollections = [] } = (await browser.storage.local.get(
+            "recentlyUsedCollections"
+        )) as {
+            recentlyUsedCollections: UUID[];
+        };
+
+        if (id === "deleted") {
+            const collections = await this.getCollectionData();
+            const validIds = collections.map((col) => col.id);
+            const updatedList = recentlyUsedCollections.filter((id) => validIds.includes(id));
+            await browser.storage.local.set({
+                recentlyUsedCollections: updatedList,
+            });
+            return;
+        }
+        if (id === "renamed") {
+            // its not called from listener coz UUID value stays same
+            // need to call this manually to reflect new name;
+            await setAddPageToCollectionContextMenu();
+            return;
+        }
+
+        const updatedList = [
+            id,
+            ...recentlyUsedCollections.filter((existingId) => existingId !== id),
+        ].slice(0, 10);
+
+        await browser.storage.local.set({
+            recentlyUsedCollections: updatedList,
+        });
+    }
+
+    static async updateAppSetting(
+        update: Partial<AppSettingType>
+    ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "SET_APP_SETTING" }>>> {
+        const { appSetting } = (await browser.storage.local.get("appSetting")) as {
+            appSetting: AppSettingType;
+        };
+        if (!appSetting) {
+            return { success: false, error: "App setting not found" };
+        }
+        const newSetting = { ...appSetting, ...update };
+        await browser.storage.local.set({ appSetting: newSetting });
+        return { success: true };
+    }
+}
+
+function isCollectionOperation(message: unknown): message is CollectionMessage {
+    return typeof message === "object" && message !== null && "type" in message;
+}
+
+browser.runtime.onMessage.addListener(
+    async (message: unknown): Promise<MessageResponse<CollectionMessage>> => {
+        if (!isCollectionOperation(message)) {
+            return { success: false, error: "Invalid message format" };
+        }
+        try {
+            switch (message.type) {
+                case "MAKE_NEW_COLLECTION":
+                    return await CollectionManager.makeNewCollection(
+                        message.payload.title,
+                        message.payload.items,
+                        {
+                            activeTabId: message.payload.fillByData?.activeTabId,
+                            activeWindowId: message.payload.fillByData?.activeWindowId,
+                        }
+                    );
+                case "REMOVE_COLLECTIONS":
+                    return await CollectionManager.removeCollections(message.payload);
+                case "ADD_TO_COLLECTION":
+                    return await CollectionManager.addToCollection(
+                        message.payload.collectionId,
+                        message.payload.items
+                    );
+                case "ADD_TAB_TO_COLLECTION":
+                    return await CollectionManager.addTabToCollection(
+                        message.payload.collectionId,
+                        message.payload.tabId
+                    );
+                case "ADD_ALL_TABS_TO_COLLECTION":
+                    return await CollectionManager.addAllTabsToCollection(
+                        message.payload.collectionId,
+                        message.payload.windowId
+                    );
+                case "REMOVE_FROM_COLLECTION":
+                    return await CollectionManager.removeFromCollection(
+                        message.payload.collectionId,
+                        message.payload.itemId
+                    );
+                case "RENAME_COLLECTION":
+                    return await CollectionManager.renameCollection(
+                        message.payload.id,
+                        message.payload.newName
+                    );
+                case "CHANGE_COLLECTION_ORDER":
+                    return await CollectionManager.changeCollectionOrder(message.payload);
+                case "CHANGE_COLLECTION_ITEM_ORDER":
+                    return await CollectionManager.changeCollectionItemOrder(
+                        message.payload.colID,
+                        message.payload.newOrder
+                    );
+                case "EXPORT_DATA":
+                    return await CollectionManager.exportData();
+                case "IMPORT_DATA":
+                    return await CollectionManager.importData(message.payload);
+                case "RESTORE_BACKUP":
+                    return await CollectionManager.restoreBackup();
+                case "SET_COLLECTIONS_DANGEROUSLY":
+                    await CollectionManager.setCollectionData(message.payload);
+                    return { success: true };
+                case "SET_APP_SETTING":
+                    return await CollectionManager.updateAppSetting(message.payload);
+                default:
+                    return { success: false, error: "Unknown operation type" };
+            }
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+);
