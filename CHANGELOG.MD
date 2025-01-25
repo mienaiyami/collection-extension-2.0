@@ -1,3 +1,10 @@
+## v2.4.1
+
+- fixed: context menu not working in production build.
+- fixed: invalid export data format
+- added: item limit on context menu. it will show most recently updated 10 collections.
+- update: updated context menu on import and backup restore.
+
 ## v2.4.0
 
 - fixed: extension version showing as "dev" in firefox.
