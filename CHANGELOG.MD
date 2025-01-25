@@ -1,7 +1,7 @@
 ## v2.4.0
 
 - fixed: extension version showing as "dev" in firefox.
-- fixed: dark theme flickering on load when light mode is enabled.
+- fixed: dark theme flickering on load when light mode is enabled (you need to toggle theme once to apply new changes).
 - added: apply appSetting to all instances on change
 - added: context menu option to add current tab to collection.
 - refactor: major code cleanup and optimization.
