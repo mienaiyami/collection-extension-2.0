@@ -133,7 +133,7 @@ const App = () => {
     };
 
     return (
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <ThemeProvider>
             <AppSettingProvider>
                 <AppContext.Provider
                     value={{

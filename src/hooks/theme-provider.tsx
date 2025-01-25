@@ -1,12 +1,6 @@
-import {
-    createContext,
-    useContext,
-    useEffect,
-    useLayoutEffect,
-    useState,
-} from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useState } from "react";
 
-type Theme = "dark" | "light";
+type Theme = "dark" | "light" | "system";
 
 type ThemeProviderProps = {
     children: React.ReactNode;
@@ -32,20 +26,19 @@ export function ThemeProvider({
     storageKey = "vite-ui-theme",
     ...props
 }: ThemeProviderProps) {
+    // here localStorage is used because it is a synchronous operation
+    // when accessing theme from browser storage it is an async operation and it will cause flickering on page load
     const [theme, setTheme] = useState<Theme>(
         () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
     );
     const [first, setFirst] = useState(false);
     useLayoutEffect(() => {
-        if (!import.meta.env.DEV) {
-            if (!first) {
-                setFirst(true);
-                window.browser.storage.local.get().then(({ theme: _theme }) => {
-                    if (_theme && typeof _theme === "string")
-                        setTheme(_theme as Theme);
-                    else window.browser.storage.local.set({ theme: theme });
-                });
-            }
+        if (!first) {
+            setFirst(true);
+            window.browser.storage.local.get().then(({ theme: _theme }) => {
+                if (_theme && typeof _theme === "string") setTheme(_theme as Theme);
+                else window.browser.storage.local.set({ theme: theme });
+            });
         }
     }, [first]);
     useEffect(() => {
@@ -70,8 +63,8 @@ export function ThemeProvider({
     const value = {
         theme,
         setTheme: (theme: Theme) => {
-            if (import.meta.env.DEV) localStorage.setItem(storageKey, theme);
-            else window.browser.storage.local.set({ theme });
+            localStorage.setItem(storageKey, theme);
+            window.browser.storage.local.set({ theme });
             setTheme(theme);
         },
     };
@@ -86,8 +79,7 @@ export function ThemeProvider({
 export const useTheme = () => {
     const context = useContext(ThemeProviderContext);
 
-    if (context === undefined)
-        throw new Error("useTheme must be used within a ThemeProvider");
+    if (context === undefined) throw new Error("useTheme must be used within a ThemeProvider");
 
     return context;
 };
