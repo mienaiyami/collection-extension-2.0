@@ -144,52 +144,56 @@ browser.runtime.onInstalled.addListener((e) => {
         delayInMinutes: 10,
         periodInMinutes: 10,
     });
-    browser.contextMenus.onClicked.addListener(async (info, tab) => {
-        // info.frameUrl does not exist in firefox
-        const url = info.frameUrl || info.pageUrl;
-        console.log(info, tab);
-        if (!tab || !url) return;
-        const isPage = info.menuItemId.toString().includes(CONTEXT_MENU_PARENT_ID_PAGE);
-        const isAllTabs = info.menuItemId.toString().includes(CONTEXT_MENU_PARENT_ID_ALL_TABS);
-        const id = info.menuItemId
-            .toString()
-            .replace(`-${CONTEXT_MENU_PARENT_ID_PAGE}`, "")
-            .replace(`-${CONTEXT_MENU_PARENT_ID_ALL_TABS}`, "");
-        if (id === "collection-new") {
-            const response = await CollectionManager.makeNewCollection(new Date().toLocaleString());
-            if (response.success) {
-                // this sometimes does not work in firefox
-                // if (info.parentMenuItemId === CONTEXT_MENU_PARENT_ID_PAGE) {
-                if (isPage) {
-                    await CollectionManager.addToCollection(
-                        response.data.collection.id,
-                        await getDataFromTab(tab)
-                    );
-                } else if (isAllTabs) {
-                    const window = await browser.windows.getCurrent();
-                    if (window)
-                        await CollectionManager.addAllTabsToCollection(
-                            response.data.collection.id,
-                            window.id!
-                        );
-                }
-            }
-            return;
-        }
-        if (id.startsWith("collection-")) {
-            const collectionId = id.replace("collection-", "") as UUID;
+    setAddPageToCollectionContextMenu();
+});
+
+browser.contextMenus.onClicked.addListener(async (info, tab) => {
+    // info.frameUrl does not exist in firefox
+    const url = info.frameUrl || info.pageUrl;
+    if (!tab || !url) {
+        console.error("tab or url not found");
+        return;
+    }
+    const isPage = info.menuItemId.toString().includes(CONTEXT_MENU_PARENT_ID_PAGE);
+    const isAllTabs = info.menuItemId.toString().includes(CONTEXT_MENU_PARENT_ID_ALL_TABS);
+    const id = info.menuItemId
+        .toString()
+        .replace(`-${CONTEXT_MENU_PARENT_ID_PAGE}`, "")
+        .replace(`-${CONTEXT_MENU_PARENT_ID_ALL_TABS}`, "");
+    if (id === "collection-new") {
+        const response = await CollectionManager.makeNewCollection(new Date().toLocaleString());
+        if (response.success) {
+            // this sometimes does not work in firefox
+            // if (info.parentMenuItemId === CONTEXT_MENU_PARENT_ID_PAGE) {
             if (isPage) {
-                await CollectionManager.addToCollection(collectionId, await getDataFromTab(tab));
-                return;
+                await CollectionManager.addToCollection(
+                    response.data.collection.id,
+                    await getDataFromTab(tab)
+                );
             } else if (isAllTabs) {
                 const window = await browser.windows.getCurrent();
                 if (window)
-                    await CollectionManager.addAllTabsToCollection(collectionId, window.id!);
+                    await CollectionManager.addAllTabsToCollection(
+                        response.data.collection.id,
+                        window.id!
+                    );
             }
-            return;
+        } else {
+            console.error(response.error);
         }
-    });
-    setAddPageToCollectionContextMenu();
+        return;
+    }
+    if (id.startsWith("collection-")) {
+        const collectionId = id.replace("collection-", "") as UUID;
+        if (isPage) {
+            await CollectionManager.addToCollection(collectionId, await getDataFromTab(tab));
+            return;
+        } else if (isAllTabs) {
+            const window = await browser.windows.getCurrent();
+            if (window) await CollectionManager.addAllTabsToCollection(collectionId, window.id!);
+        }
+        return;
+    }
 });
 
 browser.alarms.onAlarm.addListener((alarm) => {
@@ -504,7 +508,6 @@ class CollectionManager {
     ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "IMPORT_DATA" }>>> {
         try {
             const collections = await this.getCollectionData();
-            console.log(data);
             data.reverse().forEach((newCol) => {
                 const existingIndex = collections.findIndex((col) => col.id === newCol.id);
                 if (existingIndex >= 0) {
