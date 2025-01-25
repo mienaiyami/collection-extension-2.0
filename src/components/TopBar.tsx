@@ -416,7 +416,7 @@ const TopBar = () => {
                                     className="flex flex-row gap-2 items-center"
                                     onClick={() => {
                                         window.browser.tabs.create({
-                                            url: "https://github.com/mienaiyami/collection-extension-2.0/blob/main/CHANGELOG.md",
+                                            url: "https://github.com/mienaiyami/collection-extension-2.0/blob/main/CHANGELOG.MD",
                                         });
                                     }}
                                 >
