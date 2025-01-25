@@ -7,6 +7,9 @@ import {
     CollectionMessage,
 } from "./types/messages";
 
+const CONTEXT_MENU_PARENT_ID_PAGE = "add-page-to-collections";
+const CONTEXT_MENU_PARENT_ID_ALL_TABS = "add-all-tabs-to-collections";
+
 const setAddPageToCollectionContextMenu = async () => {
     await browser.contextMenus.removeAll();
     //! this collectionData can be older compared to recentUsedCollections.
@@ -21,18 +24,30 @@ const setAddPageToCollectionContextMenu = async () => {
         console.error("collectionData and recentlyUsedCollections not found in storage");
         return;
     }
-    const parentId = "add-page-to-collections";
     browser.contextMenus.create({
-        id: parentId,
+        id: CONTEXT_MENU_PARENT_ID_PAGE,
         title: "Add page to collections",
         contexts: ["all"],
     });
     browser.contextMenus.create({
-        id: `collection-new`,
+        id: CONTEXT_MENU_PARENT_ID_ALL_TABS,
+        title: "Add all tabs to collections",
+        contexts: ["all"],
+    });
+
+    browser.contextMenus.create({
+        id: `collection-new-${CONTEXT_MENU_PARENT_ID_PAGE}`,
         title: "Add to new Collection",
         contexts: ["all"],
-        parentId,
+        parentId: CONTEXT_MENU_PARENT_ID_PAGE,
     });
+    browser.contextMenus.create({
+        id: `collection-new-${CONTEXT_MENU_PARENT_ID_ALL_TABS}`,
+        title: "Add to new Collection",
+        contexts: ["all"],
+        parentId: CONTEXT_MENU_PARENT_ID_ALL_TABS,
+    });
+
     if (Array.isArray(recentlyUsedCollections)) {
         //! can be heavy
         //todo optimize
@@ -52,10 +67,16 @@ const setAddPageToCollectionContextMenu = async () => {
         });
         collectionsToShow.forEach((col) => {
             browser.contextMenus.create({
-                id: `collection-${col.id}`,
+                id: `collection-${CONTEXT_MENU_PARENT_ID_PAGE}-${col.id}`,
                 title: col.title,
                 contexts: ["all"],
-                parentId,
+                parentId: CONTEXT_MENU_PARENT_ID_PAGE,
+            });
+            browser.contextMenus.create({
+                id: `collection-${CONTEXT_MENU_PARENT_ID_ALL_TABS}-${col.id}`,
+                title: col.title,
+                contexts: ["all"],
+                parentId: CONTEXT_MENU_PARENT_ID_ALL_TABS,
             });
         });
     }
@@ -127,23 +148,43 @@ browser.runtime.onInstalled.addListener((e) => {
         // info.frameUrl does not exist in firefox
         const url = info.frameUrl || info.pageUrl;
         if (!tab || !url) return;
-
-        const id = info.menuItemId.toString();
+        const isPage = info.menuItemId.toString().includes(CONTEXT_MENU_PARENT_ID_PAGE);
+        const isAllTabs = info.menuItemId.toString().includes(CONTEXT_MENU_PARENT_ID_ALL_TABS);
+        const id = info.menuItemId
+            .toString()
+            .replace(`-${CONTEXT_MENU_PARENT_ID_PAGE}`, "")
+            .replace(`-${CONTEXT_MENU_PARENT_ID_ALL_TABS}`, "");
         if (id === "collection-new") {
             const response = await CollectionManager.makeNewCollection(new Date().toLocaleString());
             if (response.success) {
-                await CollectionManager.addToCollection(
-                    response.data.collection.id,
-                    await getDataFromTab(tab)
-                );
-            } else {
-                console.error(response.error);
+                // this sometimes does not work in firefox
+                // if (info.parentMenuItemId === CONTEXT_MENU_PARENT_ID_PAGE) {
+                if (isPage) {
+                    await CollectionManager.addToCollection(
+                        response.data.collection.id,
+                        await getDataFromTab(tab)
+                    );
+                } else if (isAllTabs) {
+                    const window = await browser.windows.getCurrent();
+                    if (window)
+                        await CollectionManager.addAllTabsToCollection(
+                            response.data.collection.id,
+                            window.id!
+                        );
+                }
             }
             return;
         }
         if (id.startsWith("collection-")) {
             const collectionId = id.replace("collection-", "") as UUID;
-            await CollectionManager.addToCollection(collectionId, await getDataFromTab(tab));
+            if (isPage) {
+                await CollectionManager.addToCollection(collectionId, await getDataFromTab(tab));
+                return;
+            } else if (isAllTabs) {
+                const window = await browser.windows.getCurrent();
+                if (window)
+                    await CollectionManager.addAllTabsToCollection(collectionId, window.id!);
+            }
             return;
         }
     });
