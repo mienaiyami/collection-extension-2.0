@@ -439,7 +439,7 @@ class CollectionManager {
             const oldName = collection.title;
             collection.title = newName;
             await this.setCollectionData(collections);
-            this.updateRecentlyUsed("renamed");
+            this.updateRecentlyUsed("update");
 
             return {
                 success: true,
@@ -508,6 +508,9 @@ class CollectionManager {
     ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "IMPORT_DATA" }>>> {
         try {
             const collections = await this.getCollectionData();
+            if (!Array.isArray(data)) {
+                return { success: false, error: "Invalid data format" };
+            }
             data.reverse().forEach((newCol) => {
                 const existingIndex = collections.findIndex((col) => col.id === newCol.id);
                 if (existingIndex >= 0) {
@@ -523,6 +526,7 @@ class CollectionManager {
             });
 
             await this.setCollectionData(collections);
+            this.updateRecentlyUsed("update");
             return { success: true };
         } catch (error) {
             return { success: false, error: String(error) };
@@ -541,6 +545,7 @@ class CollectionManager {
             }
 
             await this.setCollectionData(backup);
+            this.updateRecentlyUsed("update");
             return { success: true, data: { restoredData: backup } };
         } catch (error) {
             return { success: false, error: String(error) };
@@ -548,7 +553,7 @@ class CollectionManager {
     }
 
     private static async updateRecentlyUsed(
-        id: UUID | "deleted" | "renamed",
+        id: UUID | "deleted" | "update",
         delay = this.WAIT_TIME_BEFORE_UPDATING_RECENTLY_USED
     ): Promise<void> {
         if (delay) {
@@ -570,7 +575,7 @@ class CollectionManager {
             });
             return;
         }
-        if (id === "renamed") {
+        if (id === "update") {
             // its not called from listener coz UUID value stays same
             // need to call this manually to reflect new name;
             await setAddPageToCollectionContextMenu();
