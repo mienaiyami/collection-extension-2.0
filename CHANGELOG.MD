@@ -1,3 +1,12 @@
+## v2.4.0
+
+- fixed: extension version showing as "dev" in firefox.
+- fixed: dark theme flickering on load when light mode is enabled.
+- added: apply appSetting to all instances on change
+- added: context menu option to add current tab to collection.
+- refactor: major code cleanup and optimization.
+  - moved most storage operations to background script.
+
 ## v2.3.0
 
 ### **Dropping support for Microsoft Add-ons store.**
