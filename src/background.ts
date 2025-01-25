@@ -147,6 +147,7 @@ browser.runtime.onInstalled.addListener((e) => {
     browser.contextMenus.onClicked.addListener(async (info, tab) => {
         // info.frameUrl does not exist in firefox
         const url = info.frameUrl || info.pageUrl;
+        console.log(info, tab);
         if (!tab || !url) return;
         const isPage = info.menuItemId.toString().includes(CONTEXT_MENU_PARENT_ID_PAGE);
         const isAllTabs = info.menuItemId.toString().includes(CONTEXT_MENU_PARENT_ID_ALL_TABS);
@@ -503,6 +504,7 @@ class CollectionManager {
     ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "IMPORT_DATA" }>>> {
         try {
             const collections = await this.getCollectionData();
+            console.log(data);
             data.reverse().forEach((newCol) => {
                 const existingIndex = collections.findIndex((col) => col.id === newCol.id);
                 if (existingIndex >= 0) {

@@ -303,7 +303,7 @@ export const useCollectionOperations = () => {
             return response;
         }
 
-        const saveData = JSON.stringify(response.data, null, "\t");
+        const saveData = JSON.stringify(response.data.data, null, "\t");
         const downloadName = `collection-backup-${new Date().toJSON()}`;
 
         if (window.showSaveFilePicker) {
