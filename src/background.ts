@@ -10,16 +10,21 @@ import {
 const CONTEXT_MENU_PARENT_ID_PAGE = "add-page-to-collections";
 const CONTEXT_MENU_PARENT_ID_ALL_TABS = "add-all-tabs-to-collections";
 
+const CONTEXT_MENU_ITEMS_LIMIT = 15;
+
 const setAddPageToCollectionContextMenu = async () => {
     await browser.contextMenus.removeAll();
     //! this collectionData can be older compared to recentUsedCollections.
-    const { recentlyUsedCollections, collectionData } = (await browser.storage.local.get([
-        "recentlyUsedCollections",
-        "collectionData",
-    ])) as {
-        recentlyUsedCollections: UUID[];
-        collectionData: Collection[];
-    };
+    const { recentlyUsedCollections, collectionData, contextMenuItemLimit } =
+        (await browser.storage.local.get([
+            "recentlyUsedCollections",
+            "collectionData",
+            "contextMenuItemLimit",
+        ])) as {
+            recentlyUsedCollections: UUID[];
+            collectionData: Collection[];
+            contextMenuItemLimit: number;
+        };
     if (!collectionData && !recentlyUsedCollections) {
         console.error("collectionData and recentlyUsedCollections not found in storage");
         return;
@@ -61,10 +66,13 @@ const setAddPageToCollectionContextMenu = async () => {
                 return { id, title: collectionsBasic.get(id) as string };
             })
             .filter((col) => col !== null);
-        collectionsBasic.forEach((title, id) => {
-            if (recentlyUsedCollections.includes(id)) return;
-            collectionsToShow.push({ id, title });
-        });
+        for (const col of collectionsBasic) {
+            if (collectionsToShow.length >= (contextMenuItemLimit || CONTEXT_MENU_ITEMS_LIMIT))
+                break;
+            if (!recentlyUsedCollections.includes(col[0])) {
+                collectionsToShow.push({ id: col[0], title: col[1] });
+            }
+        }
         collectionsToShow.forEach((col) => {
             browser.contextMenus.create({
                 id: `collection-${CONTEXT_MENU_PARENT_ID_PAGE}-${col.id}`,
@@ -140,6 +148,7 @@ browser.runtime.onInstalled.addListener((e) => {
             appSetting: initAppSetting,
         });
     }
+    browser.storage.local.set({ contextMenuItemLimit: CONTEXT_MENU_ITEMS_LIMIT });
     browser.alarms.create("backup", {
         delayInMinutes: 10,
         periodInMinutes: 10,
@@ -585,7 +594,7 @@ class CollectionManager {
         const updatedList = [
             id,
             ...recentlyUsedCollections.filter((existingId) => existingId !== id),
-        ].slice(0, 10);
+        ].slice(0, CONTEXT_MENU_ITEMS_LIMIT);
 
         await browser.storage.local.set({
             recentlyUsedCollections: updatedList,
