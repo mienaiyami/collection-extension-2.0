@@ -1,11 +1,8 @@
 import browser from "webextension-polyfill";
 import { appSettingSchema, getDataFromTab, initAppSetting, wait } from "./utils";
-import {
-    CollectionOperation,
-    CollectionResponse,
-    MessageResponse,
-    CollectionMessage,
-} from "./types/messages";
+import { MessageResponse, CollectionMessage, CollectionOperationResponse } from "./types/messages";
+import { GoogleDriveService } from "./services/GoogleDriveService";
+import { GoogleAuthService } from "./services/GoogleAuthService";
 
 const CONTEXT_MENU_PARENT_ID_PAGE = "add-page-to-collections";
 const CONTEXT_MENU_PARENT_ID_ALL_TABS = "add-all-tabs-to-collections";
@@ -259,7 +256,7 @@ class CollectionManager {
             /** pass activeWindowId to fill with all tabs  */
             activeWindowId: undefined as number | undefined,
         }
-    ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "MAKE_NEW_COLLECTION" }>>> {
+    ): CollectionOperationResponse<"MAKE_NEW_COLLECTION"> {
         try {
             const collections = await this.getCollectionData();
             const newCollection: Collection = {
@@ -288,7 +285,6 @@ class CollectionManager {
 
             await this.setCollectionData([newCollection, ...collections]);
             this.updateRecentlyUsed(newCollection.id);
-
             return { success: true, data: { collection: newCollection } };
         } catch (error) {
             return { success: false, error: String(error) };
@@ -297,7 +293,7 @@ class CollectionManager {
 
     static async removeCollections(
         ids: UUID | UUID[]
-    ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "REMOVE_COLLECTIONS" }>>> {
+    ): CollectionOperationResponse<"REMOVE_COLLECTIONS"> {
         try {
             const collections = await this.getCollectionData();
             const idsToRemove = Array.isArray(ids) ? ids : [ids];
@@ -326,9 +322,7 @@ class CollectionManager {
     static async addTabToCollection(
         collectionId: UUID,
         tabId: number
-    ): Promise<
-        CollectionResponse<Extract<CollectionOperation, { type: "ADD_TAB_TO_COLLECTION" }>>
-    > {
+    ): CollectionOperationResponse<"ADD_TAB_TO_COLLECTION"> {
         try {
             const tab = await browser.tabs.get(tabId);
             if (!tab) {
@@ -343,9 +337,7 @@ class CollectionManager {
     static async addAllTabsToCollection(
         collectionId: UUID,
         windowId: number
-    ): Promise<
-        CollectionResponse<Extract<CollectionOperation, { type: "ADD_ALL_TABS_TO_COLLECTION" }>>
-    > {
+    ): CollectionOperationResponse<"ADD_ALL_TABS_TO_COLLECTION"> {
         try {
             const tabs = await browser.tabs.query({
                 windowId,
@@ -367,7 +359,7 @@ class CollectionManager {
     static async addToCollection(
         collectionId: UUID,
         items: CollectionItem | CollectionItem[]
-    ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "ADD_TO_COLLECTION" }>>> {
+    ): CollectionOperationResponse<"ADD_TO_COLLECTION"> {
         try {
             const collections = await this.getCollectionData();
             const collection = collections.find((e) => e.id === collectionId);
@@ -413,9 +405,7 @@ class CollectionManager {
     static async removeFromCollection(
         collectionId: UUID,
         itemId: UUID | UUID[]
-    ): Promise<
-        CollectionResponse<Extract<CollectionOperation, { type: "REMOVE_FROM_COLLECTION" }>>
-    > {
+    ): CollectionOperationResponse<"REMOVE_FROM_COLLECTION"> {
         try {
             const collections = await this.getCollectionData();
             const collection = collections.find((e) => e.id === collectionId);
@@ -438,7 +428,7 @@ class CollectionManager {
     static async renameCollection(
         id: UUID,
         newName: string
-    ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "RENAME_COLLECTION" }>>> {
+    ): CollectionOperationResponse<"RENAME_COLLECTION"> {
         try {
             const collections = await this.getCollectionData();
             const collection = collections.find((e) => e.id === id);
@@ -464,9 +454,7 @@ class CollectionManager {
 
     static async changeCollectionOrder(
         newOrder: UUID[]
-    ): Promise<
-        CollectionResponse<Extract<CollectionOperation, { type: "CHANGE_COLLECTION_ORDER" }>>
-    > {
+    ): CollectionOperationResponse<"CHANGE_COLLECTION_ORDER"> {
         try {
             const collections = await this.getCollectionData();
             collections.sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
@@ -480,9 +468,7 @@ class CollectionManager {
     static async changeCollectionItemOrder(
         colID: UUID,
         newOrder: UUID[]
-    ): Promise<
-        CollectionResponse<Extract<CollectionOperation, { type: "CHANGE_COLLECTION_ITEM_ORDER" }>>
-    > {
+    ): CollectionOperationResponse<"CHANGE_COLLECTION_ITEM_ORDER"> {
         try {
             const collections = await this.getCollectionData();
             const collection = collections.find((e) => e.id === colID);
@@ -501,9 +487,7 @@ class CollectionManager {
         }
     }
 
-    static async exportData(): Promise<
-        CollectionResponse<Extract<CollectionOperation, { type: "EXPORT_DATA" }>>
-    > {
+    static async exportData(): CollectionOperationResponse<"EXPORT_DATA"> {
         try {
             const collections = await this.getCollectionData();
             return { success: true, data: { data: collections } };
@@ -512,9 +496,7 @@ class CollectionManager {
         }
     }
 
-    static async importData(
-        data: Collection[]
-    ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "IMPORT_DATA" }>>> {
+    static async importData(data: Collection[]): CollectionOperationResponse<"IMPORT_DATA"> {
         try {
             const collections = await this.getCollectionData();
             if (!Array.isArray(data)) {
@@ -542,9 +524,7 @@ class CollectionManager {
         }
     }
 
-    static async restoreBackup(): Promise<
-        CollectionResponse<Extract<CollectionOperation, { type: "RESTORE_BACKUP" }>>
-    > {
+    static async restoreBackup(): CollectionOperationResponse<"RESTORE_BACKUP"> {
         try {
             const { backup } = (await browser.storage.local.get("backup")) as {
                 backup: Collection[];
@@ -603,7 +583,7 @@ class CollectionManager {
 
     static async updateAppSetting(
         update: Partial<AppSettingType>
-    ): Promise<CollectionResponse<Extract<CollectionOperation, { type: "SET_APP_SETTING" }>>> {
+    ): CollectionOperationResponse<"SET_APP_SETTING"> {
         const { appSetting } = (await browser.storage.local.get("appSetting")) as {
             appSetting: AppSettingType;
         };
@@ -614,11 +594,40 @@ class CollectionManager {
         await browser.storage.local.set({ appSetting: newSetting });
         return { success: true };
     }
+
+    static async uploadToGoogleDrive(): CollectionOperationResponse<"GOOGLE_DRIVE_UPLOAD_BACKUP"> {
+        try {
+            const collections = await this.getCollectionData();
+            await GoogleDriveService.uploadBackup(collections);
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+
+    static async downloadFromGoogleDrive(): CollectionOperationResponse<"GOOGLE_DRIVE_DOWNLOAD_BACKUP"> {
+        try {
+            const data = await GoogleDriveService.downloadBackup();
+            await this.setCollectionData(data);
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
 }
 
-function isCollectionOperation(message: unknown): message is CollectionMessage {
+const isCollectionOperation = (message: unknown): message is CollectionMessage => {
     return typeof message === "object" && message !== null && "type" in message;
-}
+};
+
+// something i was trying to do when i had brain issues
+// const handleCollectionOperation = async<T extends CollectionOperation["type"]>(
+//     message:Extract<CollectionMessage,{type:T}>
+// ):Promise<CollectionResponse<Extract<CollectionMessage,{type:T}>>> =>{
+//     if(message.type==="RENAME_COLLECTION"){
+//     }
+//     return {success:false,error:"Unknown operation type"};
+// }
 
 browser.runtime.onMessage.addListener(
     async (message: unknown): Promise<MessageResponse<CollectionMessage>> => {
@@ -681,6 +690,31 @@ browser.runtime.onMessage.addListener(
                     return { success: true };
                 case "SET_APP_SETTING":
                     return await CollectionManager.updateAppSetting(message.payload);
+                //
+                case "GOOGLE_DRIVE_LOGIN_STATUS":
+                    return {
+                        success: true,
+                        data: { isLoggedIn: await GoogleAuthService.isLoggedIn() },
+                    };
+                case "LOGIN_GOOGLE_DRIVE": {
+                    const isLoggedIn = await GoogleAuthService.isLoggedIn();
+                    if (isLoggedIn) {
+                        return { success: true };
+                    }
+                    try {
+                        await GoogleAuthService.getValidToken();
+                        return { success: true };
+                    } catch (error) {
+                        return { success: false, error: String(error) };
+                    }
+                }
+                case "LOGOUT_GOOGLE_DRIVE":
+                    await GoogleAuthService.logout();
+                    return { success: true };
+                case "GOOGLE_DRIVE_UPLOAD_BACKUP":
+                    return await CollectionManager.uploadToGoogleDrive();
+                case "GOOGLE_DRIVE_DOWNLOAD_BACKUP":
+                    return await CollectionManager.downloadFromGoogleDrive();
                 default:
                     return { success: false, error: "Unknown operation type" };
             }

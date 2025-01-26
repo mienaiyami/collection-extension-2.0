@@ -55,14 +55,14 @@ const manifest: chrome.runtime.ManifestV3 & {
         "alarms",
         "sidePanel",
         "contextMenus",
+        // "identity",
     ],
     commands: {
         "add-current-tab-to-active-collection": {
             suggested_key: {
                 default: "Ctrl+Shift+A",
             },
-            description:
-                "Add current tab to active/opened collection in side panel",
+            description: "Add current tab to active/opened collection in side panel",
         },
         _execute_sidebar_action: {
             suggested_key: {
@@ -111,8 +111,7 @@ export default defineConfig({
             },
             output: {
                 entryFileNames: (asset) => {
-                    if (["background", "content"].includes(asset.name))
-                        return `[name].js`;
+                    if (["background", "content"].includes(asset.name)) return `[name].js`;
                     return `assets/[name]-[hash].js`;
                 },
             },

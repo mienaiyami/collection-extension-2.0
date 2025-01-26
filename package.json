@@ -14,7 +14,7 @@
     "build:zip": "tsc && vite build && powershell -ExecutionPolicy Bypass -Command \"Compress-Archive -Path ./dist/* -DestinationPath ./build.zip -Force\"",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "release": "esrun release.ts",
+    "release": "esrun release.ts && pnpm run build:zip",
     "publish": "esrun publish.ts"
   },
   "dependencies": {

@@ -5,17 +5,13 @@ export const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 // need this coz `window` is not defined in the background script
 if (typeof window !== "undefined") {
-    self.isSidePanel =
-        window && window.location.href.includes("side_panel.html");
+    self.isSidePanel = window && window.location.href.includes("side_panel.html");
     if (self.isSidePanel) document.body.classList.add("sidePanel");
 
     self.browser = browser;
     self.wait = wait;
     self.cloneJSON = (obj) => JSON.parse(JSON.stringify(obj));
-    self.formatCopyData = (
-        format: string,
-        data: CollectionItem | CollectionItem[]
-    ) => {
+    self.formatCopyData = (format: string, data: CollectionItem | CollectionItem[]) => {
         if (!format) format = "{{url}}";
         const formatData = (data: CollectionItem, i?: number) => {
             return format
@@ -32,8 +28,7 @@ if (typeof window !== "undefined") {
         return formatData(data);
     };
 }
-const systemUrlPattern =
-    /^(about|chrome|edge|brave|opera|vivaldi|firefox):\/\//i;
+const systemUrlPattern = /^(about|chrome|edge|brave|opera|vivaldi|firefox):\/\//i;
 export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
     if (!tab.id || (tab.url && systemUrlPattern.test(tab.url))) return "";
     try {
@@ -44,21 +39,17 @@ export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
             func: () => {
                 return (
                     (
-                        document.querySelector(
-                            'head > meta[property="og:image"]'
-                        ) ||
+                        document.querySelector('head > meta[property="og:image"]') ||
                         document.querySelector('head > meta[name="og:image"]')
                     )?.getAttribute("content") || ""
                 );
             },
         });
         if (result[0] && result[0].result) return result[0].result as string;
-        if (!browser.tabs.captureTab && !tab.active)
-            return tab.favIconUrl || "";
+        if (!browser.tabs.captureTab && !tab.active) return tab.favIconUrl || "";
 
         const capture =
-            (await browser.tabs.captureTab?.(tab.id)) ||
-            (await browser.tabs.captureVisibleTab());
+            (await browser.tabs.captureTab?.(tab.id)) || (await browser.tabs.captureVisibleTab());
         return new Promise((res: (value: string) => void) => {
             const canvas = document.createElement("canvas");
             const w = tab.width || 128,
@@ -90,9 +81,7 @@ export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
     }
 };
 
-export const getDataFromTab = async (
-    tab: browser.Tabs.Tab
-): Promise<CollectionItem> => {
+export const getDataFromTab = async (tab: browser.Tabs.Tab): Promise<CollectionItem> => {
     if (tab.status === "loading") await wait(1000);
     if (tab.status === "loading") await wait(500);
     const img = await Promise.race([
@@ -108,9 +97,7 @@ export const getDataFromTab = async (
         date: new Date().toISOString(),
         id: crypto.randomUUID(),
         img,
-        title:
-            tab.title ||
-            `No title${tab.status === "loading" ? " (tab didn't load)" : ""}`,
+        title: tab.title || `No title${tab.status === "loading" ? " (tab didn't load)" : ""}`,
         url,
     };
 };
@@ -128,3 +115,17 @@ export const appSettingSchema = z
     })
     .strip();
 export const initAppSetting = appSettingSchema.parse({});
+
+export const collectionItemSchema = z.object({
+    title: z.string(),
+    url: z.string(),
+    img: z.string(),
+    id: z.string().uuid() as z.ZodType<UUID>,
+    date: z.string().date(),
+});
+export const collectionSchema = z.object({
+    id: z.string().uuid() as z.ZodType<UUID>,
+    title: z.string(),
+    items: z.array(collectionItemSchema),
+    date: z.string().date(),
+});

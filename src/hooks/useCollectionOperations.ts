@@ -458,6 +458,58 @@ export const useCollectionOperations = () => {
         [sendMessage]
     );
 
+    // google drive stuff
+
+    const getGoogleDriveLoginStatus = useCallback(async () => {
+        const response = await sendMessage({ type: "GOOGLE_DRIVE_LOGIN_STATUS" });
+        if (!response.success) {
+            toast.error("Failed to get login status", {
+                description: response.error,
+            });
+        }
+        return response;
+    }, [sendMessage]);
+
+    const loginGoogleDrive = useCallback(async () => {
+        const response = await sendMessage({ type: "LOGIN_GOOGLE_DRIVE" });
+        if (!response.success) {
+            toast.error("Failed to login", {
+                description: response.error,
+            });
+        }
+        return response;
+    }, [sendMessage]);
+
+    const logoutGoogleDrive = useCallback(async () => {
+        const response = await sendMessage({ type: "LOGOUT_GOOGLE_DRIVE" });
+        if (!response.success) {
+            toast.error("Failed to logout", {
+                description: response.error,
+            });
+        }
+        return response;
+    }, [sendMessage]);
+
+    const uploadToGoogleDrive = useCallback(async () => {
+        const response = await sendMessage({ type: "GOOGLE_DRIVE_UPLOAD_BACKUP" });
+        if (!response.success) {
+            toast.error("Failed to upload backup", {
+                description: response.error,
+            });
+        }
+        return response;
+    }, [sendMessage]);
+
+    const downloadFromGoogleDrive = useCallback(async () => {
+        const response = await sendMessage({ type: "GOOGLE_DRIVE_DOWNLOAD_BACKUP" });
+        if (!response.success) {
+            toast.error("Failed to download backup", {
+                description: response.error,
+            });
+        }
+        return response;
+    }, [sendMessage]);
+
     return {
         removeCollections,
         makeNewCollection,
@@ -472,5 +524,11 @@ export const useCollectionOperations = () => {
         importData,
         restoreBackup,
         setAppSetting,
+
+        getGoogleDriveLoginStatus,
+        loginGoogleDrive,
+        logoutGoogleDrive,
+        uploadToGoogleDrive,
+        downloadFromGoogleDrive,
     };
 };

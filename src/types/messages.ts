@@ -80,6 +80,27 @@ export type CollectionOperation =
     | {
           type: "SET_APP_SETTING";
           payload: Partial<AppSettingType>;
+      }
+    | {
+          type: "GOOGLE_DRIVE_LOGIN_STATUS";
+          payload?: never;
+          response: { isLoggedIn: boolean };
+      }
+    | {
+          type: "LOGIN_GOOGLE_DRIVE";
+          payload?: never;
+      }
+    | {
+          type: "LOGOUT_GOOGLE_DRIVE";
+          payload?: never;
+      }
+    | {
+          type: "GOOGLE_DRIVE_UPLOAD_BACKUP";
+          payload?: never;
+      }
+    | {
+          type: "GOOGLE_DRIVE_DOWNLOAD_BACKUP";
+          payload?: never;
       };
 
 export type BrowserMessage<T = unknown, R = unknown> = {
@@ -117,3 +138,10 @@ export type CollectionResponse<T extends CollectionOperation> =
           success: false;
           error: string;
       };
+
+export type OperationResponse<T extends BrowserMessage["type"]> = Promise<
+    MessageResponse<Extract<BrowserMessage, { type: T }>>
+>;
+export type CollectionOperationResponse<T extends CollectionOperation["type"]> = T extends T
+    ? Promise<CollectionResponse<Extract<CollectionOperation, { type: T }>>>
+    : never;
