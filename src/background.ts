@@ -1,8 +1,8 @@
 import browser from "webextension-polyfill";
 import { appSettingSchema, getDataFromTab, initAppSetting, wait } from "./utils";
 import { MessageResponse, CollectionMessage, CollectionOperationResponse } from "./types/messages";
-import { GoogleDriveService } from "./services/GoogleDriveService";
-import { GoogleAuthService } from "./services/GoogleAuthService";
+// import { GoogleDriveService } from "./services/GoogleDriveService";
+// import { GoogleAuthService } from "./services/GoogleAuthService";
 
 const CONTEXT_MENU_PARENT_ID_PAGE = "add-page-to-collections";
 const CONTEXT_MENU_PARENT_ID_ALL_TABS = "add-all-tabs-to-collections";
@@ -595,25 +595,25 @@ class CollectionManager {
         return { success: true };
     }
 
-    static async uploadToGoogleDrive(): CollectionOperationResponse<"GOOGLE_DRIVE_UPLOAD_BACKUP"> {
-        try {
-            const collections = await this.getCollectionData();
-            await GoogleDriveService.uploadBackup(collections);
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: String(error) };
-        }
-    }
+    // static async uploadToGoogleDrive(): CollectionOperationResponse<"GOOGLE_DRIVE_UPLOAD_BACKUP"> {
+    //     try {
+    //         const collections = await this.getCollectionData();
+    //         await GoogleDriveService.uploadBackup(collections);
+    //         return { success: true };
+    //     } catch (error) {
+    //         return { success: false, error: String(error) };
+    //     }
+    // }
 
-    static async downloadFromGoogleDrive(): CollectionOperationResponse<"GOOGLE_DRIVE_DOWNLOAD_BACKUP"> {
-        try {
-            const data = await GoogleDriveService.downloadBackup();
-            await this.setCollectionData(data);
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: String(error) };
-        }
-    }
+    // static async downloadFromGoogleDrive(): CollectionOperationResponse<"GOOGLE_DRIVE_DOWNLOAD_BACKUP"> {
+    //     try {
+    //         const data = await GoogleDriveService.downloadBackup();
+    //         await this.setCollectionData(data);
+    //         return { success: true };
+    //     } catch (error) {
+    //         return { success: false, error: String(error) };
+    //     }
+    // }
 }
 
 const isCollectionOperation = (message: unknown): message is CollectionMessage => {
@@ -691,30 +691,30 @@ browser.runtime.onMessage.addListener(
                 case "SET_APP_SETTING":
                     return await CollectionManager.updateAppSetting(message.payload);
                 //
-                case "GOOGLE_DRIVE_LOGIN_STATUS":
-                    return {
-                        success: true,
-                        data: { isLoggedIn: await GoogleAuthService.isLoggedIn() },
-                    };
-                case "LOGIN_GOOGLE_DRIVE": {
-                    const isLoggedIn = await GoogleAuthService.isLoggedIn();
-                    if (isLoggedIn) {
-                        return { success: true };
-                    }
-                    try {
-                        await GoogleAuthService.getValidToken();
-                        return { success: true };
-                    } catch (error) {
-                        return { success: false, error: String(error) };
-                    }
-                }
-                case "LOGOUT_GOOGLE_DRIVE":
-                    await GoogleAuthService.logout();
-                    return { success: true };
-                case "GOOGLE_DRIVE_UPLOAD_BACKUP":
-                    return await CollectionManager.uploadToGoogleDrive();
-                case "GOOGLE_DRIVE_DOWNLOAD_BACKUP":
-                    return await CollectionManager.downloadFromGoogleDrive();
+                // case "GOOGLE_DRIVE_LOGIN_STATUS":
+                //     return {
+                //         success: true,
+                //         data: { isLoggedIn: await GoogleAuthService.isLoggedIn() },
+                //     };
+                // case "LOGIN_GOOGLE_DRIVE": {
+                //     const isLoggedIn = await GoogleAuthService.isLoggedIn();
+                //     if (isLoggedIn) {
+                //         return { success: true };
+                //     }
+                //     try {
+                //         await GoogleAuthService.getValidToken();
+                //         return { success: true };
+                //     } catch (error) {
+                //         return { success: false, error: String(error) };
+                //     }
+                // }
+                // case "LOGOUT_GOOGLE_DRIVE":
+                //     await GoogleAuthService.logout();
+                //     return { success: true };
+                // case "GOOGLE_DRIVE_UPLOAD_BACKUP":
+                //     return await CollectionManager.uploadToGoogleDrive();
+                // case "GOOGLE_DRIVE_DOWNLOAD_BACKUP":
+                //     return await CollectionManager.downloadFromGoogleDrive();
                 default:
                     return { success: false, error: "Unknown operation type" };
             }

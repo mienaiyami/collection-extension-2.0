@@ -37,12 +37,16 @@ export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
                 tabId: tab.id,
             },
             func: () => {
-                return (
+                const imageUrl =
                     (
                         document.querySelector('head > meta[property="og:image"]') ||
-                        document.querySelector('head > meta[name="og:image"]')
-                    )?.getAttribute("content") || ""
-                );
+                        document.querySelector('head > meta[name="og:image"]') ||
+                        document.querySelector('head > meta[property="twitter:image"]') ||
+                        document.querySelector('head > meta[name="twitter:image"]') ||
+                        document.querySelector('head > meta[itemprop="image"]')
+                    )?.getAttribute("content") || "";
+                if (imageUrl.startsWith("/")) return location.origin + imageUrl;
+                return imageUrl;
             },
         });
         if (result[0] && result[0].result) return result[0].result as string;
@@ -50,30 +54,34 @@ export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
 
         const capture =
             (await browser.tabs.captureTab?.(tab.id)) || (await browser.tabs.captureVisibleTab());
-        return new Promise((res: (value: string) => void) => {
-            const canvas = document.createElement("canvas");
-            const w = tab.width || 128,
-                h = tab.height || 128;
-            const ratio = w / h;
-            canvas.height = 128;
-            canvas.width = 128;
-            const ctx = canvas.getContext("2d");
-            const img = new Image();
-            img.onload = () => {
-                ctx?.drawImage(
-                    img,
-                    w / 2 - w / ratio / 2,
-                    0,
-                    w / ratio,
-                    h,
-                    0,
-                    0,
-                    canvas.width,
-                    canvas.height
-                );
-                res(canvas.toDataURL());
+        const canvas = new OffscreenCanvas(128, 128);
+        const w = tab.width || 128,
+            h = tab.height || 128;
+        const ratio = w / h;
+        const ctx = canvas.getContext("2d");
+        const originalBlob = await fetch(capture).then((res) => res.blob());
+        const imageBitmap = await createImageBitmap(originalBlob);
+        ctx?.drawImage(
+            imageBitmap,
+            w / 2 - w / ratio / 2,
+            0,
+            w / ratio,
+            h,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+        const blob = await canvas.convertToBlob({ type: "image/png", quality: 0.85 });
+        if (!blob) return tab.favIconUrl || "";
+        return new Promise((res) => {
+            const reader = new FileReader();
+            reader.onload = () => res(reader.result as string);
+            reader.onerror = (e) => {
+                console.error(e);
+                res(tab.favIconUrl || "");
             };
-            img.src = capture;
+            reader.readAsDataURL(blob);
         });
     } catch (error) {
         console.error(error);
@@ -100,6 +108,13 @@ export const getDataFromTab = async (tab: browser.Tabs.Tab): Promise<CollectionI
         title: tab.title || `No title${tab.status === "loading" ? " (tab didn't load)" : ""}`,
         url,
     };
+};
+
+export const isBackgroundScript = (): boolean => {
+    // type of window is defined in firefox background script
+    if (typeof window === "undefined") return true;
+    const backgroundScript = browser.extension?.getBackgroundPage?.();
+    return window === backgroundScript;
 };
 
 export const appSettingSchema = z

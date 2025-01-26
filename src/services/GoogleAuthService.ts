@@ -1,3 +1,4 @@
+import { isBackgroundScript } from "@/utils";
 import browser from "webextension-polyfill";
 
 const CLIENT_ID = "309178204165-spf4df9t9l6dlnoo24dkva268jnvfhg7.apps.googleusercontent.com";
@@ -5,7 +6,8 @@ const SCOPES = [
     "https://www.googleapis.com/auth/drive.file",
     "https://www.googleapis.com/auth/drive.appdata",
 ];
-if (typeof window !== "undefined") {
+
+if (!isBackgroundScript()) {
     throw new Error("This file should not be imported in frontend code");
 }
 
