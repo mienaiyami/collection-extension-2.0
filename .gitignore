@@ -23,6 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
+
+*.env*
+
 build.zip
 github/aaa
 public/manifest.json
