@@ -1,3 +1,8 @@
+## v2.4.2
+
+- fixed: unable to add some pages to collection (document not defined error).
+- fixed: cover image not generating for some pages.
+
 ## v2.4.1
 
 - fixed: context menu not working in production build.
