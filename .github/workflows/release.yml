@@ -39,7 +39,7 @@ jobs:
                   body: |
                       "For more details, see the [CHANGELOG](https://github.com/mienaiyami/collection-extension-2.0/blob/main/CHANGELOG.MD)."
 
-            - name: Publish
-              env:
-                  MS_SECRET: ${{ secrets.MS_SECRET }}
-              run: pnpm run publish
+            # - name: Publish
+            #   env:
+            #       MS_SECRET: ${{ secrets.MS_SECRET }}
+            #   run: pnpm run publish
