@@ -14,8 +14,7 @@
     "build:zip": "tsc && vite build && powershell -ExecutionPolicy Bypass -Command \"Compress-Archive -Path ./dist/* -DestinationPath ./build.zip -Force\"",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "release": "esrun release.ts",
-    "publish": "esrun publish.ts"
+    "release": "esrun release.ts"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.2",

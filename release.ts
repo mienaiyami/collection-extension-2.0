@@ -11,7 +11,7 @@ const rl = readline.createInterface({
     output: process.stdout,
 });
 
-const tagAndPush = () => {
+const tagAndPush = (): void => {
     console.log(`Tagging v${pkgJSON.version} and pushing tags.`);
     const push = () => {
         const gitSpawn = exec(`git push --tags`);
@@ -32,7 +32,7 @@ const tagAndPush = () => {
     });
 };
 
-const signFireFoxAddon = () => {
+const signFireFoxAddon = (): void => {
     console.log("Signing Firefox add-on...");
     const pwshSpawn = exec(
         "cd ./dist && web-ext sign --channel=listed " +
@@ -53,57 +53,76 @@ const signFireFoxAddon = () => {
     });
 };
 
-const publishChromeExtension = async () => {
+const publishChromeExtension = async (): Promise<void> => {
     console.log("Publishing Chrome extension...");
-    throw new Error("untested");
-
-    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            client_id: process.env.CHROME_CLIENT_ID,
-            client_secret: process.env.CHROME_CLIENT_SECRET,
-            refresh_token: process.env.CHROME_REFRESH_TOKEN,
-            grant_type: "refresh_token",
-        }),
-    });
-
-    const { access_token } = await tokenResponse.json();
-
-    const zipFile = fs.readFileSync("./build.zip");
-    const uploadResponse = await fetch(
-        `https://www.googleapis.com/upload/chromewebstore/v1.1/items/${process.env.CHROME_EXTENSION_ID}`,
-        {
-            method: "PUT",
-            headers: {
-                Authorization: `Bearer ${access_token}`,
-                "x-goog-api-version": "2",
-            },
-            body: zipFile,
+    // throw new Error("untested");
+    try {
+        const requiredEnvVars = [
+            process.env.CHROME_CLIENT_ID,
+            process.env.CHROME_CLIENT_SECRET,
+            process.env.CHROME_REFRESH_TOKEN,
+            process.env.CHROME_EXTENSION_ID,
+        ];
+        if (requiredEnvVars.some((v) => !v)) {
+            throw new Error("Missing required env variables for Chrome extension publish");
         }
-    );
 
-    if (!uploadResponse.ok) {
-        throw new Error(`Upload failed: ${await uploadResponse.text()}`);
-    }
-
-    const publishResponse = await fetch(
-        `https://www.googleapis.com/chromewebstore/v1.1/items/${process.env.CHROME_EXTENSION_ID}/publish`,
-        {
+        const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
-            headers: {
-                Authorization: `Bearer ${access_token}`,
-                "x-goog-api-version": "2",
-                "Content-Length": "0",
-            },
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                client_id: process.env.CHROME_CLIENT_ID,
+                client_secret: process.env.CHROME_CLIENT_SECRET,
+                refresh_token: process.env.CHROME_REFRESH_TOKEN,
+                grant_type: "refresh_token",
+            }),
+        });
+        if (!tokenResponse.ok) {
+            throw new Error(`Token request failed: ${await tokenResponse.text()}`);
         }
-    );
+        const response = await tokenResponse.json();
+        const access_token = response.access_token;
+        if (!access_token) {
+            throw new Error("Access token not found in response");
+        }
 
-    if (!publishResponse.ok) {
-        throw new Error(`Publish failed: ${await publishResponse.text()}`);
+        const zipFile = fs.readFileSync("./build.zip");
+        const uploadResponse = await fetch(
+            `https://www.googleapis.com/upload/chromewebstore/v1.1/items/${process.env.CHROME_EXTENSION_ID}`,
+            {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${access_token}`,
+                    "x-goog-api-version": "2",
+                },
+                body: zipFile,
+            }
+        );
+
+        if (!uploadResponse.ok) {
+            throw new Error(`Upload failed: ${await uploadResponse.text()}`);
+        }
+
+        const publishResponse = await fetch(
+            `https://www.googleapis.com/chromewebstore/v1.1/items/${process.env.CHROME_EXTENSION_ID}/publish`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${access_token}`,
+                    "x-goog-api-version": "2",
+                    "Content-Length": "0",
+                },
+            }
+        );
+
+        if (!publishResponse.ok) {
+            throw new Error(`Publish failed: ${await publishResponse.text()}`);
+        }
+
+        console.log("Chrome extension published successfully!");
+    } catch (e) {
+        console.error("\x1b[91mChrome publish error:", e, "\x1b[0m");
     }
-
-    console.log("Chrome extension published successfully!");
 };
 
 rl.question(
@@ -112,11 +131,7 @@ rl.question(
         if (e === "") {
             tagAndPush();
             signFireFoxAddon();
-            // try {
-            //     await publishChromeExtension();
-            // } catch (error) {
-            //     console.error("\x1b[91mChrome publish error:", error, "\x1b[0m");
-            // }
+            await publishChromeExtension();
         }
         rl.close();
     }
