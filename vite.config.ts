@@ -55,7 +55,7 @@ const manifest: chrome.runtime.ManifestV3 & {
         "alarms",
         "sidePanel",
         "contextMenus",
-        // "identity",
+        "identity",
     ],
     commands: {
         "add-current-tab-to-active-collection": {

@@ -1,6 +1,9 @@
 import browser from "webextension-polyfill";
-import { appSettingSchema, getDataFromTab, initAppSetting, wait } from "./utils";
+import { appSettingSchema, collectionSchema, getDataFromTab, initAppSetting, wait } from "./utils";
 import { MessageResponse, CollectionMessage, CollectionOperationResponse } from "./types/messages";
+import { z } from "zod";
+import { GoogleAuthService } from "./services/GoogleAuthService";
+import { SyncService } from "./services/SyncService";
 // import { GoogleDriveService } from "./services/GoogleDriveService";
 // import { GoogleAuthService } from "./services/GoogleAuthService";
 
@@ -99,11 +102,6 @@ const backup = () =>
         });
     });
 
-browser.storage.local.onChanged.addListener(async (change) => {
-    if (change.recentlyUsedCollections) {
-        setAddPageToCollectionContextMenu();
-    }
-});
 browser.runtime.onInstalled.addListener((e) => {
     if (e.reason === "update") {
         (() => {
@@ -121,12 +119,21 @@ browser.runtime.onInstalled.addListener((e) => {
                 }
             });
             browser.storage.local
-                .get("recentlyUsedCollections")
-                .then(({ recentlyUsedCollections }) => {
+                .get(["recentlyUsedCollections", "collectionData"])
+                .then(({ recentlyUsedCollections, collectionData }) => {
                     if (!recentlyUsedCollections) {
                         browser.storage.local.set({
                             recentlyUsedCollections: [],
                         });
+                    }
+                    try {
+                        console.log("Parsing collectionData at startup");
+                        console.log({ collectionData });
+                        const data = z.array(collectionSchema || []).parse(collectionData);
+                        console.log({ data });
+                        browser.storage.local.set({ collectionData: data });
+                    } catch (e) {
+                        console.error("Error parsing collectionData at startup", e);
                     }
                 });
         })();
@@ -145,6 +152,19 @@ browser.runtime.onInstalled.addListener((e) => {
             appSetting: initAppSetting,
         });
     }
+    (() => {
+        browser.storage.local
+            .get(["collectionData", "deletedCollectionData", "syncState"])
+            .then(({ collectionData, deletedCollectionData }) => {
+                if (collectionData === undefined) {
+                    browser.storage.local.set({ collectionData: [] });
+                }
+                if (deletedCollectionData === undefined) {
+                    browser.storage.local.set({ deletedCollectionData: [] });
+                }
+                SyncService.setSyncState((prev) => ({ ...prev, status: "unsynced" }));
+            });
+    })();
     browser.storage.local.set({ contextMenuItemLimit: CONTEXT_MENU_ITEMS_LIMIT });
     browser.alarms.create("backup", {
         delayInMinutes: 10,
@@ -238,6 +258,50 @@ class CollectionManager {
     /** used when operations like rename,new so it need to be called after the item have been updated in store */
     private static WAIT_TIME_BEFORE_UPDATING_RECENTLY_USED = 3000;
 
+    static {
+        browser.storage.local.onChanged.addListener(async (change) => {
+            try {
+                console.log("Storage change:", change);
+                console.warn("need to figure something out for reorder of collections and items.");
+                if (change.recentlyUsedCollections) {
+                    setAddPageToCollectionContextMenu();
+                }
+                if (change.collectionData || change.deletedCollectionData) {
+                    // - abort sync if syncing
+                    // - ignore sync if recently synced
+                    if (
+                        change.syncState &&
+                        (change.syncState.newValue as SyncState | undefined)?.status === "synced"
+                    ) {
+                        console.log(
+                            "Collection data changed was probably triggered by sync. Ignoring."
+                        );
+                        return;
+                    }
+                    const isSafeToSync = await SyncService.isSafeToSync();
+                    if (isSafeToSync.reason.syncingInProgress) {
+                        // syncing will marge remote data and then write it to local
+                        // which can be a problem if local data is changed after sync started
+                        SyncService.abortSync("Local data changed. Aborting sync.");
+                    }
+                    // there is no need for this coz of debounce
+                    // if (isSafeToSync.reason.recentlySynced) {
+                    //     return;
+                    // }
+
+                    await SyncService.setSyncState((prev) => ({ ...prev, status: "unsynced" }));
+                    console.log("Syncing after change", change);
+                    await SyncService.syncWithDebounce();
+                }
+            } catch (error) {
+                console.error("Error in storage change listener:", error);
+            }
+        });
+
+        //startup sync
+        SyncService.syncWithDebounce({ delay: 10_000 });
+    }
+
     static async getCollectionData(): Promise<Collection[]> {
         const { collectionData } = await browser.storage.local.get("collectionData");
         return (collectionData as Collection[]) || [];
@@ -246,7 +310,16 @@ class CollectionManager {
     static async setCollectionData(data: Collection[]): Promise<void> {
         await browser.storage.local.set({ collectionData: data });
     }
-
+    private static async addToDeletedCollection(data: DeletedCollection[]): Promise<void> {
+        const { deletedCollectionData = [] } = (await browser.storage.local.get(
+            "deletedCollectionData"
+        )) as {
+            deletedCollectionData: DeletedCollection[];
+        };
+        await browser.storage.local.set({
+            deletedCollectionData: [...data, ...deletedCollectionData],
+        });
+    }
     static async makeNewCollection(
         title: string,
         items: CollectionItem[] = [],
@@ -263,7 +336,8 @@ class CollectionManager {
                 id: crypto.randomUUID(),
                 title,
                 items,
-                date: new Date().toISOString(),
+                createdAt: new Date().getTime(),
+                updatedAt: new Date().getTime(),
             };
             if (fillByData.activeTabId) {
                 const tab = await browser.tabs.get(fillByData.activeTabId);
@@ -307,6 +381,8 @@ class CollectionManager {
             });
 
             await this.setCollectionData(updatedCollections);
+            const time = new Date().getTime();
+            this.addToDeletedCollection(idsToRemove.map((id) => ({ id, deletedAt: time })));
             // not awaited coz it make other things slow
             this.updateRecentlyUsed("deleted");
 
@@ -410,13 +486,17 @@ class CollectionManager {
             const collections = await this.getCollectionData();
             const collection = collections.find((e) => e.id === collectionId);
             if (!collection) {
-                return { success: false, error: "Collection not found" };
+                return { success: false, error: "Collection not found." };
             }
 
             const itemIds = Array.isArray(itemId) ? itemId : [itemId];
             collection.items = collection.items.filter((item) => !itemIds.includes(item.id));
 
             await this.setCollectionData(collections);
+            const timestamp = Date.now();
+            this.addToDeletedCollection(
+                itemIds.map((id) => ({ id, deletedAt: timestamp, isItem: true }))
+            );
             this.updateRecentlyUsed(collectionId, 0);
 
             return { success: true };
@@ -436,7 +516,11 @@ class CollectionManager {
                 return { success: false, error: "Collection not found" };
             }
             const oldName = collection.title;
+
             collection.title = newName;
+            collection.updatedAt = Date.now();
+
+            console.log({ collection });
             await this.setCollectionData(collections);
             this.updateRecentlyUsed("update");
 
@@ -457,7 +541,13 @@ class CollectionManager {
     ): CollectionOperationResponse<"CHANGE_COLLECTION_ORDER"> {
         try {
             const collections = await this.getCollectionData();
-            collections.sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
+            const timestamp = Date.now();
+            collections.sort((a, b) => {
+                // test ordering after sync
+                a.updatedAt = timestamp;
+                b.updatedAt = timestamp;
+                return newOrder.indexOf(a.id) - newOrder.indexOf(b.id);
+            });
             await this.setCollectionData(collections);
             return { success: true };
         } catch (error) {
@@ -473,10 +563,14 @@ class CollectionManager {
             const collections = await this.getCollectionData();
             const collection = collections.find((e) => e.id === colID);
             if (!collection) {
-                return { success: false, error: "Collection not found" };
+                return { success: false, error: "Collection not found." };
             }
-
-            collection.items.sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
+            const timestamp = Date.now();
+            collection.items.sort((a, b) => {
+                a.updatedAt = timestamp;
+                b.updatedAt = timestamp;
+                return newOrder.indexOf(a.id) - newOrder.indexOf(b.id);
+            });
 
             await this.setCollectionData(collections);
             this.updateRecentlyUsed(colID, 0);
@@ -499,10 +593,8 @@ class CollectionManager {
     static async importData(data: Collection[]): CollectionOperationResponse<"IMPORT_DATA"> {
         try {
             const collections = await this.getCollectionData();
-            if (!Array.isArray(data)) {
-                return { success: false, error: "Invalid data format" };
-            }
-            data.reverse().forEach((newCol) => {
+            const parsedData = z.array(collectionSchema).parse(data);
+            parsedData.reverse().forEach((newCol) => {
                 const existingIndex = collections.findIndex((col) => col.id === newCol.id);
                 if (existingIndex >= 0) {
                     const existingItemIds = collections[existingIndex].items.map((e) => e.id);
@@ -520,6 +612,7 @@ class CollectionManager {
             this.updateRecentlyUsed("update");
             return { success: true };
         } catch (error) {
+            console.error(error);
             return { success: false, error: String(error) };
         }
     }
@@ -532,10 +625,10 @@ class CollectionManager {
             if (!backup) {
                 return { success: false, error: "No backup found" };
             }
-
-            await this.setCollectionData(backup);
+            const parsed = z.array(collectionSchema).parse(backup);
+            await this.setCollectionData(parsed);
             this.updateRecentlyUsed("update");
-            return { success: true, data: { restoredData: backup } };
+            return { success: true };
         } catch (error) {
             return { success: false, error: String(error) };
         }
@@ -594,26 +687,6 @@ class CollectionManager {
         await browser.storage.local.set({ appSetting: newSetting });
         return { success: true };
     }
-
-    // static async uploadToGoogleDrive(): CollectionOperationResponse<"GOOGLE_DRIVE_UPLOAD_BACKUP"> {
-    //     try {
-    //         const collections = await this.getCollectionData();
-    //         await GoogleDriveService.uploadBackup(collections);
-    //         return { success: true };
-    //     } catch (error) {
-    //         return { success: false, error: String(error) };
-    //     }
-    // }
-
-    // static async downloadFromGoogleDrive(): CollectionOperationResponse<"GOOGLE_DRIVE_DOWNLOAD_BACKUP"> {
-    //     try {
-    //         const data = await GoogleDriveService.downloadBackup();
-    //         await this.setCollectionData(data);
-    //         return { success: true };
-    //     } catch (error) {
-    //         return { success: false, error: String(error) };
-    //     }
-    // }
 }
 
 const isCollectionOperation = (message: unknown): message is CollectionMessage => {
@@ -691,30 +764,48 @@ browser.runtime.onMessage.addListener(
                 case "SET_APP_SETTING":
                     return await CollectionManager.updateAppSetting(message.payload);
                 //
-                // case "GOOGLE_DRIVE_LOGIN_STATUS":
-                //     return {
-                //         success: true,
-                //         data: { isLoggedIn: await GoogleAuthService.isLoggedIn() },
-                //     };
-                // case "LOGIN_GOOGLE_DRIVE": {
-                //     const isLoggedIn = await GoogleAuthService.isLoggedIn();
-                //     if (isLoggedIn) {
-                //         return { success: true };
-                //     }
-                //     try {
-                //         await GoogleAuthService.getValidToken();
-                //         return { success: true };
-                //     } catch (error) {
-                //         return { success: false, error: String(error) };
-                //     }
-                // }
-                // case "LOGOUT_GOOGLE_DRIVE":
-                //     await GoogleAuthService.logout();
-                //     return { success: true };
-                // case "GOOGLE_DRIVE_UPLOAD_BACKUP":
-                //     return await CollectionManager.uploadToGoogleDrive();
-                // case "GOOGLE_DRIVE_DOWNLOAD_BACKUP":
-                //     return await CollectionManager.downloadFromGoogleDrive();
+                case "GOOGLE_DRIVE_LOGIN_STATUS":
+                    return {
+                        success: true,
+                        data: { isLoggedIn: await GoogleAuthService.isLoggedIn() },
+                    };
+                case "LOGIN_GOOGLE_DRIVE": {
+                    const isLoggedIn = await GoogleAuthService.isLoggedIn();
+                    if (isLoggedIn) {
+                        return { success: true };
+                    }
+                    await GoogleAuthService.getValidToken();
+                    return { success: true };
+                }
+                case "LOGOUT_GOOGLE_DRIVE":
+                    await GoogleAuthService.logout();
+                    return { success: true };
+                case "GOOGLE_DRIVE_USER_INFO": {
+                    const data = await GoogleAuthService.getUserInfo();
+                    console.log("User info:", data);
+                    if (!data) {
+                        return { success: true, data: null };
+                    }
+                    return { success: true, data };
+                }
+
+                case "GOOGLE_DRIVE_SYNC_NOW": {
+                    const isSafe = await SyncService.isSafeToSync();
+                    if (!isSafe.isSafe) {
+                        return {
+                            success: false,
+                            error: isSafe.reason.syncingInProgress
+                                ? "Syncing in progress"
+                                : "Recently synced",
+                        };
+                    }
+                    await SyncService.syncNow();
+                    return { success: true };
+                }
+                case "GET_GOOGLE_DRIVE_SYNC_STATE": {
+                    const state = await SyncService.getSyncState();
+                    return { success: true, data: state };
+                }
                 default:
                     return { success: false, error: "Unknown operation type" };
             }

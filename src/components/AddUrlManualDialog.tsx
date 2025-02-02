@@ -19,9 +19,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 const AddUrlManualDialog = () => {
     const [selectedTab, setSelectedTab] = useState("direct");
-    const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(
-        null
-    );
+    const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
     const { inCollectionView } = useAppContext();
     const operations = useCollectionOperations();
     return (
@@ -54,15 +52,10 @@ const AddUrlManualDialog = () => {
                         <TabsTrigger value="direct">Direct</TabsTrigger>
                         <TabsTrigger value="file">From File</TabsTrigger>
                     </TabsList>
-                    <TabsContent
-                        tabIndex={-1}
-                        value="direct"
-                        className="flex flex-col gap-2"
-                    >
+                    <TabsContent tabIndex={-1} value="direct" className="flex flex-col gap-2">
                         <DialogDescription>
-                            Enter URLs (new line separated) to add to
-                            collection. To add url with title, follow the url
-                            with
+                            Enter URLs (new line separated) to add to collection. To add url with
+                            title, follow the url with
                             <code className="bg-foreground/10 rounded-sm px-2 py-0.5">
                                 {" "}
                                 || title || imageURL
@@ -77,18 +70,13 @@ const AddUrlManualDialog = () => {
                             }}
                         ></textarea>
                     </TabsContent>
-                    <TabsContent
-                        tabIndex={-1}
-                        value="file"
-                        className="flex flex-col gap-2"
-                    >
+                    <TabsContent tabIndex={-1} value="file" className="flex flex-col gap-2">
                         <DialogDescription>
-                            Upload a file containing URLs to add to collection.
-                            To add url with title, follow the url with
+                            Upload a file containing URLs to add to collection. To add url with
+                            title, follow the url with
                             <code> | title | imageURL</code>. For example:{" "}
                             <code className="bg-foreground/10 px-2 py-0.5 rounded-lg">
-                                https://example.com || Example ||
-                                https://image.url.png
+                                https://example.com || Example || https://image.url.png
                             </code>
                             . Make sure that the title should not contain "||".
                         </DialogDescription>
@@ -108,77 +96,51 @@ const AddUrlManualDialog = () => {
                             onClick={() => {
                                 try {
                                     const parseUrls = (str: string) => {
-                                        const urls = str
-                                            .split("\n")
-                                            .map((e) => e.trim());
-                                        const items = urls
+                                        const urls = str.split("\n").map((e) => e.trim());
+                                        const items: CollectionItem[] = urls
                                             .map((e) => {
                                                 const split = e.split("||");
                                                 try {
-                                                    const url = new URL(
-                                                        split[0].trim()
-                                                    );
-                                                    const title =
-                                                        split[1]?.trim() ||
-                                                        url.hostname;
+                                                    const url = new URL(split[0].trim());
+                                                    const title = split[1]?.trim() || url.hostname;
                                                     const img = split[2]
-                                                        ? new URL(
-                                                              split[2]?.trim()
-                                                          )
+                                                        ? new URL(split[2]?.trim())
                                                         : "";
                                                     return {
-                                                        date: new Date().toISOString(),
                                                         id: crypto.randomUUID(),
                                                         title,
                                                         url: url.toString(),
                                                         img: img.toString(),
+                                                        createdAt: Date.now(),
+                                                        updatedAt: Date.now(),
                                                     };
                                                 } catch (e) {
-                                                    toast.error(
-                                                        `Failed to parse: ${e}`
-                                                    );
+                                                    toast.error(`Failed to parse: ${e}`);
                                                     return null;
                                                 }
                                             })
-                                            .filter(
-                                                (e) => e !== null
-                                            ) as CollectionItem[];
-                                        if (items.length === 0)
-                                            return toast.error("No URLs found");
+                                            .filter((e) => e !== null);
+                                        if (items.length === 0) return toast.error("No URLs found");
                                         if (inCollectionView) {
-                                            //todo : test
-                                            operations.addToCollection(
-                                                inCollectionView,
-                                                items
-                                            );
+                                            operations.addToCollection(inCollectionView, items);
                                         }
                                     };
                                     if (inputRef.current) {
                                         if (selectedTab === "file") {
-                                            const file = (
-                                                inputRef.current as HTMLInputElement
-                                            ).files?.[0];
+                                            const file = (inputRef.current as HTMLInputElement)
+                                                .files?.[0];
                                             if (file) {
                                                 const reader = new FileReader();
                                                 reader.onload = (e) => {
-                                                    if (
-                                                        typeof e.target
-                                                            ?.result ===
-                                                        "string"
-                                                    )
-                                                        parseUrls(
-                                                            e.target.result
-                                                        );
+                                                    if (typeof e.target?.result === "string")
+                                                        parseUrls(e.target.result);
                                                     else {
-                                                        toast.error(
-                                                            "Failed to read file"
-                                                        );
+                                                        toast.error("Failed to read file");
                                                     }
                                                 };
                                                 reader.readAsText(file);
                                             }
-                                        } else
-                                            parseUrls(inputRef.current.value);
+                                        } else parseUrls(inputRef.current.value);
                                     }
                                 } catch (e) {
                                     toast.error("Failed to add URLs");

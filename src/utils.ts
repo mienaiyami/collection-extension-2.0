@@ -1,10 +1,25 @@
 import browser from "webextension-polyfill";
 import { z } from "zod";
 
+export const isBackgroundScript = (): boolean => {
+    // type of window is defined in firefox background script
+    if (typeof window === "undefined") return true;
+    const backgroundScript = browser.extension?.getBackgroundPage?.();
+    return window === backgroundScript;
+};
+export const backgroundOnlyCode = () => {
+    if (!isBackgroundScript())
+        throw new Error("This function can only be called in the background script.");
+};
+export const frontOnlyCode = () => {
+    if (isBackgroundScript())
+        throw new Error("This function can only be called in the front script.");
+};
+
 export const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 // need this coz `window` is not defined in the background script
-if (typeof window !== "undefined") {
+if (!isBackgroundScript()) {
     self.isSidePanel = window && window.location.href.includes("side_panel.html");
     if (self.isSidePanel) document.body.classList.add("sidePanel");
 
@@ -19,7 +34,9 @@ if (typeof window !== "undefined") {
                 .replace(/{{title}}/g, data.title)
                 .replace(/{{url}}/g, data.url)
                 .replace(/{{img}}/g, data.img)
-                .replace(/{{date}}/g, data.date)
+                .replace(/{{date}}/g, new Date(data.createdAt).toISOString())
+                .replace(/{{dateCreated}}/g, new Date(data.createdAt).toISOString())
+                .replace(/{{dateUpdated}}/g, new Date(data.updatedAt).toISOString())
                 .replace(/{{i}}/g, String(i));
         };
         if (data instanceof Array) {
@@ -28,6 +45,40 @@ if (typeof window !== "undefined") {
         return formatData(data);
     };
 }
+/** why did i waste time on this? */
+export const getReaderProgressFromResponse_JSON = async <T = unknown>(
+    response: Response,
+    onProgress?: (receivedLength: number, totalLength: number) => void,
+    abortSignal?: AbortSignal
+): Promise<T> => {
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("No reader available");
+    let receivedLength = 0;
+    const totalLength = response.headers.get("content-length")
+        ? parseInt(response.headers.get("content-length")!)
+        : 0;
+    const chunks: Uint8Array[] = [];
+    console.group("Downloading ", response.url);
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        if (abortSignal?.aborted) throw new Error(abortSignal.reason || "Aborted");
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        receivedLength += value.length;
+        if (onProgress) onProgress(receivedLength, totalLength);
+        else console.log(`Downloaded: ${(receivedLength / 1024).toFixed(2)} KB`);
+    }
+    console.groupEnd();
+    const chunksAll = new Uint8Array(receivedLength);
+    let position = 0;
+    for (const chunk of chunks) {
+        chunksAll.set(chunk, position);
+        position += chunk.length;
+    }
+    return JSON.parse(new TextDecoder().decode(chunksAll));
+};
+
 const systemUrlPattern = /^(about|chrome|edge|brave|opera|vivaldi|firefox):\/\//i;
 export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
     if (!tab.id || (tab.url && systemUrlPattern.test(tab.url))) return "";
@@ -100,21 +151,15 @@ export const getDataFromTab = async (tab: browser.Tabs.Tab): Promise<CollectionI
     if (!tab.title || !tab.url) console.warn("Unable to get tab title or url.");
     let url = tab.url || tab.pendingUrl || "Unable to get url";
     if (tab.url === "about:blank") url = tab.title || "Unable to get url";
-
+    const date = Date.now();
     return {
-        date: new Date().toISOString(),
         id: crypto.randomUUID(),
         img,
         title: tab.title || `No title${tab.status === "loading" ? " (tab didn't load)" : ""}`,
         url,
+        createdAt: date,
+        updatedAt: date,
     };
-};
-
-export const isBackgroundScript = (): boolean => {
-    // type of window is defined in firefox background script
-    if (typeof window === "undefined") return true;
-    const backgroundScript = browser.extension?.getBackgroundPage?.();
-    return window === backgroundScript;
 };
 
 export const appSettingSchema = z
@@ -131,16 +176,69 @@ export const appSettingSchema = z
     .strip();
 export const initAppSetting = appSettingSchema.parse({});
 
-export const collectionItemSchema = z.object({
-    title: z.string(),
-    url: z.string(),
-    img: z.string(),
+// version<=v2.4.2: data is on every item, adding createdAt,updatedAt,deleted now;
+export const collectionItemSchema = z
+    .object({
+        title: z.string(),
+        url: z.string(),
+        img: z.string(),
+        id: z.string().uuid() as z.ZodType<UUID>,
+
+        date: z.string().datetime().optional(),
+        createdAt: z.number().optional(),
+        updatedAt: z.number().optional(),
+    })
+    .transform((old) => {
+        // number date is faster compared to ISO string
+        const date: number = old.date ? new Date(old.date).getTime() : Date.now();
+        return {
+            title: old.title,
+            url: old.url,
+            img: old.img,
+            id: old.id,
+            createdAt: old.createdAt || date,
+            // currently only used to maintain item ordering
+            updatedAt: old.updatedAt || date,
+        };
+    });
+console.warn("make sure to update updatedAt when reordering collections,items");
+export const collectionSchema = z
+    .object({
+        id: z.string().uuid() as z.ZodType<UUID>,
+        title: z.string(),
+        items: z.array(collectionItemSchema),
+
+        date: z.string().datetime().optional(),
+        createdAt: z.number().optional(),
+        updatedAt: z.number().optional(),
+    })
+    .transform((old) => {
+        const date: number = old.date ? new Date(old.date).getTime() : Date.now();
+        return {
+            id: old.id,
+            title: old.title,
+            items: old.items,
+            createdAt: old.createdAt || date,
+            updatedAt: old.updatedAt || date,
+        };
+    });
+
+/** applies to both `Collection` and `CollectionItem` */
+export const deletedCollectionItemSchema = z.object({
     id: z.string().uuid() as z.ZodType<UUID>,
-    date: z.string().date(),
+    /** is `CollectionItem` */
+    isItem: z.boolean().optional(),
+    deletedAt: z.number(),
 });
-export const collectionSchema = z.object({
-    id: z.string().uuid() as z.ZodType<UUID>,
-    title: z.string(),
-    items: z.array(collectionItemSchema),
-    date: z.string().date(),
+console.warn(
+    "make sure to avoid pushing syncData at close intervals. \
+    for example, pc1 pushed data at 1:00 and pc2 pushed data at 1:01, then pc1 will overwrite pc2 data without syncing."
+);
+export const syncDataSchema = z.object({
+    collectionData: z.array(collectionSchema),
+    deletedCollectionData: z.array(deletedCollectionItemSchema).transform((old) => {
+        // clear items older than 3months
+        return old.filter((e) => e.deletedAt < Date.now() - 1000 * 60 * 60 * 24 * 30 * 3);
+    }),
+    timestamp: z.number(),
 });

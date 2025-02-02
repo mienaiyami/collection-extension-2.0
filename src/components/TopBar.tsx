@@ -28,7 +28,8 @@ import { Label } from "./ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { initAppSetting } from "@/utils";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
-// import GoogleDriveBackup from "./GoogleDriveBackup";
+import GoogleDriveBackup from "./GoogleDriveBackup";
+import { SyncStatus } from "./SyncStatus";
 
 const TopBar = () => {
     const { inCollectionView, openCollection } = useAppContext();
@@ -90,107 +91,131 @@ const TopBar = () => {
         <Dialog>
             <AlertDialog>
                 <div className="p-3 flex flex-row gap-2 items-center w-full border-b">
-                    {inCollectionView ? (
-                        <>
+                    <TooltipProvider delayDuration={100} disableHoverableContent>
+                        {inCollectionView ? (
+                            <>
+                                <Button
+                                    variant={"ghost"}
+                                    size={"icon"}
+                                    className="shrink-0"
+                                    onClick={() => {
+                                        openCollection(null);
+                                    }}
+                                >
+                                    <ChevronLeft />
+                                </Button>
+                                <Input
+                                    value={title}
+                                    className="text-lg"
+                                    onKeyDown={(e) => {
+                                        if (!["Escape"].includes(e.key)) {
+                                            e.stopPropagation();
+                                        }
+                                        if (e.key === "Enter") {
+                                            operations.renameCollection(inCollectionView, title);
+                                        }
+                                    }}
+                                    onChange={(e) => {
+                                        const value = e.currentTarget?.value;
+                                        if (value) setTitle(value);
+                                    }}
+                                />
+                            </>
+                        ) : (
                             <Button
                                 variant={"ghost"}
-                                size={"icon"}
-                                className="shrink-0"
                                 onClick={() => {
-                                    openCollection(null);
-                                }}
-                            >
-                                <ChevronLeft />
-                            </Button>
-                            <Input
-                                value={title}
-                                className="text-lg"
-                                onKeyDown={(e) => {
-                                    if (!["Escape"].includes(e.key)) {
-                                        e.stopPropagation();
-                                    }
-                                    if (e.key === "Enter") {
-                                        operations.renameCollection(inCollectionView, title);
-                                    }
-                                }}
-                                onChange={(e) => {
-                                    const value = e.currentTarget?.value;
-                                    if (value) setTitle(value);
-                                }}
-                            />
-                        </>
-                    ) : (
-                        <Button
-                            variant={"ghost"}
-                            onClick={() => {
-                                window.browser.tabs.create({
-                                    url: window.location.href,
-                                });
-                            }}
-                            className="text-3xl font-bold tracking-tight"
-                        >
-                            Collections
-                        </Button>
-                    )}
-                    <div className="ml-auto flex flex-row gap-1 items-center">
-                        <DialogTrigger asChild>
-                            <Button variant={"ghost"} size={"icon"}>
-                                <Settings />
-                            </Button>
-                        </DialogTrigger>
-
-                        <Button
-                            variant={"ghost"}
-                            size={"icon"}
-                            title="Sidebar"
-                            style={{
-                                display: chrome.sidePanel
-                                    ? "flex"
-                                    : // checking only when firefox
-                                    window.isSidePanel
-                                    ? "none"
-                                    : "flex",
-                            }}
-                            onClick={async () => {
-                                if (window.isSidePanel) {
-                                    // note to self, `chrome.sidePanel` is not on `window.browser`, and only available on chromium
-                                    if (chrome.sidePanel) {
-                                        chrome.sidePanel.setPanelBehavior({
-                                            openPanelOnActionClick: false,
-                                        });
-                                        window.close();
-                                    } else {
-                                        window.browser.sidebarAction.close();
-                                    }
-                                    return;
-                                }
-                                if (chrome.sidePanel) {
-                                    const windowId = (await window.browser.windows.getCurrent()).id;
-                                    //eslint-disable-next-line
-                                    //@ts-ignore
-                                    chrome.sidePanel.open({ windowId });
-                                    chrome.sidePanel.setPanelBehavior({
-                                        openPanelOnActionClick: true,
+                                    window.browser.tabs.create({
+                                        url: window.location.href,
                                     });
-                                } else {
-                                    window.browser.sidebarAction.open();
-                                    window.close();
-                                }
-                            }}
-                        >
-                            {window.isSidePanel ? <PinOff /> : <Pin />}
-                        </Button>
-                        <Button
-                            variant={"ghost"}
-                            size={"icon"}
-                            onClick={() => {
-                                window.close();
-                                window.browser.sidebarAction.close();
-                            }}
-                        >
-                            <X />
-                        </Button>
-                    </div>
+                                }}
+                                className="text-3xl font-bold tracking-tight"
+                            >
+                                Collections
+                            </Button>
+                        )}
+                        <div className="ml-auto flex flex-row gap-1 items-center">
+                            <SyncStatus />
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <DialogTrigger asChild>
+                                        <Button variant={"ghost"} size={"icon"}>
+                                            <Settings />
+                                        </Button>
+                                    </DialogTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Settings</p>
+                                </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant={"ghost"}
+                                        size={"icon"}
+                                        style={{
+                                            display: chrome.sidePanel
+                                                ? "flex"
+                                                : // checking only when firefox
+                                                window.isSidePanel
+                                                ? "none"
+                                                : "flex",
+                                        }}
+                                        onClick={async () => {
+                                            if (window.isSidePanel) {
+                                                // note to self, `chrome.sidePanel` is not on `window.browser`, and only available on chromium
+                                                if (chrome.sidePanel) {
+                                                    chrome.sidePanel.setPanelBehavior({
+                                                        openPanelOnActionClick: false,
+                                                    });
+                                                    window.close();
+                                                } else {
+                                                    window.browser.sidebarAction.close();
+                                                }
+                                                return;
+                                            }
+                                            if (chrome.sidePanel) {
+                                                const windowId = (
+                                                    await window.browser.windows.getCurrent()
+                                                ).id;
+                                                //eslint-disable-next-line
+                                                //@ts-ignore
+                                                chrome.sidePanel.open({ windowId });
+                                                chrome.sidePanel.setPanelBehavior({
+                                                    openPanelOnActionClick: true,
+                                                });
+                                            } else {
+                                                window.browser.sidebarAction.open();
+                                                window.close();
+                                            }
+                                        }}
+                                    >
+                                        {window.isSidePanel ? <PinOff /> : <Pin />}
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Toggle Sidebar</p>
+                                </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant={"ghost"}
+                                        size={"icon"}
+                                        onClick={() => {
+                                            window.close();
+                                            window.browser.sidebarAction.close();
+                                        }}
+                                    >
+                                        <X />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Close</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </div>
+                    </TooltipProvider>
                 </div>
                 <DialogContent className="max-w-sm sm:max-w-lg">
                     <DialogHeader>
@@ -325,7 +350,7 @@ const TopBar = () => {
                                 <div className="flex flex-col gap-2 px-2">
                                     <pre className="p-2 text-xs rounded-sm font-mono whitespace-break-spaces">
                                         Available variables:
-                                        {`\n{{i}}, {{title}}, {{url}}, {{img}}, {{date}}, {{id}}`}
+                                        {`\n{{i}}, {{title}}, {{url}}, {{img}}, {{id}}, {{createdAt}}, {{updatedAt}}`}
                                     </pre>
                                     <textarea
                                         className="p-2 text-sm rounded-md min-h-[2em] max-h-[5em] bg-foreground/5"
@@ -387,7 +412,7 @@ const TopBar = () => {
                                 </p>
                             )}
                         </div>
-                        {/* <GoogleDriveBackup /> */}
+                        <GoogleDriveBackup />
                         <div className="flex flex-row flex-wrap items-center gap-2 p-2 border rounded-md">
                             <span className="font-semibold">Links</span>
                             <div className="flex flex-row gap-2 ml-auto flex-wrap">

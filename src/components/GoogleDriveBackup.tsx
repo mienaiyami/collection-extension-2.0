@@ -1,73 +1,125 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { toast } from "sonner";
+import { Loader2, RotateCcw } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+
+const CHECK_USER_INTERVAL = 1000 * 60;
 
 const GoogleDriveBackup = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [loggedInUser, setLoggedInUser] = useState<GoogleDriveUserData | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
     const operations = useCollectionOperations();
-
-    useEffect(() => {
-        (async () => {
-            const res = await operations.getGoogleDriveLoginStatus();
-            if (res.success) setIsLoggedIn(res.data.isLoggedIn);
-        })();
+    const checkUser = useCallback(async () => {
+        const res = await operations.getGoogleDriveUserInfo();
+        if (res.success) {
+            setLoggedInUser(res.data);
+            setError(null);
+        } else {
+            setLoggedInUser(null);
+            setError(res.error);
+        }
     }, []);
+    useEffect(() => {
+        checkUser();
+    }, []);
+    useEffect(() => {
+        console.log("called123123");
+        const interval = setInterval(checkUser, CHECK_USER_INTERVAL);
+        return () => clearInterval(interval);
+    }, [loggedInUser, error]);
 
     return (
         <div className="flex flex-col gap-2 p-2 border rounded-md">
-            <div className="flex flex-row items-center gap-2">
-                <span className="font-semibold">Google Drive Backup</span>
-                <div className="flex flex-row gap-2 ml-auto">
-                    {isLoggedIn ? (
+            <TooltipProvider>
+                <div className="flex flex-col items-start gap-2">
+                    <span className="font-semibold">Google Drive Backup</span>
+                    {loggedInUser ? (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="flex items-center gap-2">
+                                    <span>Logged in as : </span>
+                                    <TooltipContent>
+                                        <p>{loggedInUser.email}</p>
+                                    </TooltipContent>
+                                    <img
+                                        src={loggedInUser.imageUrl}
+                                        alt="User"
+                                        className="w-8 h-8 rounded-full"
+                                        draggable={false}
+                                    />
+                                    <span>{loggedInUser.displayName}</span>
+                                </div>
+                            </TooltipTrigger>
+                        </Tooltip>
+                    ) : error ? (
                         <>
-                            <Button
-                                variant="outline"
-                                onClick={async () => {
-                                    const response = await operations.uploadToGoogleDrive();
-                                    if (response.success) {
-                                        toast.success("Backup uploaded to Google Drive");
-                                    }
-                                }}
-                            >
-                                Upload to Drive
+                            <Button size={"icon"} variant={"ghost"}>
+                                <RotateCcw />
                             </Button>
-                            <Button
-                                variant="outline"
-                                onClick={async () => {
-                                    const response = await operations.downloadFromGoogleDrive();
-                                    if (response.success) {
-                                        toast.success("Backup restored from Google Drive");
-                                    }
-                                }}
-                            >
-                                Sync from Drive
-                            </Button>
-                            <Button
-                                variant="outline"
-                                onClick={async () => {
-                                    await operations.logoutGoogleDrive();
-                                    setIsLoggedIn(false);
-                                }}
-                            >
-                                Logout
-                            </Button>
+                            <span className="text-destructive border border-destructive rounded-sm p-2">
+                                {error}
+                            </span>
                         </>
                     ) : (
-                        <Button
-                            variant="outline"
-                            onClick={async () => {
-                                const response = await operations.loginGoogleDrive();
-                                if (response.success) {
-                                    setIsLoggedIn(true);
-                                }
-                            }}
-                        >
-                            Login with Google
-                        </Button>
+                        <span>Not logged in</span>
                     )}
+                    <div className="flex flex-col gap-2">
+                        {loggedInUser ? (
+                            <>
+                                <Button
+                                    variant="outline"
+                                    disabled={loading}
+                                    onClick={async () => {
+                                        setLoading(true);
+                                        const response = await operations.googleDriveSyncNow();
+                                        if (response.success) {
+                                            toast.success("Synced successfully");
+                                        }
+                                        setLoading(false);
+                                    }}
+                                >
+                                    Sync Now
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    disabled={loading}
+                                    onClick={async () => {
+                                        setLoading(true);
+                                        await operations.logoutGoogleDrive();
+                                        setLoggedInUser(null);
+                                        setLoading(false);
+                                    }}
+                                >
+                                    Logout
+                                </Button>
+                            </>
+                        ) : (
+                            <Button
+                                variant="outline"
+                                disabled={loading}
+                                onClick={async () => {
+                                    setLoading(true);
+                                    const response = await operations.loginGoogleDrive();
+                                    if (response.success) {
+                                        const res = await operations.getGoogleDriveUserInfo();
+                                        if (res.success) setLoggedInUser(res.data);
+                                    }
+                                    setLoading(false);
+                                }}
+                            >
+                                {loading ? (
+                                    <Loader2 className="animate-spin" />
+                                ) : (
+                                    "Login with Google Drive"
+                                )}
+                            </Button>
+                        )}
+                    </div>
                 </div>
-            </div>
+            </TooltipProvider>
         </div>
     );
 };

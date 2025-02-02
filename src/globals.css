@@ -4,8 +4,7 @@
 
 @font-face {
     font-family: "Inter";
-    src: local("Inter") url(@/assets/Inter-VariableFont_slnt,wght.ttf)
-        format("truetype");
+    src: local("Inter") url(@/assets/Inter-VariableFont_slnt,wght.ttf) format("truetype");
     font-weight: 100 900;
     font-style: normal;
 }
@@ -35,6 +34,9 @@
 
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 0 0% 98%;
+
+        --success: 88 50% 53%;
+        --success-foreground: 0 0% 100%;
 
         --border: 0 0% 89.8%;
         --input: 0 0% 89.8%;
@@ -70,6 +72,9 @@
 
         --destructive: 0 62.8% 30.6%;
         --destructive-foreground: 0 0% 98%;
+
+        --success: 88 50% 53%;
+        --success-foreground: 0 0% 0%;
 
         --border: 0 0% 14.9%;
         --input: 0 0% 14.9%;

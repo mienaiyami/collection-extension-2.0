@@ -20,6 +20,7 @@ const tagAndPush = (): void => {
         });
         gitSpawn.on("close", (code) => {
             console.log(`push tags: exited with code ${code}.`);
+            if (code === 1) process.exit(1);
         });
     };
     const gitSpawn = exec(`git tag -a v${pkgJSON.version} -m"v${pkgJSON.version}"`);
@@ -28,6 +29,7 @@ const tagAndPush = (): void => {
     });
     gitSpawn.on("close", (code) => {
         console.log(`git tag: exited with code ${code}.`);
+        if (code === 1) process.exit(1);
         push();
     });
 };
@@ -50,6 +52,7 @@ const signFireFoxAddon = (): void => {
 
     pwshSpawn.on("close", (code) => {
         console.log(`sign addon: exited with code ${code}.`);
+        if (code === 1) process.exit(1);
     });
 };
 
@@ -122,6 +125,7 @@ const publishChromeExtension = async (): Promise<void> => {
         console.log("Chrome extension published successfully!");
     } catch (e) {
         console.error("\x1b[91mChrome publish error:", e, "\x1b[0m");
+        process.exit(1);
     }
 };
 
@@ -130,7 +134,9 @@ rl.question(
     async (e) => {
         if (e === "") {
             tagAndPush();
+            console.log("--------------------");
             signFireFoxAddon();
+            console.log("--------------------");
             await publishChromeExtension();
         }
         rl.close();

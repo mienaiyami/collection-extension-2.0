@@ -476,6 +476,8 @@ export const useCollectionOperations = () => {
             toast.error("Failed to login", {
                 description: response.error,
             });
+        } else {
+            toast.success("Logged in to Google Drive");
         }
         return response;
     }, [sendMessage]);
@@ -486,24 +488,36 @@ export const useCollectionOperations = () => {
             toast.error("Failed to logout", {
                 description: response.error,
             });
+        } else {
+            toast.success("Logged out from Google Drive");
         }
         return response;
     }, [sendMessage]);
 
-    const uploadToGoogleDrive = useCallback(async () => {
-        const response = await sendMessage({ type: "GOOGLE_DRIVE_UPLOAD_BACKUP" });
+    const getGoogleDriveUserInfo = useCallback(async () => {
+        const response = await sendMessage({ type: "GOOGLE_DRIVE_USER_INFO" });
         if (!response.success) {
-            toast.error("Failed to upload backup", {
+            toast.error("Failed to get user info", {
                 description: response.error,
             });
         }
         return response;
     }, [sendMessage]);
 
-    const downloadFromGoogleDrive = useCallback(async () => {
-        const response = await sendMessage({ type: "GOOGLE_DRIVE_DOWNLOAD_BACKUP" });
+    const googleDriveSyncNow = useCallback(async () => {
+        const response = await sendMessage({ type: "GOOGLE_DRIVE_SYNC_NOW" });
         if (!response.success) {
-            toast.error("Failed to download backup", {
+            toast.error("Failed to sync now", {
+                description: response.error,
+            });
+        }
+        return response;
+    }, [sendMessage]);
+
+    const getGoogleDriveSyncState = useCallback(async () => {
+        const response = await sendMessage({ type: "GET_GOOGLE_DRIVE_SYNC_STATE" });
+        if (!response.success) {
+            toast.error("Failed to get sync state", {
                 description: response.error,
             });
         }
@@ -528,7 +542,8 @@ export const useCollectionOperations = () => {
         getGoogleDriveLoginStatus,
         loginGoogleDrive,
         logoutGoogleDrive,
-        uploadToGoogleDrive,
-        downloadFromGoogleDrive,
+        getGoogleDriveUserInfo,
+        googleDriveSyncNow,
+        getGoogleDriveSyncState,
     };
 };

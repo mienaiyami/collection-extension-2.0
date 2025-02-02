@@ -71,7 +71,6 @@ export type CollectionOperation =
     | {
           type: "RESTORE_BACKUP";
           payload?: never;
-          response: { restoredData: Collection[] };
       }
     | {
           type: "SET_COLLECTIONS_DANGEROUSLY";
@@ -95,12 +94,18 @@ export type CollectionOperation =
           payload?: never;
       }
     | {
-          type: "GOOGLE_DRIVE_UPLOAD_BACKUP";
+          type: "GOOGLE_DRIVE_USER_INFO";
+          payload?: never;
+          response: GoogleDriveUserData | null;
+      }
+    | {
+          type: "GOOGLE_DRIVE_SYNC_NOW";
           payload?: never;
       }
     | {
-          type: "GOOGLE_DRIVE_DOWNLOAD_BACKUP";
+          type: "GET_GOOGLE_DRIVE_SYNC_STATE";
           payload?: never;
+          response: SyncState;
       };
 
 export type BrowserMessage<T = unknown, R = unknown> = {
