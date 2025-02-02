@@ -65,8 +65,7 @@ export const SyncStatus = () => {
         const onStorageChangeListener = (changes: {
             [key: string]: Browser.Storage.StorageChange;
         }) => {
-            console.log("test:frontend:SyncStatus:changes", changes);
-            if (changes.syncState) {
+            if (changes.syncState && changes.syncState.newValue) {
                 setSyncState(changes.syncState.newValue as SyncState);
             }
         };

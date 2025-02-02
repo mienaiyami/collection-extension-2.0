@@ -149,7 +149,7 @@ export class SyncService {
 
                 const data = await getReaderProgressFromResponse_JSON(
                     response,
-                    undefined,
+                    false,
                     this.syncAbortController?.signal
                 );
                 try {
@@ -183,54 +183,41 @@ export class SyncService {
         return null;
     }
     static mergeCollectionItems(
-        local: CollectionItem[],
-        remote: CollectionItem[],
+        collectionItem1: CollectionItem[],
+        collectionItem2: CollectionItem[],
         deletedMap: Map<UUID, DeletedCollection>
     ): CollectionItem[] {
-        const itemMap = new Map<string, CollectionItem>();
-        const localMap = new Map(
-            local.reduce((acc, item) => {
-                if (!deletedMap.get(item.id)) acc.push([item.id, item]);
-                return acc;
-            }, [] as [UUID, CollectionItem][])
-        );
-        remote.forEach((remoteItem) => {
-            const localItem = localMap.get(remoteItem.id);
-            if (!localItem) {
-                if (!deletedMap.get(remoteItem.id)) itemMap.set(remoteItem.id, remoteItem);
-            } else {
-                itemMap.set(remoteItem.id, {
-                    ...localItem,
-                    ...remoteItem,
-                    updatedAt: new Date().getTime(),
-                });
-            }
+        const mergedItems: CollectionItem[] = [
+            ...collectionItem1.filter((item) => !deletedMap.get(item.id)),
+            ...collectionItem2.filter((item) => !deletedMap.get(item.id)),
+        ];
+        // in case of CollectionItems, updatedAt is only for sorting on 2025/02/02. CollectionItem is not updated
+        mergedItems.sort((a, b) => b.updatedAt - a.updatedAt);
+        const seen = new Set<string>();
+        return mergedItems.filter((item) => {
+            if (seen.has(item.id)) return false;
+            seen.add(item.id);
+            return true;
         });
-        localMap.forEach((localItem) => {
-            if (!itemMap.has(localItem.id)) {
-                itemMap.set(localItem.id, localItem);
-            }
-        });
-        return Array.from(itemMap.values());
     }
     static mergeCollection(
-        local: Collection,
-        remote: Collection,
+        collection1: Collection,
+        collection2: Collection,
         deletedMap: Map<UUID, DeletedCollection>
     ): Collection {
-        if (local.updatedAt > remote.updatedAt) {
+        if (collection1.updatedAt > collection2.updatedAt) {
             return {
-                ...remote,
-                ...local,
-                items: this.mergeCollectionItems(local.items, remote.items, deletedMap),
-                updatedAt: local.updatedAt,
+                ...collection2,
+                ...collection1,
+                items: this.mergeCollectionItems(collection1.items, collection2.items, deletedMap),
+                updatedAt: collection1.updatedAt,
             };
         }
         return {
-            ...local,
-            ...remote,
-            items: this.mergeCollectionItems(local.items, remote.items, deletedMap),
-            updatedAt: remote.updatedAt,
+            ...collection1,
+            ...collection2,
+            items: this.mergeCollectionItems(collection1.items, collection2.items, deletedMap),
+            updatedAt: collection2.updatedAt,
         };
     }
     static mergeData(
@@ -242,14 +229,12 @@ export class SyncService {
         collectionData: Collection[];
         deletedCollectionData: DeletedCollection[];
     } {
+        const deletedMap = new Map<UUID, DeletedCollection>([
+            ...localDeleted.map((d) => [d.id, d] as [UUID, DeletedCollection]),
+            ...remoteDeleted.map((d) => [d.id, d] as [UUID, DeletedCollection]),
+        ]);
+
         const collectionMap = new Map<UUID, Collection>();
-        const deletedMap = new Map<UUID, DeletedCollection>();
-        localDeleted.forEach((deleted) => {
-            deletedMap.set(deleted.id, deleted);
-        });
-        remoteDeleted.forEach((deleted) => {
-            deletedMap.set(deleted.id, deleted);
-        });
         const localMap = new Map(
             localColData.reduce((acc, col) => {
                 if (!deletedMap.has(col.id)) acc.push([col.id, col]);
@@ -317,9 +302,26 @@ export class SyncService {
         };
         if (typeof syncState === "object" && typeof syncState.status !== "undefined")
             return syncState;
-        console.log("No syncState found. Setting to unsynced");
-        await browser.storage.local.set({ syncState: { status: "unsynced", lastSynced: null } });
-        return { status: "unsynced", lastSynced: null };
+        try {
+            console.log("No syncState found. Setting to unsynced");
+            const isLoggedIn = await GoogleAuthService.isLoggedIn();
+            const newSyncState: SyncState = {
+                status: isLoggedIn ? "unsynced" : "error",
+                lastSynced: null,
+                error: isLoggedIn ? undefined : "Not logged in",
+            };
+            await browser.storage.local.set({ syncState: newSyncState });
+            return newSyncState;
+        } catch (err) {
+            console.error(err);
+            const newSyncState: SyncState = {
+                status: "error",
+                lastSynced: null,
+                error: err instanceof Error ? err.message : "Something went wrong",
+            };
+            await browser.storage.local.set({ syncState: newSyncState });
+            return newSyncState;
+        }
     }
     static async isSafeToSync(): Promise<{
         isSafe: boolean;
@@ -328,7 +330,6 @@ export class SyncService {
             syncingInProgress: boolean;
         };
     }> {
-        console.log("isSafeToSync");
         const { status, lastSynced } = await this.getSyncState();
         console.log("time since last sync", Date.now() - (lastSynced || 0));
         const reason = {

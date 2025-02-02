@@ -162,7 +162,17 @@ browser.runtime.onInstalled.addListener((e) => {
                 if (deletedCollectionData === undefined) {
                     browser.storage.local.set({ deletedCollectionData: [] });
                 }
-                SyncService.setSyncState((prev) => ({ ...prev, status: "unsynced" }));
+                GoogleAuthService.isLoggedIn().then((isLoggedIn) => {
+                    if (isLoggedIn) {
+                        SyncService.setSyncState((prev) => ({ ...prev, status: "unsynced" }));
+                    } else {
+                        SyncService.setSyncState({
+                            status: "error",
+                            error: "Not logged in",
+                            lastSynced: null,
+                        });
+                    }
+                });
             });
     })();
     browser.storage.local.set({ contextMenuItemLimit: CONTEXT_MENU_ITEMS_LIMIT });
@@ -791,13 +801,8 @@ browser.runtime.onMessage.addListener(
 
                 case "GOOGLE_DRIVE_SYNC_NOW": {
                     const isSafe = await SyncService.isSafeToSync();
-                    if (!isSafe.isSafe) {
-                        return {
-                            success: false,
-                            error: isSafe.reason.syncingInProgress
-                                ? "Syncing in progress"
-                                : "Recently synced",
-                        };
+                    if (isSafe.reason.syncingInProgress) {
+                        return { success: false, error: "Syncing in progress" };
                     }
                     await SyncService.syncNow();
                     return { success: true };

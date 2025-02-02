@@ -48,7 +48,7 @@ if (!isBackgroundScript()) {
 /** why did i waste time on this? */
 export const getReaderProgressFromResponse_JSON = async <T = unknown>(
     response: Response,
-    onProgress?: (receivedLength: number, totalLength: number) => void,
+    onProgress?: boolean | ((receivedLength: number, totalLength: number) => void),
     abortSignal?: AbortSignal
 ): Promise<T> => {
     const reader = response.body?.getReader();
@@ -66,8 +66,8 @@ export const getReaderProgressFromResponse_JSON = async <T = unknown>(
         if (done) break;
         chunks.push(value);
         receivedLength += value.length;
-        if (onProgress) onProgress(receivedLength, totalLength);
-        else console.log(`Downloaded: ${(receivedLength / 1024).toFixed(2)} KB`);
+        if (typeof onProgress === "function") onProgress(receivedLength, totalLength);
+        else if (onProgress) console.log(`Downloaded: ${(receivedLength / 1024).toFixed(2)} KB`);
     }
     console.groupEnd();
     const chunksAll = new Uint8Array(receivedLength);

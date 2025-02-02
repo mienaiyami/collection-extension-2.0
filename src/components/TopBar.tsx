@@ -28,7 +28,7 @@ import { Label } from "./ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { initAppSetting } from "@/utils";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
-import GoogleDriveBackup from "./GoogleDriveBackup";
+import GoogleDriveSync from "./GoogleDriveSync";
 import { SyncStatus } from "./SyncStatus";
 
 const TopBar = () => {
@@ -412,7 +412,7 @@ const TopBar = () => {
                                 </p>
                             )}
                         </div>
-                        <GoogleDriveBackup />
+                        <GoogleDriveSync />
                         <div className="flex flex-row flex-wrap items-center gap-2 p-2 border rounded-md">
                             <span className="font-semibold">Links</span>
                             <div className="flex flex-row gap-2 ml-auto flex-wrap">

@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/t
 
 const CHECK_USER_INTERVAL = 1000 * 60;
 
-const GoogleDriveBackup = () => {
+const GoogleDriveSync = () => {
     const [loggedInUser, setLoggedInUser] = useState<GoogleDriveUserData | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -35,7 +35,7 @@ const GoogleDriveBackup = () => {
         <div className="flex flex-col gap-2 p-2 border rounded-md">
             <TooltipProvider>
                 <div className="flex flex-col items-start gap-2">
-                    <span className="font-semibold">Google Drive Backup</span>
+                    <span className="font-semibold">Google Drive Sync</span>
                     {loggedInUser ? (
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -124,4 +124,4 @@ const GoogleDriveBackup = () => {
     );
 };
 
-export default GoogleDriveBackup;
+export default GoogleDriveSync;
