@@ -36,7 +36,7 @@ if (!isBackgroundScript()) {
                 .replace(/{{img}}/g, data.img)
                 .replace(/{{date}}/g, new Date(data.createdAt).toISOString())
                 .replace(/{{dateCreated}}/g, new Date(data.createdAt).toISOString())
-                .replace(/{{dateUpdated}}/g, new Date(data.updatedAt).toISOString())
+                .replace(/{{dateUpdated}}/g, new Date(data.orderUpdatedAt).toISOString())
                 .replace(/{{i}}/g, String(i));
         };
         if (data instanceof Array) {
@@ -158,7 +158,7 @@ export const getDataFromTab = async (tab: browser.Tabs.Tab): Promise<CollectionI
         title: tab.title || `No title${tab.status === "loading" ? " (tab didn't load)" : ""}`,
         url,
         createdAt: date,
-        updatedAt: date,
+        orderUpdatedAt: date,
     };
 };
 
@@ -186,7 +186,7 @@ export const collectionItemSchema = z
 
         date: z.string().datetime().optional(),
         createdAt: z.number().optional(),
-        updatedAt: z.number().optional(),
+        orderUpdatedAt: z.number().optional(),
     })
     .transform((old) => {
         // number date is faster compared to ISO string
@@ -197,11 +197,9 @@ export const collectionItemSchema = z
             img: old.img,
             id: old.id,
             createdAt: old.createdAt || date,
-            // currently only used to maintain item ordering
-            updatedAt: old.updatedAt || date,
+            orderUpdatedAt: old.orderUpdatedAt || date,
         };
     });
-console.warn("make sure to update updatedAt when reordering collections,items");
 export const collectionSchema = z
     .object({
         id: z.string().uuid() as z.ZodType<UUID>,
@@ -211,6 +209,7 @@ export const collectionSchema = z
         date: z.string().datetime().optional(),
         createdAt: z.number().optional(),
         updatedAt: z.number().optional(),
+        orderUpdatedAt: z.number().optional(),
     })
     .transform((old) => {
         const date: number = old.date ? new Date(old.date).getTime() : Date.now();
@@ -220,6 +219,7 @@ export const collectionSchema = z
             items: old.items,
             createdAt: old.createdAt || date,
             updatedAt: old.updatedAt || date,
+            orderUpdatedAt: old.orderUpdatedAt || date,
         };
     });
 

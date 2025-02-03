@@ -551,14 +551,17 @@ class CollectionManager {
     ): CollectionOperationResponse<"CHANGE_COLLECTION_ORDER"> {
         try {
             const collections = await this.getCollectionData();
+            const newOrderMap = new Map(newOrder.map((id, index) => [id, index]));
             const timestamp = Date.now();
-            collections.sort((a, b) => {
-                // test ordering after sync
-                a.updatedAt = timestamp;
-                b.updatedAt = timestamp;
-                return newOrder.indexOf(a.id) - newOrder.indexOf(b.id);
+            const reordered: Collection[] = new Array(collections.length);
+            collections.forEach((collection) => {
+                const index = newOrderMap.get(collection.id);
+                if (index !== undefined) {
+                    collection.updatedAt = timestamp;
+                    reordered[index] = collection;
+                }
             });
-            await this.setCollectionData(collections);
+            await this.setCollectionData(reordered.filter(Boolean));
             return { success: true };
         } catch (error) {
             return { success: false, error: String(error) };
@@ -575,13 +578,18 @@ class CollectionManager {
             if (!collection) {
                 return { success: false, error: "Collection not found." };
             }
+            const newOrderMap = new Map(newOrder.map((id, index) => [id, index]));
             const timestamp = Date.now();
-            collection.items.sort((a, b) => {
-                a.updatedAt = timestamp;
-                b.updatedAt = timestamp;
-                return newOrder.indexOf(a.id) - newOrder.indexOf(b.id);
-            });
+            const reorderedItems = new Array(collection.items.length);
 
+            collection.items.forEach((item) => {
+                const index = newOrderMap.get(item.id);
+                if (index !== undefined) {
+                    item.updatedAt = timestamp;
+                    reorderedItems[index] = item;
+                }
+            });
+            collection.items = reorderedItems.filter(Boolean);
             await this.setCollectionData(collections);
             this.updateRecentlyUsed(colID, 0);
 

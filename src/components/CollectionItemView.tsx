@@ -1,10 +1,4 @@
-import React, {
-    useCallback,
-    useLayoutEffect,
-    useMemo,
-    useRef,
-    useState,
-} from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { useAppContext } from "@/App";
 import CollectionItem from "./CollectionItem";
@@ -24,17 +18,12 @@ import { Reorder } from "framer-motion";
 import { toast } from "sonner";
 import AddUrlManualDialog from "./AddUrlManualDialog";
 import { useAppSetting } from "@/hooks/appSetting-provider";
-import {
-    TooltipProvider,
-    TooltipTrigger,
-    Tooltip,
-    TooltipContent,
-} from "./ui/tooltip";
+import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "./ui/tooltip";
 import { Separator } from "./ui/separator";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+
 const CollectionItemView = () => {
-    const { collectionData, inCollectionView, openCollection } =
-        useAppContext();
+    const { collectionData, inCollectionView, openCollection } = useAppContext();
     const operations = useCollectionOperations();
     const { appSetting } = useAppSetting();
 
@@ -79,9 +68,7 @@ const CollectionItemView = () => {
             // }
             if (!lastChanged) return;
             const indexInMain = itemsOrder.findIndex((e) => e === onItem);
-            const indexOfLastChanged = itemsOrder.findIndex(
-                (e) => e === lastChanged.id
-            );
+            const indexOfLastChanged = itemsOrder.findIndex((e) => e === lastChanged.id);
             if (indexInMain === -1 || indexOfLastChanged === -1) return;
             const start = Math.min(indexInMain, indexOfLastChanged);
             const end = Math.max(indexInMain, indexOfLastChanged);
@@ -106,7 +93,7 @@ const CollectionItemView = () => {
         setItemsOrder(currentCollection?.items.map((e) => e.id) || []);
     }, [currentCollection]);
 
-    // todo : fix for performance
+    // todo : update for performance
     useLayoutEffect(() => {
         setSelected([]);
         const keyHandler = (e: KeyboardEvent) => {
@@ -136,8 +123,7 @@ const CollectionItemView = () => {
                     selected_copy.current?.click();
                     break;
                 case "KeyA":
-                    if (e.ctrlKey)
-                        setSelected(currentCollection.items.map((e) => e.id));
+                    if (e.ctrlKey) setSelected(currentCollection.items.map((e) => e.id));
                     break;
                 case "ArrowLeft":
                     if (e.altKey) openCollection(null);
@@ -157,15 +143,10 @@ const CollectionItemView = () => {
                 if (message.type === "add-current-tab-to-active-collection") {
                     if (inCollectionView)
                         //todo : test
-                        return operations.addActiveTabToCollection(
-                            inCollectionView
-                        );
+                        return operations.addActiveTabToCollection(inCollectionView);
                 }
             } else {
-                console.error(
-                    "onMessage: message is of unknown type.",
-                    message
-                );
+                console.error("onMessage: message is of unknown type.", message);
             }
         };
         window.addEventListener("keydown", keyHandler);
@@ -210,9 +191,7 @@ const CollectionItemView = () => {
                                     <Button
                                         variant={"ghost"}
                                         onClick={() => {
-                                            operations.addAllTabsToCollection(
-                                                currentCollection.id
-                                            );
+                                            operations.addAllTabsToCollection(currentCollection.id);
                                         }}
                                         // title="Add all opened tabs to collection"
                                     >
@@ -238,9 +217,7 @@ const CollectionItemView = () => {
                             onClick={() => {
                                 const items = collectionData
                                     .find((e) => e.id === inCollectionView)
-                                    ?.items.filter((e) =>
-                                        selected.includes(e.id)
-                                    );
+                                    ?.items.filter((e) => selected.includes(e.id));
                                 if (items)
                                     for (let i = 0; i < items.length; i++) {
                                         const url = items[i].url;
@@ -261,9 +238,7 @@ const CollectionItemView = () => {
                             onClick={() => {
                                 const items = collectionData
                                     .find((e) => e.id === inCollectionView)
-                                    ?.items.filter((e) =>
-                                        selected.includes(e.id)
-                                    );
+                                    ?.items.filter((e) => selected.includes(e.id));
                                 if (items)
                                     window.browser.windows.create({
                                         url: items.map((e) => e.url),
@@ -281,9 +256,7 @@ const CollectionItemView = () => {
                             onClick={() => {
                                 const items = collectionData
                                     .find((e) => e.id === inCollectionView)
-                                    ?.items.filter((e) =>
-                                        selected.includes(e.id)
-                                    );
+                                    ?.items.filter((e) => selected.includes(e.id));
                                 if (items)
                                     window.browser.windows
                                         .create({
@@ -309,19 +282,12 @@ const CollectionItemView = () => {
                             onClick={() => {
                                 const items = collectionData
                                     .find((e) => e.id === inCollectionView)
-                                    ?.items.filter((e) =>
-                                        selected.includes(e.id)
-                                    );
+                                    ?.items.filter((e) => selected.includes(e.id));
                                 if (items && items.length > 0) {
                                     navigator.clipboard.writeText(
-                                        window.formatCopyData(
-                                            appSetting.copyDataFormat,
-                                            items
-                                        )
+                                        window.formatCopyData(appSetting.copyDataFormat, items)
                                     );
-                                    toast.success(
-                                        `Copied ${items.length} items`
-                                    );
+                                    toast.success(`Copied ${items.length} items`);
                                 }
                             }}
                         >
@@ -329,11 +295,7 @@ const CollectionItemView = () => {
                         </Button>
 
                         <AlertDialogTrigger asChild ref={selected_deleteRef}>
-                            <Button
-                                className="p-1"
-                                variant={"ghost"}
-                                size={"icon"}
-                            >
+                            <Button className="p-1" variant={"ghost"} size={"icon"}>
                                 <Trash />
                             </Button>
                         </AlertDialogTrigger>
@@ -352,36 +314,36 @@ const CollectionItemView = () => {
                 <div className="h-full overflow-hidden overflow-y-auto">
                     <Reorder.Group
                         values={itemsOrder}
-                        onReorder={(e) => setItemsOrder(e)}
+                        // this is called each time an item is reordered in ui, cant be used to update storage
+                        onReorder={(e) => {
+                            setItemsOrder(e);
+                        }}
                         className="p-3 flex flex-col gap-2"
                     >
-                        {currentCollection.items.length <= 0 ? (
+                        {itemsOrder.length <= 0 ? (
                             <p>No Items</p>
                         ) : (
-                            currentCollection.items
-                                .map((e, i) => (
+                            itemsOrder.map((id) => {
+                                const e = currentCollection?.items.find((e) => e.id === id);
+                                if (!e) return null;
+                                return (
                                     <CollectionItem
                                         {...e}
                                         key={e.id}
                                         changeSelected={changeSelected}
                                         isSelected={selected.includes(e.id)}
                                         anySelected={selected.length > 0}
-                                        index={i}
                                         onShiftPlusClick={onShiftPlusClick}
                                         onDragEnd={() => {
-                                            inCollectionView &&
+                                            if (inCollectionView)
                                                 operations.changeCollectionItemOrder(
                                                     inCollectionView,
                                                     itemsOrder
                                                 );
                                         }}
                                     />
-                                ))
-                                .sort(
-                                    (a, b) =>
-                                        itemsOrder.indexOf(a.props.id) -
-                                        itemsOrder.indexOf(b.props.id)
-                                )
+                                );
+                            })
                         )}
                     </Reorder.Group>
                 </div>
@@ -394,8 +356,8 @@ const CollectionItemView = () => {
                 <AlertDialogHeader>
                     <AlertDialogTitle>Delete URLs?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently
-                        delete {selected.length} URLs.
+                        This action cannot be undone. This will permanently delete {selected.length}{" "}
+                        URLs.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -403,10 +365,7 @@ const CollectionItemView = () => {
                     <AlertDialogAction
                         onClick={() => {
                             inCollectionView &&
-                                operations.removeFromCollection(
-                                    inCollectionView,
-                                    selected
-                                );
+                                operations.removeFromCollection(inCollectionView, selected);
                         }}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
@@ -415,7 +374,9 @@ const CollectionItemView = () => {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
-    ) : null;
+    ) : (
+        <p>Collection not found</p>
+    );
 };
 
 export default CollectionItemView;

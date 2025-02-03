@@ -6,13 +6,7 @@ import { Reorder } from "framer-motion";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 
 const CollectionView = () => {
-    const {
-        collectionData,
-        setScrollPos,
-        scrollPos,
-        openCollection,
-        setOpenColOnCreate,
-    } = useAppContext();
+    const { collectionData, setScrollPos, scrollPos, setOpenColOnCreate } = useAppContext();
     const operations = useCollectionOperations();
     const [collectionOrder, setCollectionOrder] = useState<
         { id: UUID; title: string; itemLen: number }[]
@@ -59,15 +53,9 @@ const CollectionView = () => {
                 <Button
                     variant={"ghost"}
                     onClick={async () => {
-                        operations.makeNewCollection(
-                            new Date().toLocaleString(),
-                            [],
-                            {
-                                activeWindowId: (
-                                    await window.browser.windows.getCurrent()
-                                ).id,
-                            }
-                        );
+                        operations.makeNewCollection(new Date().toLocaleString(), [], {
+                            activeWindowId: (await window.browser.windows.getCurrent()).id,
+                        });
                     }}
                 >
                     New from Opened tabs
@@ -97,11 +85,11 @@ const CollectionView = () => {
                             <Collection
                                 key={e.id}
                                 item={e}
-                                onDragEnd={() => {
+                                onDragEnd={() =>
                                     operations.changeCollectionOrder(
                                         collectionOrder.map((e) => e.id)
-                                    );
-                                }}
+                                    )
+                                }
                             />
                         ))
                     )}

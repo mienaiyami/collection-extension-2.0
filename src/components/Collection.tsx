@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import {
     ContextMenu,
     ContextMenuContent,
@@ -20,7 +20,6 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "./ui/alert-dialog";
-import { getImgFromTab } from "@/utils";
 import { Reorder, motion } from "framer-motion";
 import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
@@ -31,13 +30,7 @@ type PropType = {
     itemLen: number;
 };
 
-const Collection = ({
-    item,
-    onDragEnd,
-}: {
-    item: PropType;
-    onDragEnd: () => void;
-}) => {
+const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void }) => {
     const { collectionData, openCollection } = useAppContext();
     const operations = useCollectionOperations();
 
@@ -71,8 +64,7 @@ const Collection = ({
                             onKeyDown={(e) => {
                                 if ([" ", "Enter"].includes(e.key)) {
                                     e.preventDefault();
-                                    if (e.target instanceof HTMLElement)
-                                        openCollection(item.id);
+                                    if (e.target instanceof HTMLElement) openCollection(item.id);
                                 }
                             }}
                         >
@@ -88,23 +80,17 @@ const Collection = ({
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    operations.addActiveTabToCollection(
-                                        item.id
-                                    );
+                                    operations.addActiveTabToCollection(item.id);
                                 }}
                             >
                                 <Plus />
                             </Button>
                             <div className="p-2 flex flex-col item-center justify-center">
-                                <span
-                                    className="text-lg truncate"
-                                    title={item.title}
-                                >
+                                <span className="text-lg truncate" title={item.title}>
                                     {item.title}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                    {item.itemLen}{" "}
-                                    {item.itemLen > 1 ? "Items" : "Item"}
+                                    {item.itemLen} {item.itemLen > 1 ? "Items" : "Item"}
                                 </span>
                             </div>
                         </motion.div>
@@ -113,22 +99,15 @@ const Collection = ({
                         className="w-62"
                         onContextMenu={(e) => {
                             e.preventDefault();
-                            if (e.target instanceof HTMLElement)
-                                e.target.click();
+                            if (e.target instanceof HTMLElement) e.target.click();
                         }}
                     >
                         <ContextMenuItem
                             onClick={() => {
                                 (async () => {
-                                    const collection = collectionData.find(
-                                        (e) => e.id === item.id
-                                    );
+                                    const collection = collectionData.find((e) => e.id === item.id);
                                     if (collection)
-                                        for (
-                                            let i = 0;
-                                            i < collection.items.length;
-                                            i++
-                                        ) {
+                                        for (let i = 0; i < collection.items.length; i++) {
                                             const url = collection.items[i].url;
                                             if (url)
                                                 window.browser.tabs.create({
@@ -144,13 +123,9 @@ const Collection = ({
                         <ContextMenuItem
                             onClick={() => {
                                 (async () => {
-                                    const collection = collectionData.find(
-                                        (e) => e.id === item.id
-                                    );
+                                    const collection = collectionData.find((e) => e.id === item.id);
                                     if (collection) {
-                                        const urls = collection.items.map(
-                                            (e) => e.url
-                                        );
+                                        const urls = collection.items.map((e) => e.url);
                                         window.browser.windows.create({
                                             url: urls,
                                             state: "maximized",
@@ -164,13 +139,9 @@ const Collection = ({
                         <ContextMenuItem
                             onClick={() => {
                                 (async () => {
-                                    const collection = collectionData.find(
-                                        (e) => e.id === item.id
-                                    );
+                                    const collection = collectionData.find((e) => e.id === item.id);
                                     if (collection) {
-                                        const urls = collection.items.map(
-                                            (e) => e.url
-                                        );
+                                        const urls = collection.items.map((e) => e.url);
                                         window.browser.windows.create({
                                             url: urls,
                                             state: "maximized",
@@ -186,9 +157,7 @@ const Collection = ({
                         <ContextMenuItem
                             onClick={() => {
                                 (async () => {
-                                    const collection = collectionData.find(
-                                        (e) => e.id === item.id
-                                    );
+                                    const collection = collectionData.find((e) => e.id === item.id);
                                     if (collection) {
                                         const data = window.formatCopyData(
                                             appSetting.copyDataFormat,
@@ -214,8 +183,8 @@ const Collection = ({
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete collection?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete the collection '{item.title}
+                            This action cannot be undone. This will permanently delete the
+                            collection '{item.title}
                             '.
                         </AlertDialogDescription>
                     </AlertDialogHeader>

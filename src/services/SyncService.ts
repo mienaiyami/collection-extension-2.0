@@ -187,17 +187,40 @@ export class SyncService {
         collectionItem2: CollectionItem[],
         deletedMap: Map<UUID, DeletedCollection>
     ): CollectionItem[] {
-        const mergedItems: CollectionItem[] = [
-            ...collectionItem1.filter((item) => !deletedMap.get(item.id)),
-            ...collectionItem2.filter((item) => !deletedMap.get(item.id)),
-        ];
-        // in case of CollectionItems, updatedAt is only for sorting on 2025/02/02. CollectionItem is not updated
-        mergedItems.sort((a, b) => b.updatedAt - a.updatedAt);
-        const seen = new Set<string>();
-        return mergedItems.filter((item) => {
-            if (seen.has(item.id)) return false;
-            seen.add(item.id);
-            return true;
+        const positionMap = new Map<UUID, number>();
+        const itemMap = new Map<UUID, CollectionItem>();
+        collectionItem1.forEach((item, index) => {
+            positionMap.set(item.id, index);
+            itemMap.set(item.id, item);
+        });
+        collectionItem2.forEach((item, index) => {
+            const existingPosition = positionMap.get(item.id);
+            if (typeof existingPosition === "number") {
+                if (
+                    existingPosition !== index &&
+                    item.orderUpdatedAt > collectionItem1[existingPosition].orderUpdatedAt
+                ) {
+                    positionMap.set(item.id, index);
+                }
+            } else {
+                positionMap.set(item.id, index);
+            }
+            //
+            //
+            const existing = itemMap.get(item.id);
+            if (!existing) {
+                itemMap.set(item.id, item);
+            } else {
+                itemMap.set(item.id, {
+                    ...existing,
+                    ...item,
+                    orderUpdatedAt: Math.max(existing.orderUpdatedAt, item.orderUpdatedAt),
+                });
+            }
+        });
+        //todo test
+        return Array.from(itemMap.values()).sort((a, b) => {
+            return positionMap.get(a.id)! - positionMap.get(b.id)! || a.createdAt - b.createdAt;
         });
     }
     static mergeCollection(
@@ -233,32 +256,39 @@ export class SyncService {
             ...localDeleted.map((d) => [d.id, d] as [UUID, DeletedCollection]),
             ...remoteDeleted.map((d) => [d.id, d] as [UUID, DeletedCollection]),
         ]);
-
         const collectionMap = new Map<UUID, Collection>();
-        const localMap = new Map(
-            localColData.reduce((acc, col) => {
-                if (!deletedMap.has(col.id)) acc.push([col.id, col]);
-                return acc;
-            }, [] as [UUID, Collection][])
-        );
-        remoteColData.forEach((remoteCol) => {
-            const localCol = localMap.get(remoteCol.id);
-            if (!localCol) {
-                if (!deletedMap.get(remoteCol.id)) collectionMap.set(remoteCol.id, remoteCol);
+        const positionMap = new Map<UUID, number>();
+
+        localColData.forEach((col, index) => {
+            positionMap.set(col.id, index);
+            collectionMap.set(col.id, col);
+        });
+        remoteColData.forEach((col, index) => {
+            const existingPosition = positionMap.get(col.id);
+            if (typeof existingPosition === "number") {
+                if (
+                    existingPosition !== index &&
+                    col.orderUpdatedAt > localColData[existingPosition].orderUpdatedAt
+                ) {
+                    positionMap.set(col.id, index);
+                }
             } else {
-                collectionMap.set(
-                    remoteCol.id,
-                    this.mergeCollection(localCol, remoteCol, deletedMap)
-                );
+                positionMap.set(col.id, index);
+            }
+            //
+            //
+            const existing = collectionMap.get(col.id);
+            if (!existing) {
+                collectionMap.set(col.id, col);
+            } else {
+                collectionMap.set(col.id, this.mergeCollection(existing, col, deletedMap));
             }
         });
-        localMap.forEach((localCol) => {
-            if (!collectionMap.has(localCol.id)) {
-                collectionMap.set(localCol.id, localCol);
-            }
-        });
+        //todo test
         return {
-            collectionData: Array.from(collectionMap.values()),
+            collectionData: Array.from(collectionMap.values()).sort((a, b) => {
+                return positionMap.get(a.id)! - positionMap.get(b.id)! || a.createdAt - b.createdAt;
+            }),
             deletedCollectionData: Array.from(deletedMap.values()),
         };
     }

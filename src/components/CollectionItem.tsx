@@ -17,9 +17,8 @@ type PropType = CollectionItem & {
     changeSelected: (id: UUID, checked: boolean) => void;
     isSelected: boolean;
     anySelected: boolean;
-    index: number;
-    onDragEnd: () => void;
     onShiftPlusClick: (id: UUID) => void;
+    onDragEnd: () => void;
 };
 const CollectionItem = (props: PropType) => {
     const { inCollectionView } = useAppContext();
@@ -32,6 +31,7 @@ const CollectionItem = (props: PropType) => {
         <Reorder.Item
             value={props.id}
             whileDrag={{ backdropFilter: "blur(4px)" }}
+            // dragListener={!props.anySelected}
             onDragStart={() => {
                 draggingRef.current = true;
             }}
@@ -44,13 +44,10 @@ const CollectionItem = (props: PropType) => {
             <ContextMenu>
                 <ContextMenuTrigger
                     className={`urlItem w-full h-24 cursor-pointer rounded-md grid grid-cols-[25%_65%_10%] items-center hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20 border ${
-                        props.isSelected
-                            ? "ring-2 ring-purple-700 dark:ring-purple-400"
-                            : ""
+                        props.isSelected ? "ring-2 ring-purple-700 dark:ring-purple-400" : ""
                     }`}
                     tabIndex={0}
                     data-url-id={props.id}
-                    data-url-index={props.index}
                     onMouseDown={(e) => {
                         if (e.button === 1) e.preventDefault();
                     }}
@@ -95,10 +92,7 @@ const CollectionItem = (props: PropType) => {
                             //todo or not?
                             case "Delete":
                                 inCollectionView &&
-                                    operations.removeFromCollection(
-                                        inCollectionView,
-                                        props.id
-                                    );
+                                    operations.removeFromCollection(inCollectionView, props.id);
                                 break;
                             case "KeyC":
                                 navigator.clipboard.writeText(props.url);
@@ -143,21 +137,14 @@ const CollectionItem = (props: PropType) => {
                             draggable={false}
                             onLoad={(e) => {
                                 setImgLoaded(true);
-                                if (
-                                    e.currentTarget.width <= 100 ||
-                                    e.currentTarget.height <= 100
-                                ) {
+                                if (e.currentTarget.width <= 100 || e.currentTarget.height <= 100) {
                                     e.currentTarget.classList.add("p-3.5");
                                 }
                                 if (
                                     e.currentTarget.width <= 50 ||
                                     e.currentTarget.height <= 50 ||
-                                    e.currentTarget.src
-                                        .toLowerCase()
-                                        .includes(".ico") ||
-                                    e.currentTarget.src
-                                        .toLowerCase()
-                                        .includes(".svg")
+                                    e.currentTarget.src.toLowerCase().includes(".ico") ||
+                                    e.currentTarget.src.toLowerCase().includes(".svg")
                                 )
                                     e.currentTarget.classList.add("p-6");
                             }}
@@ -170,10 +157,7 @@ const CollectionItem = (props: PropType) => {
                         <span className="text-lg truncate" title={props.title}>
                             {props.title}
                         </span>
-                        <span
-                            className="text-xs text-muted-foreground truncate"
-                            title={props.url}
-                        >
+                        <span className="text-xs text-muted-foreground truncate" title={props.url}>
                             {props.url}
                         </span>
                     </div>
@@ -203,9 +187,7 @@ const CollectionItem = (props: PropType) => {
                         >
                             <div
                                 className={`border rounded-md group-hover:border-foreground/20 ${
-                                    props.isSelected
-                                        ? "bg-purple-700 dark:bg-purple-400"
-                                        : ""
+                                    props.isSelected ? "bg-purple-700 dark:bg-purple-400" : ""
                                 } group-focus:ring-2 ring-white`}
                             >
                                 <input
@@ -213,18 +195,13 @@ const CollectionItem = (props: PropType) => {
                                     className="hidden"
                                     checked={props.isSelected}
                                     onChange={(e) => {
-                                        props.changeSelected(
-                                            props.id,
-                                            e.currentTarget.checked
-                                        );
+                                        props.changeSelected(props.id, e.currentTarget.checked);
                                     }}
                                 />
                                 <Check
                                     className="text-white"
                                     style={{
-                                        visibility: props.isSelected
-                                            ? "visible"
-                                            : "hidden",
+                                        visibility: props.isSelected ? "visible" : "hidden",
                                     }}
                                 />
                             </div>
@@ -292,10 +269,7 @@ const CollectionItem = (props: PropType) => {
                     <ContextMenuItem
                         onClick={() => {
                             inCollectionView &&
-                                operations.removeFromCollection(
-                                    inCollectionView,
-                                    props.id
-                                );
+                                operations.removeFromCollection(inCollectionView, props.id);
                         }}
                         className="focus:text-destructive-foreground focus:bg-destructive"
                     >

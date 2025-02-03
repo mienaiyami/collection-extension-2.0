@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Privacy Policy - Collection Extension</title>
+
+        <link rel="stylesheet" href="https://unpkg.com/tailwindcss@1.4.6/dist/base.min.css" />
+        <link rel="stylesheet" href="https://unpkg.com/tailwindcss@1.4.6/dist/components.min.css" />
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/@tailwindcss/typography@0.1.2/dist/typography.min.css"
+        />
+        <link rel="stylesheet" href="https://unpkg.com/tailwindcss@1.4.6/dist/utilities.min.css" />
+    </head>
+    <body class="bg-gray-50 transition-colors duration-200">
+        <main class="container mx-auto px-4 py-8 prose prose-slate max-w-4xl">
+            <h1>Privacy Policy for Collection Extension</h1>
+            <p>Last Updated: February 2025</p>
+
+            <h2>Overview</h2>
+            <p>
+                Collection Extension is an open-source browser extension that helps users organize
+                their browser tabs and pages. This privacy policy explains how we handle your data.
+            </p>
+
+            <h2>Data Collection and Storage</h2>
+            <p>
+                We do not collect or store any personal data on our servers. All your collection
+                data is stored locally on your device using browser storage APIs.
+            </p>
+
+            <h2>Google Drive Integration</h2>
+            <ul>
+                <li>We use Google OAuth for syncing your collections to your Google Drive</li>
+                <li>
+                    We only request access to:
+                    <ul>
+                        <li>Create/modify its own application data in your Google Drive</li>
+                        <li>View and manage its own configuration data in your Google Drive</li>
+                    </ul>
+                </li>
+                <li>Access tokens and refresh tokens are stored only on your local device</li>
+                <li>
+                    Token refresh operations are processed through our Cloudflare Worker solely for
+                    secure client secret management
+                </li>
+            </ul>
+
+            <h2>Your Data Rights</h2>
+            <p>You have the right to:</p>
+            <ul>
+                <li>Access your data (stored locally on your device)</li>
+                <li>Delete your data (through extension settings)</li>
+                <li>Disable Google Drive sync at any time</li>
+                <li>Revoke Google OAuth permissions</li>
+            </ul>
+
+            <h2>Cookie Usage</h2>
+            <p>
+                This extension does not use cookies. We use browser's local storage API to store
+                your preferences and collections.
+            </p>
+
+            <h2>Browser Permissions</h2>
+            <p>The extension requires these permissions for functionality:</p>
+            <ul>
+                <li>Storage: To save your collections locally</li>
+                <li>Tabs & ActiveTab: To manage and interact with browser tabs</li>
+                <li>Identity: For Google OAuth authentication</li>
+                <li>SidePanel: For extension interface</li>
+            </ul>
+
+            <h2>Third-Party Services</h2>
+            <p>
+                We do not share any data with third parties. The only external service used is
+                Google Drive API for syncing your collections, which is completely optional.
+            </p>
+
+            <h2>Data Security</h2>
+            <p>
+                All your data is stored either locally on your device or in your personal Google
+                Drive account if you choose to enable sync. We never have access to your data.
+            </p>
+
+            <h2>Changes to Policy</h2>
+            <p>
+                Any changes to this privacy policy will be updated on this page and in our GitHub
+                repository.
+            </p>
+
+            <h2>Contact</h2>
+            <p>For privacy concerns or questions:</p>
+            <ul>
+                <li>Email: <a href="mailto:mienaiyami0@gmail.com">mienaiyami0@gmail.com</a></li>
+                <li>
+                    GitHub:
+                    <a href="https://github.com/mienaiyami/collection-extension-2.0"
+                        >collection-extension-2.0</a
+                    >
+                </li>
+            </ul>
+        </main>
+    </body>
+</html>
