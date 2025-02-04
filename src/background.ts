@@ -348,6 +348,7 @@ class CollectionManager {
                 items,
                 createdAt: new Date().getTime(),
                 updatedAt: new Date().getTime(),
+                orderUpdatedAt: new Date().getTime(),
             };
             if (fillByData.activeTabId) {
                 const tab = await browser.tabs.get(fillByData.activeTabId);
@@ -554,10 +555,10 @@ class CollectionManager {
             const newOrderMap = new Map(newOrder.map((id, index) => [id, index]));
             const timestamp = Date.now();
             const reordered: Collection[] = new Array(collections.length);
-            collections.forEach((collection) => {
+            collections.forEach((collection, idx) => {
                 const index = newOrderMap.get(collection.id);
                 if (index !== undefined) {
-                    collection.updatedAt = timestamp;
+                    if (idx !== index) collection.orderUpdatedAt = timestamp;
                     reordered[index] = collection;
                 }
             });
@@ -582,10 +583,10 @@ class CollectionManager {
             const timestamp = Date.now();
             const reorderedItems = new Array(collection.items.length);
 
-            collection.items.forEach((item) => {
+            collection.items.forEach((item, idx) => {
                 const index = newOrderMap.get(item.id);
                 if (index !== undefined) {
-                    item.updatedAt = timestamp;
+                    if (idx !== index) item.orderUpdatedAt = timestamp;
                     reorderedItems[index] = item;
                 }
             });

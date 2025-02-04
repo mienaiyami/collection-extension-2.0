@@ -45,6 +45,11 @@ const CollectionItemView = () => {
             return collectionData.find((e) => e.id === inCollectionView);
         }
     }, [collectionData, inCollectionView]);
+    const currentCollectionItemsMap = useMemo(() => {
+        if (currentCollection) {
+            return new Map(currentCollection.items.map((e) => [e.id, e]));
+        }
+    }, [currentCollection]);
 
     const changeSelected = (id: UUID, checked: boolean) => {
         setLastChanged({
@@ -215,9 +220,9 @@ const CollectionItemView = () => {
                             variant={"ghost"}
                             ref={selected_open}
                             onClick={() => {
-                                const items = collectionData
-                                    .find((e) => e.id === inCollectionView)
-                                    ?.items.filter((e) => selected.includes(e.id));
+                                const items = currentCollection.items.filter((e) =>
+                                    selected.includes(e.id)
+                                );
                                 if (items)
                                     for (let i = 0; i < items.length; i++) {
                                         const url = items[i].url;
@@ -236,9 +241,9 @@ const CollectionItemView = () => {
                             variant={"ghost"}
                             ref={selected_openNewWindow}
                             onClick={() => {
-                                const items = collectionData
-                                    .find((e) => e.id === inCollectionView)
-                                    ?.items.filter((e) => selected.includes(e.id));
+                                const items = currentCollection.items.filter((e) =>
+                                    selected.includes(e.id)
+                                );
                                 if (items)
                                     window.browser.windows.create({
                                         url: items.map((e) => e.url),
@@ -254,9 +259,9 @@ const CollectionItemView = () => {
                             variant={"ghost"}
                             ref={selected_openIncognito}
                             onClick={() => {
-                                const items = collectionData
-                                    .find((e) => e.id === inCollectionView)
-                                    ?.items.filter((e) => selected.includes(e.id));
+                                const items = currentCollection.items.filter((e) =>
+                                    selected.includes(e.id)
+                                );
                                 if (items)
                                     window.browser.windows
                                         .create({
@@ -280,9 +285,9 @@ const CollectionItemView = () => {
                             ref={selected_copy}
                             title="Copy Data"
                             onClick={() => {
-                                const items = collectionData
-                                    .find((e) => e.id === inCollectionView)
-                                    ?.items.filter((e) => selected.includes(e.id));
+                                const items = currentCollection.items.filter((e) =>
+                                    selected.includes(e.id)
+                                );
                                 if (items && items.length > 0) {
                                     navigator.clipboard.writeText(
                                         window.formatCopyData(appSetting.copyDataFormat, items)
@@ -324,7 +329,7 @@ const CollectionItemView = () => {
                             <p>No Items</p>
                         ) : (
                             itemsOrder.map((id) => {
-                                const e = currentCollection?.items.find((e) => e.id === id);
+                                const e = currentCollectionItemsMap?.get(id);
                                 if (!e) return null;
                                 return (
                                     <CollectionItem

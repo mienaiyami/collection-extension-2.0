@@ -113,6 +113,7 @@ const AddUrlManualDialog = () => {
                                                         img: img.toString(),
                                                         createdAt: Date.now(),
                                                         updatedAt: Date.now(),
+                                                        orderUpdatedAt: Date.now(),
                                                     };
                                                 } catch (e) {
                                                     toast.error(`Failed to parse: ${e}`);

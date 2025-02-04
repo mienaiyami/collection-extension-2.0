@@ -190,10 +190,12 @@ export class SyncService {
         const positionMap = new Map<UUID, number>();
         const itemMap = new Map<UUID, CollectionItem>();
         collectionItem1.forEach((item, index) => {
+            if (deletedMap.has(item.id)) return;
             positionMap.set(item.id, index);
             itemMap.set(item.id, item);
         });
         collectionItem2.forEach((item, index) => {
+            if (deletedMap.has(item.id)) return;
             const existingPosition = positionMap.get(item.id);
             if (typeof existingPosition === "number") {
                 if (
@@ -260,10 +262,14 @@ export class SyncService {
         const positionMap = new Map<UUID, number>();
 
         localColData.forEach((col, index) => {
+            if (deletedMap.has(col.id)) return;
+
             positionMap.set(col.id, index);
             collectionMap.set(col.id, col);
         });
         remoteColData.forEach((col, index) => {
+            if (deletedMap.has(col.id)) return;
+
             const existingPosition = positionMap.get(col.id);
             if (typeof existingPosition === "number") {
                 if (
@@ -285,6 +291,7 @@ export class SyncService {
             }
         });
         //todo test
+        console.log({ positionMap });
         return {
             collectionData: Array.from(collectionMap.values()).sort((a, b) => {
                 return positionMap.get(a.id)! - positionMap.get(b.id)! || a.createdAt - b.createdAt;
