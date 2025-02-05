@@ -73,6 +73,13 @@ export type CollectionOperation =
           payload?: never;
       }
     | {
+          type: "CREATE_LOCAL_BACKUP";
+          payload?: never;
+          response: {
+              date: string;
+          };
+      }
+    | {
           type: "SET_COLLECTIONS_DANGEROUSLY";
           payload: Collection[];
       }
@@ -106,6 +113,14 @@ export type CollectionOperation =
           type: "GET_GOOGLE_DRIVE_SYNC_STATE";
           payload?: never;
           response: SyncState;
+      }
+    | {
+          type: "DELETE_ALL_LOCAL_COLLECTIONS_DATA";
+          payload?: never;
+      }
+    | {
+          type: "DELETE_ALL_GDRIVE_SYCNED_COLLECTION_DATA";
+          payload?: never;
       };
 
 export type BrowserMessage<T = unknown, R = unknown> = {

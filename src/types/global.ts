@@ -21,7 +21,7 @@ declare global {
     type DeletedCollection = z.infer<typeof deletedCollectionItemSchema>;
     type SyncData = z.infer<typeof syncDataSchema>;
     type SyncState = {
-        status: "synced" | "syncing" | "unsynced" | "error";
+        status: "synced" | "syncing" | "unsynced" | "error" | "not-authenticated";
         lastSynced: number | null;
         error?: string;
     };

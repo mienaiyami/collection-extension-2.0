@@ -158,7 +158,12 @@ export class GoogleAuthService {
         if (!accessToken || !tokenExpiry || !refreshToken) {
             console.log("Not logged in with Google");
             if (logInIfInvalid) {
-                return this.getAccessToken(signal);
+                const token = await this.getAccessToken(signal);
+                if (token) {
+                    return token;
+                } else {
+                    throw new Error("Failed to get access token");
+                }
             }
             throw new Error("Not logged in with Google");
         }

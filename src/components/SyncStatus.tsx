@@ -51,6 +51,13 @@ const getTooltipContent = (
                 message: "Error syncing",
                 details: `Sync error: ${syncState.error}`,
             };
+        case "not-authenticated":
+            return {
+                message: "Not authenticated",
+                details: "Please login to sync.",
+            };
+        default:
+            return { message: "Sync status unknown", details: "Try logging in again." };
     }
 };
 export const SyncStatus = () => {
@@ -90,7 +97,11 @@ export const SyncStatus = () => {
                                 toast.success("Synced successfully");
                             }
                         }}
-                        disabled={syncState === null || syncState.status === "syncing"}
+                        disabled={
+                            syncState === null ||
+                            syncState.status === "syncing" ||
+                            syncState.status === "not-authenticated"
+                        }
                     >
                         {getIcon(syncState?.status)}
                     </Button>

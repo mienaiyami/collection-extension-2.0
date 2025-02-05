@@ -31,7 +31,7 @@ const CollectionItem = (props: PropType) => {
         <Reorder.Item
             value={props.id}
             whileDrag={{ backdropFilter: "blur(4px)" }}
-            // dragListener={!props.anySelected}
+            dragListener={!props.anySelected}
             onDragStart={() => {
                 draggingRef.current = true;
             }}

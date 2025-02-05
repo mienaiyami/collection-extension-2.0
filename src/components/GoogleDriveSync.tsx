@@ -35,7 +35,7 @@ const GoogleDriveSync = () => {
         <div className="flex flex-col gap-2 p-2 border rounded-md">
             <TooltipProvider>
                 <div className="flex flex-col items-start gap-2">
-                    <span className="font-semibold">Google Drive Sync</span>
+                    <span className="font-semibold">Google Drive Sync (Beta)</span>
                     {loggedInUser ? (
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -118,6 +118,11 @@ const GoogleDriveSync = () => {
                             </Button>
                         )}
                     </div>
+                    <p className="text-sm text-muted-foreground">
+                        <span className="font-semibold">Note:</span> This feature is in beta. Please
+                        report any issues. <br />
+                        Syncing may take 5-40MB of data per sync depending on your data size.
+                    </p>
                 </div>
             </TooltipProvider>
         </div>

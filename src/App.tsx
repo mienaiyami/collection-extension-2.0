@@ -43,7 +43,6 @@ const App = () => {
                 .then(({ collectionData: _collectionData }) => {
                     if (_collectionData === undefined) {
                         setCollectionData([]);
-                        window.browser.storage.local.set({ collectionData });
                     } else setCollectionData(_collectionData as Collection[]);
                 });
 
@@ -75,10 +74,6 @@ const App = () => {
                 */
                 if (
                     c &&
-                    !(
-                        (c.newValue as Collection[]).length === 0 &&
-                        (c.oldValue as Collection[]).length !== 0
-                    ) &&
                     //! todo check for more optimization
                     // using ["id", "title", "items"]
                     JSON.stringify(c.newValue, replacer) !== JSON.stringify(c.oldValue, replacer)

@@ -1,5 +1,12 @@
 import browser from "webextension-polyfill";
-import { appSettingSchema, collectionSchema, getDataFromTab, initAppSetting, wait } from "./utils";
+import {
+    appSettingSchema,
+    collectionSchema,
+    deletedCollectionItemSchema,
+    getDataFromTab,
+    initAppSetting,
+    wait,
+} from "./utils";
 import { MessageResponse, CollectionMessage, CollectionOperationResponse } from "./types/messages";
 import { z } from "zod";
 import { GoogleAuthService } from "./services/GoogleAuthService";
@@ -91,16 +98,28 @@ const setAddPageToCollectionContextMenu = async () => {
 };
 
 //todo : make better backup system
-const backup = () =>
-    browser.storage.local.get("collectionData").then(({ collectionData }) => {
-        if (!collectionData) return;
-        if (collectionData instanceof Array && collectionData.length === 0) return;
-        browser.storage.local.set({ backup: collectionData }).then(() => {
-            browser.storage.local.set({
-                lastBackup: new Date().toJSON(),
-            });
+const createLocalBackup = () =>
+    browser.storage.local
+        .get(["collectionData", "deletedCollectionData"])
+        .then(({ collectionData, deletedCollectionData }) => {
+            if (!collectionData) return;
+            if (collectionData instanceof Array && collectionData.length === 0) return;
+            if (!deletedCollectionData) deletedCollectionData = [];
+            return browser.storage.local
+                .set({
+                    backup: {
+                        collectionData,
+                        deletedCollectionData,
+                    },
+                })
+                .then(() => {
+                    const date = new Date().toJSON();
+                    browser.storage.local.set({
+                        lastBackup: date,
+                    });
+                    return date;
+                });
         });
-    });
 
 browser.runtime.onInstalled.addListener((e) => {
     if (e.reason === "update") {
@@ -108,8 +127,8 @@ browser.runtime.onInstalled.addListener((e) => {
             browser.storage.local.get("appSetting").then(({ appSetting }) => {
                 if (appSetting) {
                     if (
-                        !(appSetting as AppSettingType).version ||
-                        (appSetting as AppSettingType).version < initAppSetting.version
+                        !(appSetting as AppSettingType)?.version ||
+                        (appSetting as AppSettingType)?.version < initAppSetting.version
                     ) {
                         const newSettings = appSettingSchema.parse(appSetting);
                         browser.storage.local.set({
@@ -240,11 +259,11 @@ browser.alarms.onAlarm.addListener((alarm) => {
                 const now = new Date();
                 if (now.getTime() - last.getTime() >= 1000 * 60 * 60 * 6) {
                     console.log("creating backup...");
-                    backup();
+                    createLocalBackup();
                 }
             } else {
                 console.log("creating backup...");
-                backup();
+                createLocalBackup();
             }
         });
     }
@@ -329,6 +348,14 @@ class CollectionManager {
         await browser.storage.local.set({
             deletedCollectionData: [...data, ...deletedCollectionData],
         });
+    }
+    private static async getDeletedCollectionData(): Promise<DeletedCollection[]> {
+        const { deletedCollectionData = [] } = (await browser.storage.local.get(
+            "deletedCollectionData"
+        )) as {
+            deletedCollectionData: DeletedCollection[];
+        };
+        return deletedCollectionData;
     }
     static async makeNewCollection(
         title: string,
@@ -600,6 +627,19 @@ class CollectionManager {
         }
     }
 
+    static async deleteAllLocalCollectionsData(): CollectionOperationResponse<"DELETE_ALL_LOCAL_COLLECTIONS_DATA"> {
+        try {
+            await browser.storage.local.set({
+                collectionData: [],
+                deletedCollectionData: [],
+            });
+            this.updateRecentlyUsed("deleted");
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+
     static async exportData(): CollectionOperationResponse<"EXPORT_DATA"> {
         try {
             const collections = await this.getCollectionData();
@@ -612,10 +652,15 @@ class CollectionManager {
     static async importData(data: Collection[]): CollectionOperationResponse<"IMPORT_DATA"> {
         try {
             const collections = await this.getCollectionData();
+            const deletedCollectionData = await this.getDeletedCollectionData();
+            const deletedMap = new Map(deletedCollectionData.map((e) => [e.id, e]));
             const parsedData = z.array(collectionSchema).parse(data);
             parsedData.reverse().forEach((newCol) => {
                 const existingIndex = collections.findIndex((col) => col.id === newCol.id);
                 if (existingIndex >= 0) {
+                    if (deletedMap.has(newCol.id)) {
+                        deletedMap.delete(newCol.id);
+                    }
                     const existingItemIds = collections[existingIndex].items.map((e) => e.id);
                     newCol.items.forEach((item) => {
                         if (!existingItemIds.includes(item.id)) {
@@ -639,15 +684,42 @@ class CollectionManager {
     static async restoreBackup(): CollectionOperationResponse<"RESTORE_BACKUP"> {
         try {
             const { backup } = (await browser.storage.local.get("backup")) as {
-                backup: Collection[];
+                backup:
+                    | Collection[]
+                    | { collectionData: Collection[]; deletedCollectionData: DeletedCollection[] }
+                    | undefined;
             };
             if (!backup) {
                 return { success: false, error: "No backup found" };
             }
-            const parsed = z.array(collectionSchema).parse(backup);
-            await this.setCollectionData(parsed);
+            // <= v2.4.2 backup = Collection[];
+            // >= v2.4.3 backup = {collectionData: Collection[], deletedCollectionData: DeletedCollection[]
+            let parsedCollection: Collection[];
+            let parsedDeletedCollection: DeletedCollection[] = [];
+            if (backup instanceof Array) {
+                parsedCollection = z.array(collectionSchema).parse(backup);
+            } else {
+                parsedCollection = z.array(collectionSchema).parse(backup.collectionData);
+                parsedDeletedCollection = z
+                    .array(deletedCollectionItemSchema)
+                    .parse(backup.deletedCollectionData);
+            }
+            await browser.storage.local.set({
+                collectionData: parsedCollection,
+                deletedCollectionData: parsedDeletedCollection,
+            });
             this.updateRecentlyUsed("update");
             return { success: true };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+    static async createLocalBackup(): CollectionOperationResponse<"CREATE_LOCAL_BACKUP"> {
+        try {
+            // not member of this class
+            const date = await createLocalBackup();
+            if (!date) return { success: false, error: "Backup failed" };
+            return { success: true, data: { date } };
         } catch (error) {
             return { success: false, error: String(error) };
         }
@@ -777,6 +849,8 @@ browser.runtime.onMessage.addListener(
                     return await CollectionManager.importData(message.payload);
                 case "RESTORE_BACKUP":
                     return await CollectionManager.restoreBackup();
+                case "CREATE_LOCAL_BACKUP":
+                    return await CollectionManager.createLocalBackup();
                 case "SET_COLLECTIONS_DANGEROUSLY":
                     await CollectionManager.setCollectionData(message.payload);
                     return { success: true };
@@ -794,10 +868,15 @@ browser.runtime.onMessage.addListener(
                         return { success: true };
                     }
                     await GoogleAuthService.getValidToken();
+                    SyncService.setSyncState((prev) => ({ ...prev, status: "unsynced" }));
                     return { success: true };
                 }
                 case "LOGOUT_GOOGLE_DRIVE":
                     await GoogleAuthService.logout();
+                    SyncService.setSyncState({
+                        status: "not-authenticated",
+                        lastSynced: null,
+                    });
                     return { success: true };
                 case "GOOGLE_DRIVE_USER_INFO": {
                     const data = await GoogleAuthService.getUserInfo();
@@ -820,6 +899,13 @@ browser.runtime.onMessage.addListener(
                     const state = await SyncService.getSyncState();
                     return { success: true, data: state };
                 }
+                case "DELETE_ALL_LOCAL_COLLECTIONS_DATA":
+                    return await CollectionManager.deleteAllLocalCollectionsData();
+                case "DELETE_ALL_GDRIVE_SYCNED_COLLECTION_DATA": {
+                    await SyncService.clearSyncData();
+                    return { success: true };
+                }
+
                 default:
                     return { success: false, error: "Unknown operation type" };
             }

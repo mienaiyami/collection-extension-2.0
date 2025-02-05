@@ -442,6 +442,16 @@ export const useCollectionOperations = () => {
         return response;
     }, [sendMessage]);
 
+    const createLocalBackup = useCallback(async () => {
+        const response = await sendMessage({ type: "CREATE_LOCAL_BACKUP" });
+        if (!response.success) {
+            toast.error("Failed to create local backup", {
+                description: response.error,
+            });
+        }
+        return response;
+    }, [sendMessage]);
+
     const setAppSetting = useCallback(
         async (payload: Partial<AppSettingType>) => {
             const response = await sendMessage({
@@ -524,6 +534,29 @@ export const useCollectionOperations = () => {
         return response;
     }, [sendMessage]);
 
+    const deleteAllLocalCollectionsData = useCallback(async () => {
+        const response = await sendMessage({ type: "DELETE_ALL_LOCAL_COLLECTIONS_DATA" });
+        if (!response.success) {
+            toast.error("Failed to delete all local collections", {
+                description: response.error,
+            });
+        } else {
+            toast.success("Deleted all local collections.");
+        }
+        return response;
+    }, [sendMessage]);
+    const deleteAllGDriveSyncedCollectionData = useCallback(async () => {
+        const response = await sendMessage({ type: "DELETE_ALL_GDRIVE_SYCNED_COLLECTION_DATA" });
+        if (!response.success) {
+            toast.error("Failed to delete all gdrive synced collections", {
+                description: response.error,
+            });
+        } else {
+            toast.success("Deleted all gdrive synced collections.");
+        }
+        return response;
+    }, [sendMessage]);
+
     return {
         removeCollections,
         makeNewCollection,
@@ -537,6 +570,7 @@ export const useCollectionOperations = () => {
         exportData,
         importData,
         restoreBackup,
+        createLocalBackup,
         setAppSetting,
 
         getGoogleDriveLoginStatus,
@@ -545,5 +579,8 @@ export const useCollectionOperations = () => {
         getGoogleDriveUserInfo,
         googleDriveSyncNow,
         getGoogleDriveSyncState,
+
+        deleteAllLocalCollectionsData,
+        deleteAllGDriveSyncedCollectionData,
     };
 };

@@ -322,15 +322,33 @@ export class SyncService {
     static async setSyncState(
         syncState: SyncState | ((prevState: SyncState) => SyncState)
     ): Promise<void> {
-        if (typeof syncState === "function") {
-            const original = await this.getSyncState();
-            // removing error so don't have to do it in every call
-            original.error = undefined;
+        try {
+            const isLoggedIn = await GoogleAuthService.isLoggedIn();
+            if (!isLoggedIn) {
+                await browser.storage.local.set({
+                    syncState: { status: "not-authenticated", lastSynced: null, error: undefined },
+                });
+                return;
+            }
+            if (typeof syncState === "function") {
+                const original = await this.getSyncState();
+                // removing error so don't have to do it in every call
+                original.error = undefined;
+                await browser.storage.local.set({
+                    syncState: syncState(original),
+                });
+            } else {
+                await browser.storage.local.set({ syncState });
+            }
+        } catch (err) {
+            console.error(err);
             await browser.storage.local.set({
-                syncState: syncState(original),
+                syncState: {
+                    status: "error",
+                    lastSynced: null,
+                    error: err instanceof Error ? err.message : "Something went wrong",
+                },
             });
-        } else {
-            await browser.storage.local.set({ syncState });
         }
     }
     static async getSyncState(): Promise<SyncState> {
@@ -343,9 +361,9 @@ export class SyncService {
             console.log("No syncState found. Setting to unsynced");
             const isLoggedIn = await GoogleAuthService.isLoggedIn();
             const newSyncState: SyncState = {
-                status: isLoggedIn ? "unsynced" : "error",
+                status: isLoggedIn ? "unsynced" : "not-authenticated",
                 lastSynced: null,
-                error: isLoggedIn ? undefined : "Not logged in",
+                error: undefined,
             };
             await browser.storage.local.set({ syncState: newSyncState });
             return newSyncState;
@@ -403,9 +421,9 @@ export class SyncService {
             if (!(await GoogleAuthService.isLoggedIn())) {
                 console.log("Not logged in");
                 await this.setSyncState({
-                    status: "error",
                     lastSynced: null,
-                    error: "Not logged in",
+                    status: "not-authenticated",
+                    error: undefined,
                 });
                 return;
             }
@@ -477,7 +495,7 @@ export class SyncService {
                 if (error === this.syncAbortController?.signal.reason) {
                     errorMessage = "Sync Aborted";
                 } else if (error.message.includes("401")) {
-                    errorMessage = "Authentication error. Please login again";
+                    errorMessage = "not-authenticated";
                 } else if (error.message.includes("Sync Aborted")) {
                     errorMessage = "Sync Aborted";
                 } else if (error.message.includes("Failed to fetch")) {
@@ -487,13 +505,34 @@ export class SyncService {
                     errorMessage = error.message;
                 }
             }
-            await this.setSyncState((init) => ({
-                ...init,
-                status: "error",
-                error: errorMessage,
-            }));
+            if (errorMessage === "not-authenticated") {
+                await this.setSyncState(() => ({
+                    lastSynced: null,
+                    status: "not-authenticated",
+                    error: undefined,
+                }));
+            } else
+                await this.setSyncState((init) => ({
+                    ...init,
+                    status: "error",
+                    error: errorMessage,
+                }));
         } finally {
             console.groupEnd();
         }
+    }
+    static async clearSyncData(): Promise<void> {
+        if (!(await GoogleAuthService.isLoggedIn())) throw new Error("Not logged in");
+        const token = await GoogleAuthService.getValidToken();
+        const fileId = await this.findSyncDataFile(token);
+        if (!fileId) throw new Error("No sync data found");
+        const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        if (!response.ok) throw new Error("Failed to delete sync data.");
+        console.log("Deleted sync data.", await response.text());
     }
 }
