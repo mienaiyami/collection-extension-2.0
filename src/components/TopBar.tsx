@@ -499,7 +499,7 @@ const TopBar = () => {
                                 Local backup is made every 6 hours (if browser is open). Choose this
                                 option if some error caused all collections to disappear. <br />{" "}
                                 <br />
-                                NOTE: Not recommended to be used with Google Drive Sync.
+                                NOTE: Not recommended to be used with Google Drive Sync.{" "}
                                 <a
                                     href="https://github.com/mienaiyami/collection-extension-2.0/wiki#how-to-properly-restore-local-backup-when-logged-in-with-google-drive-for-sync"
                                     target="_blank"

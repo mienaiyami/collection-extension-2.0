@@ -43,7 +43,7 @@ export class SyncService {
                     throw new Error(this.syncAbortController.signal.reason);
                 }
                 const token = await GoogleAuthService.getValidToken(
-                    true,
+                    false,
                     this.syncAbortController?.signal
                 );
                 const fileId = await this.findSyncDataFile(token);
@@ -77,8 +77,6 @@ export class SyncService {
                     body: form,
                     signal: this.syncAbortController?.signal,
                 });
-
-                console.log(await response.json());
 
                 if (!response.ok) {
                     console.error(response);
@@ -124,7 +122,7 @@ export class SyncService {
         while (retryCount < this.MAX_RETRIES && !this.syncAbortController?.signal.aborted) {
             try {
                 const token = await GoogleAuthService.getValidToken(
-                    true,
+                    false,
                     this.syncAbortController?.signal
                 );
                 const fileId = await this.findSyncDataFile(token);
@@ -153,14 +151,14 @@ export class SyncService {
                     this.syncAbortController?.signal
                 );
                 try {
-                    console.log(
-                        "Validating syncData",
-                        Intl.NumberFormat().format(new Blob([JSON.stringify(data)]).size / 1024),
-                        "KB"
-                    );
-                    const now = performance.now();
+                    // console.log(
+                    //     "Validating syncData",
+                    //     Intl.NumberFormat().format(new Blob([JSON.stringify(data)]).size / 1024),
+                    //     "KB"
+                    // );
+                    // const now = performance.now();
                     const syncData = await this.validCollectionData(data);
-                    console.log("Validated syncData", performance.now() - now, "ms");
+                    // console.log("Validated syncData", performance.now() - now, "ms");
                     return syncData;
                 } catch (error) {
                     console.error("Invalid syncData data", error);
@@ -291,7 +289,6 @@ export class SyncService {
             }
         });
         //todo test
-        console.log({ positionMap });
         return {
             collectionData: Array.from(collectionMap.values()).sort((a, b) => {
                 return positionMap.get(a.id)! - positionMap.get(b.id)! || a.createdAt - b.createdAt;
@@ -305,12 +302,10 @@ export class SyncService {
     static reNewAbortController(): void {
         this.abortSync();
         this.syncAbortController = new AbortController();
-        console.log(this.syncAbortController);
     }
     static abortSync(reason?: string): void {
         if (this.syncAbortController) {
             this.syncAbortController.abort(new Error(reason || "Sync aborted"));
-            console.log(this.syncAbortController.signal);
             // not removed coz needed in places
             // this.syncAbortController = null;
         }
@@ -386,7 +381,7 @@ export class SyncService {
         };
     }> {
         const { status, lastSynced } = await this.getSyncState();
-        console.log("time since last sync", Date.now() - (lastSynced || 0));
+        console.log("time since last sync", (Date.now() - (lastSynced || 0)) / 1000, "s");
         const reason = {
             syncingInProgress: status === "syncing",
             recentlySynced: !!lastSynced && Date.now() - lastSynced < this.SYNC_RECENCY_THRESHOLD,
@@ -419,18 +414,16 @@ export class SyncService {
         console.group("background:syncData");
         try {
             if (!(await GoogleAuthService.isLoggedIn())) {
-                console.log("Not logged in");
                 await this.setSyncState({
                     lastSynced: null,
                     status: "not-authenticated",
                     error: undefined,
                 });
-                return;
+                throw new Error("Not logged in");
             }
             const syncState = await this.getSyncState();
             if (syncState.status === "syncing") {
-                console.log("Already syncing");
-                return;
+                throw new Error("Sync in progress");
             }
 
             this.reNewAbortController();
@@ -460,7 +453,7 @@ export class SyncService {
                 deletedCollectionData,
                 remoteData?.deletedCollectionData || []
             );
-            console.log("merge took", performance.now() - now2, "ms");
+            // console.log("merge took", performance.now() - now2, "ms");
             // important in case data updated while merging
             await this.uploadSyncData({
                 collectionData: mergedData.collectionData,
@@ -471,7 +464,6 @@ export class SyncService {
             // if local is changed while uploading, it will be aborted
             if (this.syncAbortController?.signal.aborted)
                 throw new Error(this.syncAbortController.signal.reason);
-            console.log({ mergedData });
             // await this.setSyncState({ status: "synced", lastSynced: timestamp });
             // doing this together is better because sync is triggered by changes in local data
             // and listener can check is data was changed with syncSate=synced to ignore syncing again
@@ -517,13 +509,14 @@ export class SyncService {
                     status: "error",
                     error: errorMessage,
                 }));
+            throw error;
         } finally {
             console.groupEnd();
         }
     }
     static async clearSyncData(): Promise<void> {
         if (!(await GoogleAuthService.isLoggedIn())) throw new Error("Not logged in");
-        const token = await GoogleAuthService.getValidToken();
+        const token = await GoogleAuthService.getValidToken(false);
         const fileId = await this.findSyncDataFile(token);
         if (!fileId) throw new Error("No sync data found");
         const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {

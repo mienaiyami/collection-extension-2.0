@@ -5,10 +5,9 @@ backgroundOnlyCode();
 
 const CLIENT_ID = "309178204165-spf4df9t9l6dlnoo24dkva268jnvfhg7.apps.googleusercontent.com";
 const WORKER_URL = "https://collection-extension-gdrive-auth.mienaiyami.workers.dev";
-const SCOPES = [
-    "https://www.googleapis.com/auth/drive.file",
-    "https://www.googleapis.com/auth/drive.appdata",
-];
+const SCOPES = ["https://www.googleapis.com/auth/drive.appdata"];
+
+// TODO: define errors in a separate file and import here, and check for them in catch blocks
 
 export class GoogleAuthService {
     private static async generatePKCE() {
@@ -45,8 +44,6 @@ export class GoogleAuthService {
 
             const url = new URL(responseUrl);
             const params = new URLSearchParams(url.search);
-            console.log("Google auth response:");
-            console.log([...params.entries()]);
 
             const code = params.get("code");
             if (!code) throw new Error("No authorization code found");
@@ -98,7 +95,6 @@ export class GoogleAuthService {
             }
             const tokenData = await tokenResponse.json();
             if (!tokenData.access_token) throw new Error("No access token received");
-            console.log("Refreshed token:", tokenData);
             await browser.storage.local.set({
                 accessToken: tokenData.access_token,
                 tokenExpiry: Date.now() + tokenData.expires_in * 1000,
@@ -134,7 +130,6 @@ export class GoogleAuthService {
                 return;
             }
             const data = await response.json();
-            console.log("User info:", data);
             return {
                 displayName: data.user.displayName,
                 email: data.user.emailAddress,
@@ -145,7 +140,7 @@ export class GoogleAuthService {
             return;
         }
     }
-    static async getValidToken(logInIfInvalid = true, signal?: AbortSignal): Promise<string> {
+    static async getValidToken(logInIfInvalid = false, signal?: AbortSignal): Promise<string> {
         const { accessToken, tokenExpiry, refreshToken } = (await browser.storage.local.get([
             "accessToken",
             "tokenExpiry",

@@ -230,10 +230,6 @@ export const deletedCollectionItemSchema = z.object({
     isItem: z.boolean().optional(),
     deletedAt: z.number(),
 });
-console.warn(
-    "make sure to avoid pushing syncData at close intervals. \
-    for example, pc1 pushed data at 1:00 and pc2 pushed data at 1:01, then pc1 will overwrite pc2 data without syncing."
-);
 export const syncDataSchema = z.object({
     collectionData: z.array(collectionSchema),
     deletedCollectionData: z.array(deletedCollectionItemSchema).transform((old) => {

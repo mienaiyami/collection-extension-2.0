@@ -147,7 +147,6 @@ const CollectionItemView = () => {
             if (typeof message === "object" && "type" in message) {
                 if (message.type === "add-current-tab-to-active-collection") {
                     if (inCollectionView)
-                        //todo : test
                         return operations.addActiveTabToCollection(inCollectionView);
                 }
             } else {
@@ -247,7 +246,6 @@ const CollectionItemView = () => {
                                 if (items)
                                     window.browser.windows.create({
                                         url: items.map((e) => e.url),
-                                        //todo check
                                         state: "normal",
                                     });
                             }}

@@ -72,7 +72,6 @@ const CollectionView = () => {
                     axis="y"
                     layoutScroll
                     values={collectionOrder}
-                    // todo impl real order
                     onReorder={(e) => {
                         setCollectionOrder(e);
                     }}

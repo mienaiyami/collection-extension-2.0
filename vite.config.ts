@@ -91,9 +91,22 @@ const manifestPlugin = (): PluginOption => {
         },
     };
 };
+const htmlDuplicationPlugin = (): PluginOption => {
+    return {
+        name: "html-duplication",
+        writeBundle(options, bundle) {
+            const sidePanelHtmlPath = path.join(options.dir, "side_panel.html");
+            const indexHtml = bundle["index.html"];
+            // need for typescript
+            if (indexHtml.type !== "asset") throw new Error("index.html not found");
+            const indexHtmlContent = indexHtml.source;
+            writeFileSync(sidePanelHtmlPath, indexHtmlContent);
+        },
+    };
+};
 
 export default defineConfig({
-    plugins: [react(), manifestPlugin()],
+    plugins: [react(), htmlDuplicationPlugin(), manifestPlugin()],
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "./src"),
@@ -105,7 +118,7 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 index: path.resolve(__dirname, "./index.html"),
-                side_panel: path.resolve(__dirname, "./side_panel.html"),
+                side_panel: path.resolve(__dirname, "./index.html"),
                 background: path.resolve(__dirname, "./src/background.ts"),
                 content: path.resolve(__dirname, "./src/content.ts"),
             },

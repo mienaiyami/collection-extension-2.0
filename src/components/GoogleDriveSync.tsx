@@ -26,7 +26,6 @@ const GoogleDriveSync = () => {
         checkUser();
     }, []);
     useEffect(() => {
-        console.log("called123123");
         const interval = setInterval(checkUser, CHECK_USER_INTERVAL);
         return () => clearInterval(interval);
     }, [loggedInUser, error]);
@@ -55,14 +54,20 @@ const GoogleDriveSync = () => {
                             </TooltipTrigger>
                         </Tooltip>
                     ) : error ? (
-                        <>
-                            <Button size={"icon"} variant={"ghost"}>
+                        <div className="flex flex-row gap-1 items-center">
+                            <Button
+                                size={"icon"}
+                                variant={"ghost"}
+                                onClick={() => {
+                                    checkUser();
+                                }}
+                            >
                                 <RotateCcw />
                             </Button>
                             <span className="text-destructive border border-destructive rounded-sm p-2">
                                 {error}
                             </span>
-                        </>
+                        </div>
                     ) : (
                         <span>Not logged in</span>
                     )}
@@ -97,25 +102,27 @@ const GoogleDriveSync = () => {
                                 </Button>
                             </>
                         ) : (
-                            <Button
-                                variant="outline"
-                                disabled={loading}
-                                onClick={async () => {
-                                    setLoading(true);
-                                    const response = await operations.loginGoogleDrive();
-                                    if (response.success) {
-                                        const res = await operations.getGoogleDriveUserInfo();
-                                        if (res.success) setLoggedInUser(res.data);
-                                    }
-                                    setLoading(false);
-                                }}
-                            >
-                                {loading ? (
-                                    <Loader2 className="animate-spin" />
-                                ) : (
-                                    "Login with Google Drive"
-                                )}
-                            </Button>
+                            Boolean(!error) && (
+                                <Button
+                                    variant="outline"
+                                    disabled={loading}
+                                    onClick={async () => {
+                                        setLoading(true);
+                                        const response = await operations.loginGoogleDrive();
+                                        if (response.success) {
+                                            const res = await operations.getGoogleDriveUserInfo();
+                                            if (res.success) setLoggedInUser(res.data);
+                                        }
+                                        setLoading(false);
+                                    }}
+                                >
+                                    {loading ? (
+                                        <Loader2 className="animate-spin" />
+                                    ) : (
+                                        "Login with Google Drive"
+                                    )}
+                                </Button>
+                            )
                         )}
                     </div>
                     <p className="text-sm text-muted-foreground">

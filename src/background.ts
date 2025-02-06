@@ -105,6 +105,7 @@ const createLocalBackup = () =>
             if (!collectionData) return;
             if (collectionData instanceof Array && collectionData.length === 0) return;
             if (!deletedCollectionData) deletedCollectionData = [];
+            console.log("Creating local backup.");
             return browser.storage.local
                 .set({
                     backup: {
@@ -114,6 +115,7 @@ const createLocalBackup = () =>
                 })
                 .then(() => {
                     const date = new Date().toJSON();
+                    console.log("Local backup created.", date);
                     browser.storage.local.set({
                         lastBackup: date,
                     });
@@ -147,9 +149,7 @@ browser.runtime.onInstalled.addListener((e) => {
                     }
                     try {
                         console.log("Parsing collectionData at startup");
-                        console.log({ collectionData });
                         const data = z.array(collectionSchema || []).parse(collectionData);
-                        console.log({ data });
                         browser.storage.local.set({ collectionData: data });
                     } catch (e) {
                         console.error("Error parsing collectionData at startup", e);
@@ -258,11 +258,9 @@ browser.alarms.onAlarm.addListener((alarm) => {
                 const last = new Date(lastBackup);
                 const now = new Date();
                 if (now.getTime() - last.getTime() >= 1000 * 60 * 60 * 6) {
-                    console.log("creating backup...");
                     createLocalBackup();
                 }
             } else {
-                console.log("creating backup...");
                 createLocalBackup();
             }
         });
@@ -290,8 +288,6 @@ class CollectionManager {
     static {
         browser.storage.local.onChanged.addListener(async (change) => {
             try {
-                console.log("Storage change:", change);
-                console.warn("need to figure something out for reorder of collections and items.");
                 if (change.recentlyUsedCollections) {
                     setAddPageToCollectionContextMenu();
                 }
@@ -319,7 +315,6 @@ class CollectionManager {
                     // }
 
                     await SyncService.setSyncState((prev) => ({ ...prev, status: "unsynced" }));
-                    console.log("Syncing after change", change);
                     await SyncService.syncWithDebounce();
                 }
             } catch (error) {
@@ -558,7 +553,6 @@ class CollectionManager {
             collection.title = newName;
             collection.updatedAt = Date.now();
 
-            console.log({ collection });
             await this.setCollectionData(collections);
             this.updateRecentlyUsed("update");
 
@@ -867,7 +861,7 @@ browser.runtime.onMessage.addListener(
                     if (isLoggedIn) {
                         return { success: true };
                     }
-                    await GoogleAuthService.getValidToken();
+                    await GoogleAuthService.getValidToken(true);
                     SyncService.setSyncState((prev) => ({ ...prev, status: "unsynced" }));
                     return { success: true };
                 }
@@ -880,7 +874,6 @@ browser.runtime.onMessage.addListener(
                     return { success: true };
                 case "GOOGLE_DRIVE_USER_INFO": {
                     const data = await GoogleAuthService.getUserInfo();
-                    console.log("User info:", data);
                     if (!data) {
                         return { success: true, data: null };
                     }
