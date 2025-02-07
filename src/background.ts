@@ -299,7 +299,7 @@ class CollectionManager {
                         (change.syncState.newValue as SyncState | undefined)?.status === "synced"
                     ) {
                         console.log(
-                            "Collection data changed was probably triggered by sync. Ignoring."
+                            "Collection data changed was probably triggered by sync. Ignoring Sync."
                         );
                         return;
                     }
@@ -487,30 +487,6 @@ class CollectionManager {
         }
     }
 
-    // static async replaceCollection(
-    //     id: UUID,
-    //     items: CollectionItem[]
-    // ): Promise<
-    //     CollectionResponse<
-    //         Extract<CollectionOperation, { type: "REPLACE_COLLECTION" }>
-    //     >
-    // > {
-    //     try {
-    //         const collections = await this.getCollectionData();
-    //         const collection = collections.find((e) => e.id === id);
-    //         if (!collection) {
-    //             return { success: false, error: "Collection not found" };
-    //         }
-
-    //         collection.items = items;
-    //         await this.setCollectionData(collections);
-
-    //         return { success: true };
-    //     } catch (error) {
-    //         return { success: false, error: String(error) };
-    //     }
-    // }
-
     static async removeFromCollection(
         collectionId: UUID,
         itemId: UUID | UUID[]
@@ -665,8 +641,10 @@ class CollectionManager {
                     collections.unshift(newCol);
                 }
             });
-
-            await this.setCollectionData(collections);
+            await browser.storage.local.set({
+                collectionData: collections,
+                deletedCollectionData: Array.from(deletedMap.values()),
+            });
             this.updateRecentlyUsed("update");
             return { success: true };
         } catch (error) {

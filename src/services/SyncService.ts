@@ -29,6 +29,7 @@ export class SyncService {
 
         if (!response.ok) {
             console.error(response);
+            if (response.status === 401) throw new Error("Invalid access token");
             return null;
             // throw new Error(`Failed to search files: ${response.status} ${response.statusText}`);
         }
@@ -107,7 +108,7 @@ export class SyncService {
         }
     }
 
-    static async validCollectionData(data: unknown): Promise<SyncData> {
+    static async validSyncData(data: unknown): Promise<SyncData> {
         try {
             return syncDataSchema.parse(data);
         } catch (error) {
@@ -157,7 +158,7 @@ export class SyncService {
                     //     "KB"
                     // );
                     // const now = performance.now();
-                    const syncData = await this.validCollectionData(data);
+                    const syncData = await this.validSyncData(data);
                     // console.log("Validated syncData", performance.now() - now, "ms");
                     return syncData;
                 } catch (error) {
@@ -194,12 +195,10 @@ export class SyncService {
         });
         collectionItem2.forEach((item, index) => {
             if (deletedMap.has(item.id)) return;
+            const existing = itemMap.get(item.id);
             const existingPosition = positionMap.get(item.id);
-            if (typeof existingPosition === "number") {
-                if (
-                    existingPosition !== index &&
-                    item.orderUpdatedAt > collectionItem1[existingPosition].orderUpdatedAt
-                ) {
+            if (typeof existingPosition === "number" && existing) {
+                if (existingPosition !== index && item.orderUpdatedAt > existing.orderUpdatedAt) {
                     positionMap.set(item.id, index);
                 }
             } else {
@@ -207,7 +206,6 @@ export class SyncService {
             }
             //
             //
-            const existing = itemMap.get(item.id);
             if (!existing) {
                 itemMap.set(item.id, item);
             } else {
@@ -218,7 +216,6 @@ export class SyncService {
                 });
             }
         });
-        //todo test
         return Array.from(itemMap.values()).sort((a, b) => {
             return positionMap.get(a.id)! - positionMap.get(b.id)! || a.createdAt - b.createdAt;
         });
@@ -228,12 +225,14 @@ export class SyncService {
         collection2: Collection,
         deletedMap: Map<UUID, DeletedCollection>
     ): Collection {
+        const orderUpdatedAt = Math.max(collection1.orderUpdatedAt, collection2.orderUpdatedAt);
         if (collection1.updatedAt > collection2.updatedAt) {
             return {
                 ...collection2,
                 ...collection1,
                 items: this.mergeCollectionItems(collection1.items, collection2.items, deletedMap),
                 updatedAt: collection1.updatedAt,
+                orderUpdatedAt,
             };
         }
         return {
@@ -241,6 +240,7 @@ export class SyncService {
             ...collection2,
             items: this.mergeCollectionItems(collection1.items, collection2.items, deletedMap),
             updatedAt: collection2.updatedAt,
+            orderUpdatedAt,
         };
     }
     static mergeData(
@@ -268,12 +268,10 @@ export class SyncService {
         remoteColData.forEach((col, index) => {
             if (deletedMap.has(col.id)) return;
 
+            const existing = collectionMap.get(col.id);
             const existingPosition = positionMap.get(col.id);
-            if (typeof existingPosition === "number") {
-                if (
-                    existingPosition !== index &&
-                    col.orderUpdatedAt > localColData[existingPosition].orderUpdatedAt
-                ) {
+            if (typeof existingPosition === "number" && existing) {
+                if (existingPosition !== index && col.orderUpdatedAt > existing.orderUpdatedAt) {
                     positionMap.set(col.id, index);
                 }
             } else {
@@ -281,14 +279,12 @@ export class SyncService {
             }
             //
             //
-            const existing = collectionMap.get(col.id);
             if (!existing) {
                 collectionMap.set(col.id, col);
             } else {
                 collectionMap.set(col.id, this.mergeCollection(existing, col, deletedMap));
             }
         });
-        //todo test
         return {
             collectionData: Array.from(collectionMap.values()).sort((a, b) => {
                 return positionMap.get(a.id)! - positionMap.get(b.id)! || a.createdAt - b.createdAt;
@@ -464,7 +460,7 @@ export class SyncService {
             // if local is changed while uploading, it will be aborted
             if (this.syncAbortController?.signal.aborted)
                 throw new Error(this.syncAbortController.signal.reason);
-            // await this.setSyncState({ status: "synced", lastSynced: timestamp });
+
             // doing this together is better because sync is triggered by changes in local data
             // and listener can check is data was changed with syncSate=synced to ignore syncing again
             const newData: {

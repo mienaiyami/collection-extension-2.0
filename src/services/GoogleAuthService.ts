@@ -127,6 +127,10 @@ export class GoogleAuthService {
             if (!response.ok) {
                 console.error(response);
                 console.error(await response.text());
+                if (response.status === 401) {
+                    console.log("Invalid access token. Logging out.");
+                    this.logout();
+                }
                 return;
             }
             const data = await response.json();
@@ -140,6 +144,7 @@ export class GoogleAuthService {
             return;
         }
     }
+    /** does not check for revoked token */
     static async getValidToken(logInIfInvalid = false, signal?: AbortSignal): Promise<string> {
         const { accessToken, tokenExpiry, refreshToken } = (await browser.storage.local.get([
             "accessToken",
@@ -194,7 +199,12 @@ export class GoogleAuthService {
             console.log("Not logged in with Google");
             return;
         }
-        await fetch("https://accounts.google.com/o/oauth2/revoke?token=" + refreshToken);
-        console.log("Logged out from Google");
+        try {
+            await fetch("https://accounts.google.com/o/oauth2/revoke?token=" + refreshToken);
+            console.log("Logged out from Google");
+        } catch (error) {
+            console.error("Failed to logout from Google", error);
+            throw new Error("Failed to logout from Google");
+        }
     }
 }

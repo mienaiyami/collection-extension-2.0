@@ -234,7 +234,7 @@ export const syncDataSchema = z.object({
     collectionData: z.array(collectionSchema),
     deletedCollectionData: z.array(deletedCollectionItemSchema).transform((old) => {
         // clear items older than 3months
-        return old.filter((e) => e.deletedAt < Date.now() - 1000 * 60 * 60 * 24 * 30 * 3);
+        return old.filter((e) => e.deletedAt > Date.now() - 1000 * 60 * 60 * 24 * 30 * 3);
     }),
     timestamp: z.number(),
 });
