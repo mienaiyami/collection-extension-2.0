@@ -204,7 +204,9 @@ browser.runtime.onInstalled.addListener((e) => {
 
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
     // info.frameUrl does not exist in firefox
-    const url = info.frameUrl || info.pageUrl;
+    // info.linkText does not exist in chromium
+    const isLinkFromPage = Boolean(info.linkUrl && info.linkUrl !== info.pageUrl);
+    const url = isLinkFromPage ? info.linkUrl : info.pageUrl;
     if (!tab || !url) {
         console.error("tab or url not found");
         return;
@@ -220,7 +222,16 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
         if (response.success) {
             // this sometimes does not work in firefox
             // if (info.parentMenuItemId === CONTEXT_MENU_PARENT_ID_PAGE) {
-            if (isPage) {
+            if (isLinkFromPage) {
+                await CollectionManager.addToCollection(response.data.collection.id, {
+                    id: crypto.randomUUID(),
+                    title: info.linkText || "No title",
+                    url,
+                    img: "",
+                    createdAt: Date.now(),
+                    orderUpdatedAt: Date.now(),
+                });
+            } else if (isPage) {
                 await CollectionManager.addToCollection(
                     response.data.collection.id,
                     await getDataFromTab(tab)
@@ -240,7 +251,16 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     }
     if (id.startsWith("collection-")) {
         const collectionId = id.replace("collection-", "") as UUID;
-        if (isPage) {
+        if (isLinkFromPage) {
+            await CollectionManager.addToCollection(collectionId, {
+                id: crypto.randomUUID(),
+                title: info.linkText || "No title",
+                url,
+                img: "",
+                createdAt: Date.now(),
+                orderUpdatedAt: Date.now(),
+            });
+        } else if (isPage) {
             await CollectionManager.addToCollection(collectionId, await getDataFromTab(tab));
             return;
         } else if (isAllTabs) {
