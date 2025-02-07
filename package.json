@@ -1,7 +1,7 @@
 {
   "name": "collection-extension",
   "productName": "Collections",
-  "version": "2.4.2",
+  "version": "2.5.0",
   "type": "module",
   "description": "Organize and manage tabs effortlessly with collections, batch operations, keyboard shortcuts, and export/import features.",
   "author": {

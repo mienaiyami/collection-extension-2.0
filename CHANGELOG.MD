@@ -1,3 +1,15 @@
+## v2.5.0
+
+- added: Google Drive sync support for syncing collections across / backup online.
+- added: enhanced backup management
+- added: privacy policy and improved documentation
+- improved: collection and item ordering with better timestamp tracking
+- improved: sync and authentication error handling
+- improved: local backup creation and restore functionality
+- fixed: context menu handling for links and pages in different contexts
+- fixed: collection data filtering during sync operations
+- fixed: various UI components and error management
+
 ## v2.4.2
 
 - fixed: unable to add some pages to collection (document not defined error).
