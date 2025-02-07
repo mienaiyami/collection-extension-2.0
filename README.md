@@ -1,22 +1,26 @@
 # Collection extension for all browsers
 
-Enhanced version of <https://github.com/mienaiyami/collections-chrome-extension>
-
 Organize and manage tabs effortlessly with collections, batch operations, keyboard shortcuts, and export/import features, compatible with all browsers.
 
 This extension simplifies tab management by allowing users to group multiple open tabs into collections, accessible through a side panel. It offers features like batch opening of URLs, keyboard shortcuts for quick actions, and support for incognito mode. Additionally, users can easily export and import collections for backup or sharing purposes. Compatible with all major browsers, it ensures a streamlined browsing experience with the convenience of installation and updates through official browser stores.
 
-Chrome Store : <https://chromewebstore.google.com/detail/collections/kcijpmmfajideceadmcihckmodaiehpm>
+| Store | Link | Notes |
+|-------|------|-------|
+| Chrome Web Store | [Install](https://chromewebstore.google.com/detail/collections/kcijpmmfajideceadmcihckmodaiehpm) | ✅ Recommended - Works on all Chromium browsers |
+| Firefox Add-ons | [Install](https://addons.mozilla.org/en-US/firefox/addon/collections) | ✅ Firefox only |
+| ~~Microsoft Edge~~ | ~~[Install](https://microsoftedge.microsoft.com/addons/detail/collections/fpolmkmcokpklimmekilomdghljpmpcf)~~ | ⚠️ Deprecated - Updates take >7 days |
 
-> I recommend using Chrome store to get benefits of online backup (will be implemented soon.)
+### Manual Installation
 
-Firefox : <https://addons.mozilla.org/en-US/firefox/addon/collections>
+1. Download `build.zip` from [Releases](https://github.com/mienaiyami/collection-extension-2.0/releases)
+2. Extract the zip file
+3. Open browser's extension settings
+4. Enable "Developer mode"
+5. Click "Load unpacked"
+6. Select the extracted `/dist` folder
+7. Optional: Disable "Developer mode"
 
-~~Microsoft Edge Store Link (works in all chromium browser) : <https://microsoftedge.microsoft.com/addons/detail/collections/fpolmkmcokpklimmekilomdghljpmpcf>~~
-
-> Microsoft Edge extension updates usually take over 7 days. So it is possible for important updates to longer to be delivered.
-
-Local (**NO AUTO UPDATES**) : download `build.zip` from releases and unzip it, open extension option in your browser, enable developer mode, load unpacked and select extracted `/dist`. You can turn off developer mode now.
+> ⚠️ **Note**: Manual installation will not receive automatic updates
 
 ## [Build Instruction](/docs/guide.md#build-instructions)
 
@@ -24,6 +28,7 @@ Local (**NO AUTO UPDATES**) : download `build.zip` from releases and unzip it, o
 
 - create collection from all opened tabs.
 - works as side-panel (v2.0.17 onwards).
+- online sync using google drive.
 - select and open urls in batch.
 - works in incognito.
 - shortcut keys for quick actions.
@@ -32,7 +37,6 @@ Local (**NO AUTO UPDATES**) : download `build.zip` from releases and unzip it, o
 
 ## Todo
 
-- online synced collection.
 - better shortcuts.
 - selectable collections (similar to links inside collection).
 

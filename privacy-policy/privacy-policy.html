@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Privacy Policy - Collections Extension</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+        <style>
+            body {
+                font-family: "Inter", sans-serif;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+        <main class="container mx-auto px-4 py-8 max-w-4xl">
+            <nav class="mb-8">
+                <a href="./" class="text-blue-600 hover:underline">&larr; Back to Home</a>
+            </nav>
+
+            <section class="prose prose-slate dark:prose-invert max-w-none">
+                <h1 class="text-4xl font-bold mb-8">Privacy Policy</h1>
+                <div class="bg-white dark:bg-gray-800 p-8 rounded-xl">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-8">
+                        Last Updated: February 2025
+                    </p>
+
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4">Data Collection and Storage</h3>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li>
+                                    All collection data is stored locally on your device using
+                                    browser's storage API
+                                </li>
+                                <li>No personal data is collected or stored on external servers</li>
+                                <li>Your data remains private and under your control</li>
+                                <li>You can export, import, or delete your data at any time</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4">Google Drive Integration</h3>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li>Uses Google OAuth 2.0 for secure authentication</li>
+                                <li>Access is limited to application data folder only</li>
+                                <li>Cannot access your other Google Drive files</li>
+                                <li>Authentication tokens are stored locally on your device</li>
+                                <li>
+                                    Token refresh operations are handled securely via Cloudflare
+                                    Worker
+                                </li>
+                                <li>Sync is optional and can be disabled at any time</li>
+                                <li>You can revoke access through your Google Account settings</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4">Browser Permissions</h3>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li>Storage: Required to save your collections locally</li>
+                                <li>
+                                    Tabs & ActiveTab: Required to manage and interact with browser
+                                    tabs
+                                </li>
+                                <li>Identity: Required for Google OAuth authentication</li>
+                                <li>
+                                    SidePanel: Required for extension interface in browser side
+                                    panel
+                                </li>
+                                <li>Incognito: Optional permission for incognito mode support</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4">Data Security</h3>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li>All communication with Google Drive uses secure HTTPS</li>
+                                <li>No analytics or tracking code is included</li>
+                                <li>Extension is open source - code can be audited on GitHub</li>
+                                <li>Regular security updates through browser stores</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4">Your Rights</h3>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li>Access your data anytime through the extension interface</li>
+                                <li>Export your data in JSON format</li>
+                                <li>Delete all local data through extension settings</li>
+                                <li>Disable Google Drive sync at any time</li>
+                                <li>Uninstall the extension to remove all local data</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4">Contact & Support</h3>
+                            <p>For questions, concerns, or bug reports:</p>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li>
+                                    Email:
+                                    <a
+                                        href="mailto:mienaiyami0@gmail.com"
+                                        class="text-blue-600 hover:underline"
+                                        >mienaiyami0@gmail.com</a
+                                    >
+                                </li>
+                                <li>
+                                    GitHub Issues:
+                                    <a
+                                        href="https://github.com/mienaiyami/collection-extension-2.0/issues"
+                                        class="text-blue-600 hover:underline"
+                                        >Report an Issue</a
+                                    >
+                                </li>
+                                <li>
+                                    Source Code:
+                                    <a
+                                        href="https://github.com/mienaiyami/collection-extension-2.0"
+                                        class="text-blue-600 hover:underline"
+                                        >GitHub Repository</a
+                                    >
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="border-t mt-12">
+            <div
+                class="container mx-auto px-4 py-6 text-center text-sm text-gray-600 dark:text-gray-400"
+            >
+                <p>
+                    © 2025 mienaiyami. View project on
+                    <a
+                        href="https://github.com/mienaiyami/collection-extension-2.0"
+                        class="text-blue-600 hover:underline"
+                        >GitHub</a
+                    >
+                </p>
+            </div>
+        </footer>
+
+        <script>
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.documentElement.classList.add("dark");
+            }
+        </script>
+    </body>
+</html>
