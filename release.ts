@@ -11,50 +11,54 @@ const rl = readline.createInterface({
     output: process.stdout,
 });
 
-const tagAndPush = (): void => {
-    console.log(`Tagging v${pkgJSON.version} and pushing tags.`);
-    const push = () => {
-        const gitSpawn = exec(`git push --tags`);
+const tagAndPush = (): Promise<void> =>
+    new Promise((resolve) => {
+        console.log(`Tagging v${pkgJSON.version} and pushing tags.`);
+        const push = () => {
+            const gitSpawn = exec(`git push --tags`);
+            gitSpawn.stderr?.on("data", (data) => {
+                process.stdout.write(`\x1b[91m${data}\x1b[0m`);
+            });
+            gitSpawn.on("close", (code) => {
+                console.log(`push tags: exited with code ${code}.`);
+                if (code === 1) process.exit(1);
+                resolve();
+            });
+        };
+        const gitSpawn = exec(`git tag -a v${pkgJSON.version} -m"v${pkgJSON.version}"`);
         gitSpawn.stderr?.on("data", (data) => {
             process.stdout.write(`\x1b[91m${data}\x1b[0m`);
         });
         gitSpawn.on("close", (code) => {
-            console.log(`push tags: exited with code ${code}.`);
+            console.log(`git tag: exited with code ${code}.`);
             if (code === 1) process.exit(1);
+            push();
         });
-    };
-    const gitSpawn = exec(`git tag -a v${pkgJSON.version} -m"v${pkgJSON.version}"`);
-    gitSpawn.stderr?.on("data", (data) => {
-        process.stdout.write(`\x1b[91m${data}\x1b[0m`);
-    });
-    gitSpawn.on("close", (code) => {
-        console.log(`git tag: exited with code ${code}.`);
-        if (code === 1) process.exit(1);
-        push();
-    });
-};
-
-const signFireFoxAddon = (): void => {
-    console.log("Signing Firefox add-on...");
-    const pwshSpawn = exec(
-        "cd ./dist && web-ext sign --channel=listed " +
-            `--api-key=${process.env.AMO_JWT_ISSUER} ` +
-            `--api-secret=${process.env.AMO_JWT_SECRET}`
-    );
-
-    pwshSpawn.stdout?.on("data", (data) => {
-        process.stdout.write(data);
     });
 
-    pwshSpawn.stderr?.on("data", (data) => {
-        process.stdout.write(`\x1b[91m${data}\x1b[0m`);
-    });
+const signFireFoxAddon = (): Promise<void> =>
+    new Promise((resolve) => {
+        console.log("Signing Firefox add-on...");
+        const pwshSpawn = exec(
+            "cd ./dist && web-ext sign --channel=listed " +
+                `--api-key=${process.env.AMO_JWT_ISSUER} ` +
+                `--api-secret=${process.env.AMO_JWT_SECRET}`
+        );
 
-    pwshSpawn.on("close", (code) => {
-        console.log(`sign addon: exited with code ${code}.`);
-        if (code === 1) process.exit(1);
+        pwshSpawn.stdout?.on("data", (data) => {
+            process.stdout.write(data);
+        });
+
+        pwshSpawn.stderr?.on("data", (data) => {
+            process.stdout.write(`\x1b[91m${data}\x1b[0m`);
+        });
+
+        pwshSpawn.on("close", (code) => {
+            console.log(`sign addon: exited with code ${code}.`);
+            if (code === 1) process.exit(1);
+            resolve();
+        });
     });
-};
 
 const publishChromeExtension = async (): Promise<void> => {
     console.log("Publishing Chrome extension...");
@@ -135,7 +139,7 @@ rl.question(
         if (e === "") {
             tagAndPush();
             console.log("--------------------");
-            signFireFoxAddon();
+            await signFireFoxAddon();
             console.log("--------------------");
             await publishChromeExtension();
         }
