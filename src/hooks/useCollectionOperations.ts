@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import browser from "webextension-polyfill";
-import { CollectionOperation, CollectionResponse } from "../types/messages";
+import { CollectionOperation, MessageResponse } from "../types/messages";
 import { toast } from "sonner";
 
 export const useCollectionOperations = () => {
@@ -10,7 +10,7 @@ export const useCollectionOperations = () => {
                 Extract<CollectionOperation, { type: Type }>,
                 "response"
             >
-        ): Promise<CollectionResponse<Extract<CollectionOperation, { type: Type }>>> => {
+        ): Promise<MessageResponse<Extract<CollectionOperation, { type: Type }>>> => {
             try {
                 return browser.runtime.sendMessage(operation);
             } catch (error) {
