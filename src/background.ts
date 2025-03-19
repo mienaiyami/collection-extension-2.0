@@ -129,8 +129,8 @@ browser.runtime.onInstalled.addListener((e) => {
             browser.storage.local.get("appSetting").then(({ appSetting }) => {
                 if (appSetting) {
                     if (
-                        !(appSetting as AppSettingType)?.version ||
-                        (appSetting as AppSettingType)?.version < initAppSetting.version
+                        !(appSetting as AppSettingType).version ||
+                        (appSetting as AppSettingType).version < initAppSetting.version
                     ) {
                         const newSettings = appSettingSchema.parse(appSetting);
                         browser.storage.local.set({
@@ -325,25 +325,29 @@ class CollectionManager {
                     }
                     const isSafeToSync = await SyncService.isSafeToSync();
                     if (isSafeToSync.reason.syncingInProgress) {
-                        // syncing will marge remote data and then write it to local
+                        // syncing will merge remote data and then write it to local
                         // which can be a problem if local data is changed after sync started
                         SyncService.abortSync("Local data changed. Aborting sync.");
                     }
-                    // there is no need for this coz of debounce
-                    // if (isSafeToSync.reason.recentlySynced) {
-                    //     return;
-                    // }
 
                     await SyncService.setSyncState((prev) => ({ ...prev, status: "unsynced" }));
-                    await SyncService.syncWithDebounce();
+
+                    await SyncService.syncWithDebounce({
+                        rejectIfRecentlySynced: false,
+                        rejectIfSyncing: true,
+                    });
                 }
             } catch (error) {
                 console.error("Error in storage change listener:", error);
             }
         });
 
-        //startup sync
-        SyncService.syncWithDebounce({ delay: 10_000 });
+        // startup sync
+        SyncService.syncWithDebounce({
+            delay: 1000 * 60 * 1,
+            rejectIfRecentlySynced: false,
+            rejectIfSyncing: true,
+        });
     }
 
     static async getCollectionData(): Promise<Collection[]> {

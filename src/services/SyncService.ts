@@ -1,4 +1,4 @@
-import { getReaderProgressFromResponse_JSON, syncDataSchema } from "@/utils";
+import { getReaderProgressFromResponse_JSON, syncDataSchema, wait } from "@/utils";
 import { GoogleAuthService } from "./GoogleAuthService";
 import browser from "webextension-polyfill";
 
@@ -6,13 +6,60 @@ export class SyncService {
     private static readonly MAX_RETRIES = 3;
     private static readonly INITIAL_RETRY_DELAY = 1000;
 
-    static readonly SYNC_DEBOUNCE_TIME = 1000 * 60 * 5;
+    static readonly SYNC_DEBOUNCE_TIME = 1000 * 60 * 1;
     static readonly SYNC_RECENCY_THRESHOLD = 1000 * 60;
     static readonly SYNC_DATA_FILE_NAME = `collections-sync-data.json`;
     static readonly SYNC_DATA_FOLDER_NAME = `appDataFolder`;
+    static readonly PERIODIC_SYNC_INTERVAL = 1000 * 60 * 20;
 
-    static syncTimeout: NodeJS.Timeout | null = null;
     private static syncAbortController: AbortController | null = null;
+    private static syncAlarmName = "syncDataManager";
+
+    static {
+        browser.alarms.clear(this.syncAlarmName);
+        browser.alarms.onAlarm.addListener((alarm) => {
+            try {
+                if (alarm.name === this.syncAlarmName) {
+                    this.handleSyncAlarm();
+                }
+            } catch (error) {
+                console.error("Error in alarm listener:", error);
+            }
+        });
+    }
+
+    private static async handleSyncAlarm(): Promise<void> {
+        try {
+            const isSafe = await this.isSafeToSync();
+
+            if (isSafe.reason.syncingInProgress) {
+                console.log("Sync already in progress, skipping alarm-triggered sync");
+                return;
+            }
+
+            if (isSafe.reason.recentlySynced) {
+                console.log("Recently synced, scheduling next periodic sync");
+                this.scheduleNextPeriodicSync();
+                return;
+            }
+
+            await this.syncNow();
+        } catch (error) {
+            console.error("Error handling sync alarm:", error);
+            this.scheduleNextPeriodicSync();
+        }
+    }
+
+    private static async scheduleNextPeriodicSync(): Promise<void> {
+        try {
+            await browser.alarms.clear(this.syncAlarmName);
+            await browser.alarms.create(this.syncAlarmName, {
+                delayInMinutes: this.PERIODIC_SYNC_INTERVAL / 1000 / 60,
+            });
+        } catch (error) {
+            console.error("Failed to schedule next periodic sync:", error);
+        }
+    }
 
     private static async findSyncDataFile(token: string): Promise<string | null> {
         const response = await fetch(
@@ -93,17 +140,19 @@ export class SyncService {
                 if (retryCount >= this.MAX_RETRIES) {
                     throw error;
                 }
+                const throwOnArr = [
+                    "The user did not approve access",
+                    "Sync Aborted",
+                    "data changed",
+                ];
                 if (error instanceof Error) {
-                    if (error.message.includes("The user did not approve access")) {
-                        throw error;
-                    }
-                    if (error.message.includes("Sync Aborted")) {
+                    if (throwOnArr.some((str) => error.message.includes(str))) {
                         throw error;
                     }
                 }
                 const delay = this.INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
                 console.error(`Error uploading syncData: ${error}. Retrying in ${delay}ms`);
-                await new Promise((resolve) => setTimeout(resolve, delay));
+                await wait(delay);
             }
         }
     }
@@ -152,14 +201,7 @@ export class SyncService {
                     this.syncAbortController?.signal
                 );
                 try {
-                    // console.log(
-                    //     "Validating syncData",
-                    //     Intl.NumberFormat().format(new Blob([JSON.stringify(data)]).size / 1024),
-                    //     "KB"
-                    // );
-                    // const now = performance.now();
                     const syncData = await this.validSyncData(data);
-                    // console.log("Validated syncData", performance.now() - now, "ms");
                     return syncData;
                 } catch (error) {
                     console.error("Invalid syncData data", error);
@@ -176,7 +218,7 @@ export class SyncService {
                 }
                 const delay = this.INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
                 console.error(`Error downloading syncData: ${error}. Retrying in ${delay}ms`);
-                return await new Promise((resolve) => setTimeout(resolve, delay));
+                await wait(delay);
             }
         }
         return null;
@@ -295,20 +337,17 @@ export class SyncService {
 
     //
     //
-    static reNewAbortController(): void {
-        this.abortSync();
+    static async reNewAbortController(): Promise<void> {
+        await this.abortSync("Sync restarted");
         this.syncAbortController = new AbortController();
     }
-    static abortSync(reason?: string): void {
+    static async abortSync(reason?: string): Promise<void> {
         if (this.syncAbortController) {
             this.syncAbortController.abort(new Error(reason || "Sync aborted"));
             // not removed coz needed in places
             // this.syncAbortController = null;
         }
-        if (this.syncTimeout) {
-            clearTimeout(this.syncTimeout);
-            this.syncTimeout = null;
-        }
+        await browser.alarms.clear(this.syncAlarmName);
     }
     static async setSyncState(
         syncState: SyncState | ((prevState: SyncState) => SyncState)
@@ -377,7 +416,6 @@ export class SyncService {
         };
     }> {
         const { status, lastSynced } = await this.getSyncState();
-        console.log("time since last sync", (Date.now() - (lastSynced || 0)) / 1000, "s");
         const reason = {
             syncingInProgress: status === "syncing",
             recentlySynced: !!lastSynced && Date.now() - lastSynced < this.SYNC_RECENCY_THRESHOLD,
@@ -387,6 +425,9 @@ export class SyncService {
             reason,
         };
     }
+    /**
+     * @param delay - in ms
+     */
     static async syncWithDebounce({
         delay = this.SYNC_DEBOUNCE_TIME,
         rejectIfRecentlySynced = true,
@@ -399,34 +440,26 @@ export class SyncService {
         if (rejectIfSyncing && isSafe.reason.syncingInProgress) {
             throw new Error("Sync in progress. Try again later");
         }
-        if (this.syncTimeout) clearTimeout(this.syncTimeout);
-        this.syncTimeout = setTimeout(() => this.syncData(), delay);
+
+        await browser.alarms.clear(this.syncAlarmName);
+        await browser.alarms.create(this.syncAlarmName, {
+            delayInMinutes: delay / 1000 / 60,
+        });
     }
     static async syncNow(): Promise<void> {
-        if (this.syncTimeout) clearTimeout(this.syncTimeout);
+        await this.reNewAbortController();
         await this.syncData();
     }
     private static async syncData(): Promise<void> {
         console.group("background:syncData");
         try {
             if (!(await GoogleAuthService.isLoggedIn())) {
-                await this.setSyncState({
-                    lastSynced: null,
-                    status: "not-authenticated",
-                    error: undefined,
-                });
-                throw new Error("Not logged in");
+                throw new Error("401");
             }
-            const syncState = await this.getSyncState();
-            if (syncState.status === "syncing") {
-                throw new Error("Sync in progress");
-            }
-
-            this.reNewAbortController();
 
             await this.setSyncState((prev) => ({ ...prev, status: "syncing" }));
             const now = performance.now();
-            console.log("Starting sync", performance.now() - now, "ms");
+            console.log("Starting sync", performance.now());
             const remoteData = await this.downloadSyncData();
             if (!remoteData) {
                 console.log("No remote data found");
@@ -508,6 +541,7 @@ export class SyncService {
             throw error;
         } finally {
             console.groupEnd();
+            await this.scheduleNextPeriodicSync();
         }
     }
     static async clearSyncData(): Promise<void> {

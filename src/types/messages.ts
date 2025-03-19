@@ -144,24 +144,25 @@ export type MessageResponse<
 > =
     | ({
           success: true;
+          message?: string;
       } & OptionalResponseData<T>)
     | {
           success: false;
           error: string;
       };
 
-export type CollectionResponse<T extends CollectionOperation> =
-    | ({
-          success: true;
-      } & OptionalResponseData<T>)
-    | {
-          success: false;
-          error: string;
-      };
+// export type CollectionResponse<T extends CollectionOperation> =
+//     | ({
+//           success: true;
+//       } & OptionalResponseData<T>)
+//     | {
+//           success: false;
+//           error: string;
+//       };
 
 export type OperationResponse<T extends BrowserMessage["type"]> = Promise<
     MessageResponse<Extract<BrowserMessage, { type: T }>>
 >;
 export type CollectionOperationResponse<T extends CollectionOperation["type"]> = T extends T
-    ? Promise<CollectionResponse<Extract<CollectionOperation, { type: T }>>>
+    ? Promise<MessageResponse<Extract<CollectionOperation, { type: T }>>>
     : never;
