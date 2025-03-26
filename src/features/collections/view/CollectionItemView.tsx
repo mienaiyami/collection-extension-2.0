@@ -288,7 +288,11 @@ const CollectionItemView = () => {
                                 );
                                 if (items && items.length > 0) {
                                     navigator.clipboard.writeText(
-                                        window.formatCopyData(appSetting.copyDataFormat, items)
+                                        window.formatCopyData(
+                                            appSetting.copyDataFormat,
+                                            items,
+                                            currentCollection.title
+                                        )
                                     );
                                     toast.success(`Copied ${items.length} items`);
                                 }

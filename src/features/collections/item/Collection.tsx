@@ -161,7 +161,8 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                                     if (collection) {
                                         const data = window.formatCopyData(
                                             appSetting.copyDataFormat,
-                                            collection.items
+                                            collection.items,
+                                            collection.title
                                         );
                                         navigator.clipboard.writeText(data);
                                     }

@@ -1,5 +1,6 @@
 import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { COPY_DATA_FORMAT } from "@/utils";
 import { useLayoutEffect, useState } from "react";
 
 const CopyDataFormatSetting = () => {
@@ -20,7 +21,7 @@ const CopyDataFormatSetting = () => {
                 <div className="flex flex-col gap-2 px-2">
                     <pre className="p-2 text-xs rounded-sm font-mono whitespace-break-spaces">
                         Available variables:
-                        {`\n{{i}}, {{title}}, {{url}}, {{img}}, {{id}}, {{createdAt}}, {{updatedAt}}`}
+                        {`\n${Object.keys(COPY_DATA_FORMAT).join(", ")}`}
                     </pre>
                     <textarea
                         className="p-2 text-sm rounded-md min-h-[2em] max-h-[5em] bg-foreground/5"

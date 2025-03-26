@@ -18,6 +18,27 @@ export const frontOnlyCode = () => {
 
 export const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
+type CopyDataFormatArgs = {
+    data: CollectionItem;
+    i?: number;
+    total?: number;
+    collectionName?: string;
+};
+export const COPY_DATA_FORMAT = {
+    "{{i}}": (args: CopyDataFormatArgs): string => String(args.i ?? ""),
+    "{{total}}": (args: CopyDataFormatArgs): string => String(args.total ?? ""),
+    "{{collectionName}}": (args: CopyDataFormatArgs): string => String(args.collectionName ?? ""),
+    "{{id}}": (args: CopyDataFormatArgs): string => args.data.id,
+    "{{title}}": (args: CopyDataFormatArgs): string => args.data.title,
+    "{{url}}": (args: CopyDataFormatArgs): string => args.data.url,
+    "{{img}}": (args: CopyDataFormatArgs): string => args.data.img,
+    "{{dateCreated}}": (args: CopyDataFormatArgs): string =>
+        new Date(args.data.createdAt).toISOString(),
+    "{{dateUpdated}}": (args: CopyDataFormatArgs): string =>
+        new Date(args.data.orderUpdatedAt).toISOString(),
+} as const;
+Object.freeze(COPY_DATA_FORMAT);
+
 // need this coz `window` is not defined in the background script
 if (!isBackgroundScript()) {
     self.isSidePanel = window && window.location.href.includes("side_panel.html");
@@ -26,26 +47,33 @@ if (!isBackgroundScript()) {
     self.browser = browser;
     self.wait = wait;
     self.cloneJSON = (obj) => JSON.parse(JSON.stringify(obj));
-    self.formatCopyData = (format: string, data: CollectionItem | CollectionItem[]) => {
+    self.formatCopyData = (
+        format: string,
+        data: CollectionItem | CollectionItem[],
+        collectionName: string
+    ) => {
         if (!format) format = "{{url}}";
-        const formatData = (data: CollectionItem, i?: number) => {
-            return format
-                .replace(/{{id}}/g, data.id)
-                .replace(/{{title}}/g, data.title)
-                .replace(/{{url}}/g, data.url)
-                .replace(/{{img}}/g, data.img)
-                .replace(/{{date}}/g, new Date(data.createdAt).toISOString())
-                .replace(/{{dateCreated}}/g, new Date(data.createdAt).toISOString())
-                .replace(/{{dateUpdated}}/g, new Date(data.orderUpdatedAt).toISOString())
-                .replace(/{{i}}/g, String(i));
+        const formatData = (d: CollectionItem, i?: number) => {
+            let formatted = format;
+            Object.entries(COPY_DATA_FORMAT).forEach(([key, value]) => {
+                formatted = formatted.replaceAll(
+                    key,
+                    value({
+                        data: d,
+                        i,
+                        total: Array.isArray(data) ? data.length : undefined,
+                        collectionName,
+                    })
+                );
+            });
+            return formatted;
         };
-        if (data instanceof Array) {
+        if (Array.isArray(data)) {
             return data.map((e, i) => formatData(e, i + 1)).join("\n");
         }
         return formatData(data);
     };
 }
-/** why did i waste time on this? */
 export const getReaderProgressFromResponse_JSON = async <T = unknown>(
     response: Response,
     onProgress?: boolean | ((receivedLength: number, totalLength: number) => void),

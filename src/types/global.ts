@@ -36,7 +36,11 @@ declare global {
         shiftKeyHeld: boolean;
         browser: typeof browser;
         cloneJSON: <T>(obj: T) => T;
-        formatCopyData: (format: string, data: CollectionItem | CollectionItem[]) => string;
+        formatCopyData: (
+            format: string,
+            data: CollectionItem | CollectionItem[],
+            collectionName: string
+        ) => string;
     }
     type AppSettingType = z.infer<typeof appSettingSchema>;
 }
