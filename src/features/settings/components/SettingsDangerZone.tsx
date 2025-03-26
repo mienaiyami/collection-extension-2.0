@@ -9,10 +9,10 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "./ui/alert-dialog";
-import { Button } from "./ui/button";
-import { Checkbox } from "./ui/checkbox";
-import { Label } from "./ui/label";
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 
 const SettingsDangerZone = () => {

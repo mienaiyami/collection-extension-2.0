@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "./ui/button";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { toast } from "sonner";
 import { Loader2, RotateCcw } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 
 const CHECK_USER_INTERVAL = 1000 * 60;
 
@@ -11,9 +11,10 @@ const GoogleDriveSync = () => {
     const [loggedInUser, setLoggedInUser] = useState<GoogleDriveUserData | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const operations = useCollectionOperations();
+    const { getGoogleDriveUserInfo, googleDriveSyncNow, logoutGoogleDrive, loginGoogleDrive } =
+        useCollectionOperations();
     const checkUser = useCallback(async () => {
-        const res = await operations.getGoogleDriveUserInfo();
+        const res = await getGoogleDriveUserInfo();
         if (res.success) {
             setLoggedInUser(res.data);
             setError(null);
@@ -79,7 +80,7 @@ const GoogleDriveSync = () => {
                                     disabled={loading}
                                     onClick={async () => {
                                         setLoading(true);
-                                        const response = await operations.googleDriveSyncNow();
+                                        const response = await googleDriveSyncNow();
                                         if (response.success) {
                                             toast.success("Synced successfully");
                                         }
@@ -93,7 +94,7 @@ const GoogleDriveSync = () => {
                                     disabled={loading}
                                     onClick={async () => {
                                         setLoading(true);
-                                        await operations.logoutGoogleDrive();
+                                        await logoutGoogleDrive();
                                         setLoggedInUser(null);
                                         setLoading(false);
                                     }}
@@ -108,9 +109,9 @@ const GoogleDriveSync = () => {
                                     disabled={loading}
                                     onClick={async () => {
                                         setLoading(true);
-                                        const response = await operations.loginGoogleDrive();
+                                        const response = await loginGoogleDrive();
                                         if (response.success) {
-                                            const res = await operations.getGoogleDriveUserInfo();
+                                            const res = await getGoogleDriveUserInfo();
                                             if (res.success) setLoggedInUser(res.data);
                                         }
                                         setLoading(false);
