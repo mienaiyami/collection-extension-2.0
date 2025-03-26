@@ -1,6 +1,6 @@
 import { Cloud, CloudOff, HelpCircle, RefreshCw } from "lucide-react";
-import { Button } from "./ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEffect, useState } from "react";
 import Browser from "webextension-polyfill";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";

@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
-import { Button } from "./ui/button";
-import { useAppContext } from "@/App";
-import Collection from "./Collection";
+import { Button } from "@/components/ui/button";
+import { useAppContext } from "@/features/layout/App";
+import Collection from "../item/Collection";
 import { Reorder } from "framer-motion";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 

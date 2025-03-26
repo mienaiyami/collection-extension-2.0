@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useEffect, useLayoutEffect, useState } from "react";
+import React, { createContext, useContext, useLayoutEffect, useState } from "react";
 import { ThemeProvider } from "@/hooks/theme-provider";
 import { AppSettingProvider } from "@/hooks/appSetting-provider";
-import CollectionView from "./components/CollectionView";
-import TopBar from "./components/TopBar";
-import CollectionItemView from "./components/CollectionItemView";
+import CollectionView from "@/features/collections/view/CollectionView";
+import TopBar from "@/features/layout/TopBar";
+import CollectionItemView from "@/features/collections/view/CollectionItemView";
 import Browser from "webextension-polyfill";
-import { Toaster } from "./components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 
 type AppContextType = {

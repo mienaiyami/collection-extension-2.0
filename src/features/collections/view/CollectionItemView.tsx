@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Button } from "./ui/button";
-import { useAppContext } from "@/App";
-import CollectionItem from "./CollectionItem";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useAppContext } from "@/features/layout/App";
+import CollectionItem from "../item/CollectionItem";
 import { Copy, CopyPlus, FilePlus, Trash, X } from "lucide-react";
 import {
     AlertDialog,
@@ -13,13 +13,13 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "./ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import { Reorder } from "framer-motion";
 import { toast } from "sonner";
-import AddUrlManualDialog from "./AddUrlManualDialog";
+import AddUrlManualDialog from "../AddUrlManualDialog";
 import { useAppSetting } from "@/hooks/appSetting-provider";
-import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "./ui/tooltip";
-import { Separator } from "./ui/separator";
+import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 
 const CollectionItemView = () => {

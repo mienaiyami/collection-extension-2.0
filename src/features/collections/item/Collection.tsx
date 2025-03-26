@@ -5,10 +5,10 @@ import {
     ContextMenuItem,
     ContextMenuSeparator,
     ContextMenuTrigger,
-} from "./ui/context-menu";
-import { Button } from "./ui/button";
+} from "@/components/ui/context-menu";
+import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useAppContext } from "@/App";
+import { useAppContext } from "@/features/layout/App";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -19,7 +19,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "./ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import { Reorder, motion } from "framer-motion";
 import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";

@@ -1,7 +1,7 @@
 // import { scan } from "react-scan";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.tsx";
+import App from "./features/layout/App.tsx";
 import "./globals.css";
 
 // if (typeof window !== "undefined") {

@@ -6,17 +6,18 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "./ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { useAppContext } from "@/App";
+import { useAppContext } from "@/features/layout/App";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Pencil } from "lucide-react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+
 const AddUrlManualDialog = () => {
     const [selectedTab, setSelectedTab] = useState("direct");
     const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);

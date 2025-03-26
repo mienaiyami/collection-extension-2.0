@@ -1,12 +1,12 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
     ContextMenu,
     ContextMenuContent,
     ContextMenuItem,
     ContextMenuSeparator,
     ContextMenuTrigger,
-} from "./ui/context-menu";
-import { useAppContext } from "@/App";
+} from "@/components/ui/context-menu";
+import { useAppContext } from "@/features/layout/App";
 import { AppWindow, Check } from "lucide-react";
 
 import { Reorder } from "framer-motion";

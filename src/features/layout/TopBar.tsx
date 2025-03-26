@@ -1,11 +1,11 @@
-import { useAppContext } from "@/App";
+import { useAppContext } from "@/features/layout/App";
 import React, { useEffect, useLayoutEffect, useState } from "react";
-import { Input } from "./ui/input";
+import { Input } from "@/components/ui/input";
 import { ChevronLeft, Pin, PinOff, X, Settings as SettingsIcon } from "lucide-react";
-import { Button } from "./ui/button";
-import { Dialog, DialogTrigger } from "./ui/dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
-import { SyncStatus } from "./SyncStatus";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { SyncStatus } from "@/features/layout/SyncStatus";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import Settings from "@/features/settings/Settings";
 
