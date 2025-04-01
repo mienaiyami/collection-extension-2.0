@@ -11,16 +11,20 @@ const rl = readline.createInterface({
     output: process.stdout,
 });
 
+const log = (...args: string[]) => {
+    console.log(`[${new Date().toISOString()}] ${args.join(" ")}`);
+};
+
 const tagAndPush = (): Promise<void> =>
     new Promise((resolve) => {
-        console.log(`Tagging v${pkgJSON.version} and pushing tags.`);
+        log(`Tagging v${pkgJSON.version} and pushing tags.`);
         const push = () => {
             const gitSpawn = exec(`git push --tags`);
             gitSpawn.stderr?.on("data", (data) => {
                 process.stdout.write(`\x1b[91m${data}\x1b[0m`);
             });
             gitSpawn.on("close", (code) => {
-                console.log(`push tags: exited with code ${code}.`);
+                log(`push tags: exited with code ${code}.`);
                 if (code === 1) process.exit(1);
                 resolve();
             });
@@ -30,7 +34,7 @@ const tagAndPush = (): Promise<void> =>
             process.stdout.write(`\x1b[91m${data}\x1b[0m`);
         });
         gitSpawn.on("close", (code) => {
-            console.log(`git tag: exited with code ${code}.`);
+            log(`git tag: exited with code ${code}.`);
             if (code === 1) process.exit(1);
             push();
         });
@@ -38,7 +42,7 @@ const tagAndPush = (): Promise<void> =>
 
 const signFireFoxAddon = (): Promise<void> =>
     new Promise((resolve) => {
-        console.log("Signing Firefox add-on...");
+        log("Signing Firefox add-on...");
         const pwshSpawn = exec(
             "cd ./dist && web-ext sign --channel=listed " +
                 `--api-key=${process.env.AMO_JWT_ISSUER} ` +
@@ -54,26 +58,16 @@ const signFireFoxAddon = (): Promise<void> =>
         });
 
         pwshSpawn.on("close", (code) => {
-            console.log(`sign addon: exited with code ${code}.`);
+            log(`sign addon: exited with code ${code}.`);
             if (code === 1) process.exit(1);
             resolve();
         });
     });
 
 const publishChromeExtension = async (): Promise<void> => {
-    console.log("Publishing Chrome extension...");
+    log("Publishing Chrome extension...");
     // throw new Error("untested");
     try {
-        const requiredEnvVars = [
-            process.env.CHROME_CLIENT_ID,
-            process.env.CHROME_CLIENT_SECRET,
-            process.env.CHROME_REFRESH_TOKEN,
-            process.env.CHROME_EXTENSION_ID,
-        ];
-        if (requiredEnvVars.some((v) => !v)) {
-            throw new Error("Missing required env variables for Chrome extension publish");
-        }
-
         const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -126,21 +120,35 @@ const publishChromeExtension = async (): Promise<void> => {
             throw new Error(`Publish failed: ${await publishResponse.text()}`);
         }
 
-        console.log("Chrome extension published successfully!");
+        log("Chrome extension published successfully!");
     } catch (e) {
         console.error("\x1b[91mChrome publish error:", e, "\x1b[0m");
         process.exit(1);
     }
 };
 
+const requiredEnvVars = [
+    process.env.CHROME_CLIENT_ID,
+    process.env.CHROME_CLIENT_SECRET,
+    process.env.CHROME_REFRESH_TOKEN,
+    process.env.CHROME_EXTENSION_ID,
+];
+if (requiredEnvVars.some((v) => !v)) {
+    throw new Error("Missing required env variables for Chrome extension publish");
+}
+const fireFoxEnvVars = [process.env.AMO_JWT_ISSUER, process.env.AMO_JWT_SECRET];
+if (fireFoxEnvVars.some((v) => !v)) {
+    throw new Error("Missing required env variables for Firefox extension publish");
+}
+
 rl.question(
     "\x1b[91mMake sure to edit and commit package.json with version change before starting.\x1b[0m",
     async (e) => {
         if (e === "") {
-            tagAndPush();
-            console.log("--------------------");
+            // await tagAndPush();
+            log("--------------------");
             await signFireFoxAddon();
-            console.log("--------------------");
+            log("--------------------");
             await publishChromeExtension();
         }
         rl.close();
