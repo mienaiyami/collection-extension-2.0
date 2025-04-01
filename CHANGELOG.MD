@@ -1,3 +1,12 @@
+## v2.5.1
+
+- fixed: sync behavior, prevent fake sync loops.
+- fixed: ui for format copy data, #7.
+- added: MSEdge collection importer, <https://github.com/mienaiyami/collection-extension-msedge-exporter>
+- improved: replaced timeouts with alarms for better reliability.
+- improved: format copy data.
+- improved: focus title on new collection.
+
 ## v2.5.0
 
 - added: Google Drive sync support for syncing collections across / backup online.
