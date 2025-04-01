@@ -64,9 +64,9 @@ const signFireFoxAddon = (): Promise<void> =>
         });
     });
 
+// https://developer.chrome.com/docs/webstore/using-api
 const publishChromeExtension = async (): Promise<void> => {
     log("Publishing Chrome extension...");
-    // throw new Error("untested");
     try {
         const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
@@ -145,7 +145,7 @@ rl.question(
     "\x1b[91mMake sure to edit and commit package.json with version change before starting.\x1b[0m",
     async (e) => {
         if (e === "") {
-            // await tagAndPush();
+            await tagAndPush();
             log("--------------------");
             await signFireFoxAddon();
             log("--------------------");
