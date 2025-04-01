@@ -39,7 +39,6 @@ const CollectionView = () => {
                 <Button
                     variant={"ghost"}
                     onClick={async () => {
-                        //todo, open and focus name input
                         const response = await operations.makeNewCollection(
                             new Date().toLocaleString()
                         );

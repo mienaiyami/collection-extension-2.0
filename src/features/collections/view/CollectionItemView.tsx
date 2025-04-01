@@ -67,10 +67,6 @@ const CollectionItemView = () => {
 
     const onShiftPlusClick = useCallback(
         (onItem: UUID) => {
-            // if(!currentCollection) {
-            //     console.error("currentCollection is null");
-            //     return;
-            // }
             if (!lastChanged) return;
             const indexInMain = itemsOrder.findIndex((e) => e === onItem);
             const indexOfLastChanged = itemsOrder.findIndex((e) => e === lastChanged.id);
@@ -137,7 +133,6 @@ const CollectionItemView = () => {
                     break;
             }
         };
-        // only here till storage functions are moved to background.ts
         const onMessage = (message: unknown) => {
             if (!message) {
                 console.error("onMessage: message is undefined.");

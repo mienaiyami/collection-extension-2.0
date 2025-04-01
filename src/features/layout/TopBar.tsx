@@ -1,5 +1,5 @@
 import { useAppContext } from "@/features/layout/App";
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, Pin, PinOff, X, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,26 +8,27 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { SyncStatus } from "@/features/layout/SyncStatus";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import Settings from "@/features/settings/Settings";
+import { toast } from "sonner";
 
 const TopBar = () => {
-    const { inCollectionView, openCollection } = useAppContext();
-    const { collectionData } = useAppContext();
+    const { inCollectionView, openCollection, collectionData } = useAppContext();
     const [title, setTitle] = useState("");
     const [first, setFirst] = useState(true);
     const operations = useCollectionOperations();
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useLayoutEffect(() => {
+        setFirst(true);
         if (inCollectionView) {
             const current = collectionData.find((e) => e.id === inCollectionView);
             if (current) {
                 setTitle(current.title);
             }
+            if (inputRef.current) {
+                if (current && current.createdAt > Date.now() - 1000 * 5) inputRef.current.focus();
+            }
         }
     }, [inCollectionView, collectionData]);
-
-    useLayoutEffect(() => {
-        setFirst(true);
-    }, [inCollectionView]);
 
     useEffect(() => {
         if (first) setFirst(false);
@@ -38,6 +39,10 @@ const TopBar = () => {
         const timeout = setTimeout(() => {
             const found = collectionData.find((e) => e.id === inCollectionView);
             if (!found || found.title === title) return;
+            if (title === "") {
+                toast.error("Collection name cannot be empty");
+                return;
+            }
             if (inCollectionView) operations.renameCollection(inCollectionView, title);
         }, 2000);
         return () => {
@@ -64,6 +69,7 @@ const TopBar = () => {
                             <Input
                                 value={title}
                                 className="text-lg"
+                                ref={inputRef}
                                 onKeyDown={(e) => {
                                     if (!["Escape"].includes(e.key)) {
                                         e.stopPropagation();
@@ -73,8 +79,7 @@ const TopBar = () => {
                                     }
                                 }}
                                 onChange={(e) => {
-                                    const value = e.currentTarget?.value;
-                                    if (value) setTitle(value);
+                                    setTitle(e.currentTarget?.value ?? "");
                                 }}
                             />
                         </>

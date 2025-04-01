@@ -7,6 +7,7 @@ import CollectionItemView from "@/features/collections/view/CollectionItemView";
 import Browser from "webextension-polyfill";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
+import { CollectionOperationsProvider } from "@/hooks/useCollectionOperations";
 
 type AppContextType = {
     collectionData: Collection[];
@@ -19,7 +20,6 @@ type AppContextType = {
 
 const AppContext = createContext<AppContextType | null>(null);
 
-//todo export to file;
 export const useAppContext = () => {
     const context = useContext(AppContext);
     if (!context) throw new Error("AppContextProvider not used.");
@@ -51,7 +51,8 @@ const App = () => {
                 if (key === "") return value;
                 if (Number.isInteger(Number(key))) return value;
                 if (key === "id") return value;
-                if (key === "title") return value;
+                if (key === "updatedAt") return value;
+                if (key === "orderUpdatedAt") return value;
                 if (key === "items") {
                     let str = "";
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -140,13 +141,15 @@ const App = () => {
                         setOpenColOnCreate,
                     }}
                 >
-                    <div className="w-full h-full border grid grid-rows-[65px_auto]">
-                        <TopBar />
-                        {inCollectionView ? <CollectionItemView /> : <CollectionView />}
-                    </div>
-                    <Toaster richColors />
+                    <CollectionOperationsProvider>
+                        <div className="w-full h-full border grid grid-rows-[65px_auto]">
+                            <TopBar />
+                            {inCollectionView ? <CollectionItemView /> : <CollectionView />}
+                        </div>
+                    </CollectionOperationsProvider>
                 </AppContext.Provider>
             </AppSettingProvider>
+            <Toaster richColors />
         </ThemeProvider>
     );
 };

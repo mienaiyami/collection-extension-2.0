@@ -38,6 +38,8 @@ This extension simplifies tab management by allowing users to group multiple ope
 ## Todo
 
 - better shortcuts.
+- more themes.
+- optimistic ui updates.
 - selectable collections (similar to links inside collection).
 
 ## Shortcut keys

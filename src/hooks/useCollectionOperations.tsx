@@ -1,9 +1,78 @@
-import { useCallback } from "react";
+import { createContext, useCallback, useContext } from "react";
 import browser from "webextension-polyfill";
-import { CollectionOperation, MessageResponse } from "../types/messages";
+import {
+    CollectionOperation,
+    MessageResponse,
+    CollectionOperationResponse,
+} from "../types/messages";
 import { toast } from "sonner";
 
+type CollectionOperationsContextType = {
+    removeCollections: (ids: UUID | UUID[]) => CollectionOperationResponse<"REMOVE_COLLECTIONS">;
+    makeNewCollection: (
+        title: string,
+        items?: CollectionItem[],
+        fillByData?: { activeTabId?: number; activeWindowId?: number }
+    ) => CollectionOperationResponse<"MAKE_NEW_COLLECTION">;
+    addToCollection: (
+        collectionId: UUID,
+        items: CollectionItem | CollectionItem[],
+        redoEnabled?: boolean
+    ) => CollectionOperationResponse<"ADD_TO_COLLECTION">;
+    addActiveTabToCollection: (
+        collectionId: UUID
+    ) => Promise<
+        MessageResponse<Extract<CollectionOperation, { type: "ADD_TAB_TO_COLLECTION" }>> | undefined
+    >;
+    addAllTabsToCollection: (
+        collectionId: UUID
+    ) => Promise<
+        | MessageResponse<Extract<CollectionOperation, { type: "ADD_ALL_TABS_TO_COLLECTION" }>>
+        | undefined
+    >;
+    removeFromCollection: (
+        collectionId: UUID,
+        itemId: UUID | UUID[]
+    ) => CollectionOperationResponse<"REMOVE_FROM_COLLECTION">;
+    renameCollection: (
+        id: UUID,
+        newName: string
+    ) => CollectionOperationResponse<"RENAME_COLLECTION">;
+    changeCollectionOrder: (
+        newOrder: UUID[]
+    ) => CollectionOperationResponse<"CHANGE_COLLECTION_ORDER">;
+    changeCollectionItemOrder: (
+        colID: UUID,
+        newOrder: UUID[]
+    ) => CollectionOperationResponse<"CHANGE_COLLECTION_ITEM_ORDER">;
+    exportData: () => CollectionOperationResponse<"EXPORT_DATA">;
+    importData: () => CollectionOperationResponse<"IMPORT_DATA">;
+    restoreBackup: () => CollectionOperationResponse<"RESTORE_BACKUP">;
+    createLocalBackup: () => CollectionOperationResponse<"CREATE_LOCAL_BACKUP">;
+    setAppSetting: (
+        payload: Partial<AppSettingType>
+    ) => CollectionOperationResponse<"SET_APP_SETTING">;
+    getGoogleDriveLoginStatus: () => CollectionOperationResponse<"GOOGLE_DRIVE_LOGIN_STATUS">;
+    loginGoogleDrive: () => CollectionOperationResponse<"LOGIN_GOOGLE_DRIVE">;
+    logoutGoogleDrive: () => CollectionOperationResponse<"LOGOUT_GOOGLE_DRIVE">;
+    getGoogleDriveUserInfo: () => CollectionOperationResponse<"GOOGLE_DRIVE_USER_INFO">;
+    googleDriveSyncNow: () => CollectionOperationResponse<"GOOGLE_DRIVE_SYNC_NOW">;
+    getGoogleDriveSyncState: () => CollectionOperationResponse<"GET_GOOGLE_DRIVE_SYNC_STATE">;
+    deleteAllLocalCollectionsData: () => CollectionOperationResponse<"DELETE_ALL_LOCAL_COLLECTIONS_DATA">;
+    deleteAllGDriveSyncedCollectionData: () => CollectionOperationResponse<"DELETE_ALL_GDRIVE_SYCNED_COLLECTION_DATA">;
+};
+
+const CollectionOperationsContext = createContext<CollectionOperationsContextType | null>(null);
+
 export const useCollectionOperations = () => {
+    const context = useContext(CollectionOperationsContext);
+    if (!context) throw new Error("CollectionOperationsContext not found");
+    return context;
+};
+
+export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode }> = ({
+    children,
+}) => {
     const sendMessage = useCallback(
         <Type extends CollectionOperation["type"]>(
             operation: { type: Type } & Omit<
@@ -71,7 +140,6 @@ export const useCollectionOperations = () => {
                 return response;
             }
             let displayText = response.data.removedCollections.join(", ");
-            //todo: test which length is better for ui
             if (displayText.length > 30) {
                 displayText =
                     `{${response.data.removedCollections.length}: }` +
@@ -556,31 +624,36 @@ export const useCollectionOperations = () => {
         }
         return response;
     }, [sendMessage]);
+    return (
+        <CollectionOperationsContext.Provider
+            value={{
+                removeCollections,
+                makeNewCollection,
+                addToCollection,
+                addActiveTabToCollection,
+                addAllTabsToCollection,
+                removeFromCollection,
+                renameCollection,
+                changeCollectionOrder,
+                changeCollectionItemOrder,
+                exportData,
+                importData,
+                restoreBackup,
+                createLocalBackup,
+                setAppSetting,
 
-    return {
-        removeCollections,
-        makeNewCollection,
-        addToCollection,
-        addActiveTabToCollection,
-        addAllTabsToCollection,
-        removeFromCollection,
-        renameCollection,
-        changeCollectionOrder,
-        changeCollectionItemOrder,
-        exportData,
-        importData,
-        restoreBackup,
-        createLocalBackup,
-        setAppSetting,
+                getGoogleDriveLoginStatus,
+                loginGoogleDrive,
+                logoutGoogleDrive,
+                getGoogleDriveUserInfo,
+                googleDriveSyncNow,
+                getGoogleDriveSyncState,
 
-        getGoogleDriveLoginStatus,
-        loginGoogleDrive,
-        logoutGoogleDrive,
-        getGoogleDriveUserInfo,
-        googleDriveSyncNow,
-        getGoogleDriveSyncState,
-
-        deleteAllLocalCollectionsData,
-        deleteAllGDriveSyncedCollectionData,
-    };
+                deleteAllLocalCollectionsData,
+                deleteAllGDriveSyncedCollectionData,
+            }}
+        >
+            {children}
+        </CollectionOperationsContext.Provider>
+    );
 };

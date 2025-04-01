@@ -89,7 +89,6 @@ const CollectionItem = (props: PropType) => {
                         if (props.anySelected) return;
                         //todo take the formatter key approach from yomikiru
                         switch (e.code) {
-                            //todo or not?
                             case "Delete":
                                 inCollectionView &&
                                     operations.removeFromCollection(inCollectionView, props.id);
@@ -120,7 +119,6 @@ const CollectionItem = (props: PropType) => {
                             default:
                                 break;
                         }
-                        //todo impl if needed
                         // if (e.key === "Escape" && dragging) setDragging(null);
                     }}
                 >
