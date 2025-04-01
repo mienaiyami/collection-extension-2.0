@@ -334,7 +334,7 @@ class CollectionManager {
 
                     await SyncService.syncWithDebounce({
                         rejectIfRecentlySynced: false,
-                        rejectIfSyncing: true,
+                        rejectIfSyncing: false,
                     });
                 }
             } catch (error) {
@@ -346,7 +346,7 @@ class CollectionManager {
         SyncService.syncWithDebounce({
             delay: 1000 * 60 * 1,
             rejectIfRecentlySynced: false,
-            rejectIfSyncing: true,
+            rejectIfSyncing: false,
         });
     }
 
