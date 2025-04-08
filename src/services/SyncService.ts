@@ -33,8 +33,7 @@ export class SyncService {
             const isSafe = await this.isSafeToSync();
 
             if (isSafe.reason.syncingInProgress) {
-                console.log("Sync already in progress, skipping alarm-triggered sync");
-                return;
+                console.warn("Sync alarm triggered while syncing, forcing re-sync to prevent loop");
             }
 
             if (isSafe.reason.recentlySynced) {
