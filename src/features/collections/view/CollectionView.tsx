@@ -4,6 +4,7 @@ import { useAppContext } from "@/features/layout/App";
 import Collection from "../item/Collection";
 import { Reorder } from "framer-motion";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+// import { useVirtualizer } from "@tanstack/react-virtual";
 
 const CollectionView = () => {
     const { collectionData, setScrollPos, scrollPos, setOpenColOnCreate } = useAppContext();
@@ -11,6 +12,13 @@ const CollectionView = () => {
     const [collectionOrder, setCollectionOrder] = useState<
         { id: UUID; title: string; itemLen: number }[]
     >([]);
+    // will not work with Reorder, need to implement separate mode for reorder and normal(with virtualizer)
+    // const virtualizer = useVirtualizer({
+    //     count: collectionData.length,
+    //     getScrollElement: () => ref.current,
+    //     estimateSize: () => 72,
+    //     overscan: 1,
+    // });
     useLayoutEffect(() => {
         setCollectionOrder(
             collectionData.map((e) => ({
@@ -60,26 +68,28 @@ const CollectionView = () => {
                     New from Opened tabs
                 </Button>
             </div>
-            <div
-                className="p-2 h-full overflow-hidden overflow-y-auto"
-                ref={ref}
-                onScroll={(e) => {
-                    setScrollPos(e.currentTarget.scrollTop);
-                }}
-            >
-                <Reorder.Group
-                    axis="y"
-                    layoutScroll
-                    values={collectionOrder}
-                    onReorder={(e) => {
-                        setCollectionOrder(e);
+            {collectionData.length === 0 ? (
+                <div className="p-2 h-full overflow-hidden overflow-y-auto">
+                    <p>No Collections</p>
+                </div>
+            ) : (
+                <div
+                    className="p-2 h-full overflow-hidden overflow-y-auto"
+                    ref={ref}
+                    onScroll={(e) => {
+                        setScrollPos(e.currentTarget.scrollTop);
                     }}
-                    className="p-1 flex flex-col gap-2"
                 >
-                    {collectionData.length <= 0 ? (
-                        <p>No Collections</p>
-                    ) : (
-                        collectionOrder.map((e) => (
+                    <Reorder.Group
+                        axis="y"
+                        layoutScroll
+                        values={collectionOrder}
+                        onReorder={(e) => {
+                            setCollectionOrder(e);
+                        }}
+                        className="p-1 flex flex-col gap-2"
+                    >
+                        {collectionOrder.map((e) => (
                             <Collection
                                 key={e.id}
                                 item={e}
@@ -89,10 +99,10 @@ const CollectionView = () => {
                                     )
                                 }
                             />
-                        ))
-                    )}
-                </Reorder.Group>
-            </div>
+                        ))}
+                    </Reorder.Group>
+                </div>
+            )}
         </div>
     );
 };
