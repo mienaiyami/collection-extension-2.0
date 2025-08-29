@@ -17,8 +17,8 @@ concurrency:
     cancel-in-progress: true
 
 env:
-    NODE_VERSION: "20"
-    PNPM_VERSION: "8"
+    NODE_VERSION: "22"
+    PNPM_VERSION: "10"
 
 jobs:
     pre-check:
@@ -51,7 +51,7 @@ jobs:
         if: needs.pre-check.outputs.should-run == 'true'
         strategy:
             matrix:
-                node-version: [18, 20]
+                node-version: [22]
             fail-fast: false
         steps:
             - name: Checkout
