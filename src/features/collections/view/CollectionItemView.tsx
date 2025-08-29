@@ -1,8 +1,3 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { useAppContext } from "@/features/layout/App";
-import CollectionItem from "../item/CollectionItem";
-import { Copy, CopyPlus, FilePlus, Trash, X } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -14,17 +9,28 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useAppContext } from "@/features/layout/App";
+import { useAppSetting } from "@/hooks/appSetting-provider";
+import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { Reorder } from "framer-motion";
+import { Copy, CopyPlus, FilePlus, Trash, X } from "lucide-react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import AddUrlManualDialog from "../AddUrlManualDialog";
-import { useAppSetting } from "@/hooks/appSetting-provider";
-import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@/components/ui/tooltip";
-import { Separator } from "@/components/ui/separator";
-import { useCollectionOperations } from "@/hooks/useCollectionOperations";
-import { useTranslation } from "react-i18next";
+import CollectionItem from "../item/CollectionItem";
 
 const CollectionItemView = () => {
-    const { collectionData, inCollectionView, openCollection } = useAppContext();
+    const { collectionData, inCollectionView, openCollection } =
+        useAppContext();
     const operations = useCollectionOperations();
     const { appSetting } = useAppSetting();
     const { t } = useTranslation();
@@ -71,7 +77,9 @@ const CollectionItemView = () => {
         (onItem: UUID) => {
             if (!lastChanged) return;
             const indexInMain = itemsOrder.findIndex((e) => e === onItem);
-            const indexOfLastChanged = itemsOrder.findIndex((e) => e === lastChanged.id);
+            const indexOfLastChanged = itemsOrder.findIndex(
+                (e) => e === lastChanged.id
+            );
             if (indexInMain === -1 || indexOfLastChanged === -1) return;
             const start = Math.min(indexInMain, indexOfLastChanged);
             const end = Math.max(indexInMain, indexOfLastChanged);
@@ -126,7 +134,8 @@ const CollectionItemView = () => {
                     selected_copy.current?.click();
                     break;
                 case "KeyA":
-                    if (e.ctrlKey) setSelected(currentCollection.items.map((e) => e.id));
+                    if (e.ctrlKey)
+                        setSelected(currentCollection.items.map((e) => e.id));
                     break;
                 case "ArrowLeft":
                     if (e.altKey) openCollection(null);
@@ -144,10 +153,15 @@ const CollectionItemView = () => {
             if (typeof message === "object" && "type" in message) {
                 if (message.type === "add-current-tab-to-active-collection") {
                     if (inCollectionView)
-                        return operations.addActiveTabToCollection(inCollectionView);
+                        return operations.addActiveTabToCollection(
+                            inCollectionView
+                        );
                 }
             } else {
-                console.error("onMessage: message is of unknown type.", message);
+                console.error(
+                    "onMessage: message is of unknown type.",
+                    message
+                );
             }
         };
         window.addEventListener("keydown", keyHandler);
@@ -160,9 +174,9 @@ const CollectionItemView = () => {
 
     return currentCollection ? (
         <AlertDialog>
-            <div className="min-h-full grid grid-rows-[3rem_auto]">
+            <div className="grid min-h-full grid-rows-[3rem_auto]">
                 {selected.length === 0 && (
-                    <div className="p-1 grid grid-cols-[1fr_1px_1fr_1px_0.4fr] h-full items-center">
+                    <div className="grid h-full grid-cols-[1fr_1px_1fr_1px_0.4fr] items-center p-1">
                         <TooltipProvider
                             disableHoverableContent
                             delayDuration={200}
@@ -192,7 +206,9 @@ const CollectionItemView = () => {
                                     <Button
                                         variant={"ghost"}
                                         onClick={() => {
-                                            operations.addAllTabsToCollection(currentCollection.id);
+                                            operations.addAllTabsToCollection(
+                                                currentCollection.id
+                                            );
                                         }}
                                         // title="Add all opened tabs to collection"
                                     >
@@ -209,17 +225,17 @@ const CollectionItemView = () => {
                     </div>
                 )}
                 {selected.length > 0 && (
-                    <div className="p-2 flex flex-row w-full h-full items-center">
+                    <div className="flex h-full w-full flex-row items-center p-2">
                         <span className="p-1">
                             {selected.length} {t("collections.selected")}
                         </span>
                         <Button
-                            className="p-1 ml-auto"
+                            className="ml-auto p-1"
                             variant={"ghost"}
                             ref={selected_open}
                             onClick={() => {
-                                const items = currentCollection.items.filter((e) =>
-                                    selected.includes(e.id)
+                                const items = currentCollection.items.filter(
+                                    (e) => selected.includes(e.id)
                                 );
                                 if (items)
                                     for (let i = 0; i < items.length; i++) {
@@ -239,8 +255,8 @@ const CollectionItemView = () => {
                             variant={"ghost"}
                             ref={selected_openNewWindow}
                             onClick={() => {
-                                const items = currentCollection.items.filter((e) =>
-                                    selected.includes(e.id)
+                                const items = currentCollection.items.filter(
+                                    (e) => selected.includes(e.id)
                                 );
                                 if (items)
                                     window.browser.windows.create({
@@ -256,8 +272,8 @@ const CollectionItemView = () => {
                             variant={"ghost"}
                             ref={selected_openIncognito}
                             onClick={() => {
-                                const items = currentCollection.items.filter((e) =>
-                                    selected.includes(e.id)
+                                const items = currentCollection.items.filter(
+                                    (e) => selected.includes(e.id)
                                 );
                                 if (items)
                                     window.browser.windows
@@ -282,8 +298,8 @@ const CollectionItemView = () => {
                             ref={selected_copy}
                             title={t("collections.copyData")}
                             onClick={() => {
-                                const items = currentCollection.items.filter((e) =>
-                                    selected.includes(e.id)
+                                const items = currentCollection.items.filter(
+                                    (e) => selected.includes(e.id)
                                 );
                                 if (items && items.length > 0) {
                                     navigator.clipboard.writeText(
@@ -294,7 +310,9 @@ const CollectionItemView = () => {
                                         )
                                     );
                                     toast.success(
-                                        t("messages.copiedItems", { count: items.length })
+                                        t("messages.copiedItems", {
+                                            count: items.length,
+                                        })
                                     );
                                 }
                             }}
@@ -303,7 +321,11 @@ const CollectionItemView = () => {
                         </Button>
 
                         <AlertDialogTrigger asChild ref={selected_deleteRef}>
-                            <Button className="p-1" variant={"ghost"} size={"icon"}>
+                            <Button
+                                className="p-1"
+                                variant={"ghost"}
+                                size={"icon"}
+                            >
                                 <Trash />
                             </Button>
                         </AlertDialogTrigger>
@@ -326,7 +348,7 @@ const CollectionItemView = () => {
                         onReorder={(e) => {
                             setItemsOrder(e);
                         }}
-                        className="p-3 flex flex-col gap-2"
+                        className="flex flex-col gap-2 p-3"
                     >
                         {itemsOrder.length <= 0 ? (
                             <p>{t("collections.noItems")}</p>
@@ -362,9 +384,13 @@ const CollectionItemView = () => {
                 }}
             >
                 <AlertDialogHeader>
-                    <AlertDialogTitle>{t("collections.deleteUrls")}</AlertDialogTitle>
+                    <AlertDialogTitle>
+                        {t("collections.deleteUrls")}
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                        {t("collections.deleteUrlsDescription", { count: selected.length })}
+                        {t("collections.deleteUrlsDescription", {
+                            count: selected.length,
+                        })}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -372,7 +398,10 @@ const CollectionItemView = () => {
                     <AlertDialogAction
                         onClick={() => {
                             inCollectionView &&
-                                operations.removeFromCollection(inCollectionView, selected);
+                                operations.removeFromCollection(
+                                    inCollectionView,
+                                    selected
+                                );
                         }}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >

@@ -1,17 +1,17 @@
 import { Button } from "@/components/ui/button";
-import { Sun, Moon } from "lucide-react";
 import { useTheme } from "@/hooks/theme-provider";
+import { Moon, Sun } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const ThemeSetting = () => {
     const { theme, setTheme } = useTheme();
     const { t } = useTranslation();
     return (
-        <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
+        <div className="flex flex-row items-center gap-2 rounded-md border p-2">
             <span className="font-semibold">{t("settings.theme")}</span>
             <Button
                 variant={"outline"}
-                className="flex flex-row gap-2 items-center ml-auto"
+                className="ml-auto flex flex-row items-center gap-2"
                 onClick={() => {
                     if (theme === "dark") setTheme("light");
                     else setTheme("dark");

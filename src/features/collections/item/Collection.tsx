@@ -1,14 +1,3 @@
-import { useRef } from "react";
-import {
-    ContextMenu,
-    ContextMenuContent,
-    ContextMenuItem,
-    ContextMenuSeparator,
-    ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useAppContext } from "@/features/layout/App";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -20,9 +9,20 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Reorder, motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuSeparator,
+    ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { useAppContext } from "@/features/layout/App";
 import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { Reorder, motion } from "framer-motion";
+import { Plus } from "lucide-react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 type PropType = {
@@ -31,7 +31,13 @@ type PropType = {
     itemLen: number;
 };
 
-const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void }) => {
+const Collection = ({
+    item,
+    onDragEnd,
+}: {
+    item: PropType;
+    onDragEnd: () => void;
+}) => {
     const { collectionData, openCollection } = useAppContext();
     const operations = useCollectionOperations();
     const { t } = useTranslation();
@@ -57,7 +63,9 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                 <ContextMenu>
                     <ContextMenuTrigger asChild>
                         <motion.div
-                            className={`collection handle w-full h-16 rounded-md grid grid-cols-[15%_70%_15%] hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20 border`}
+                            className={
+                                " handle grid h-16 w-full grid-cols-[15%_70%_15%] rounded-md border hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20"
+                            }
                             data-collection-id={item.id}
                             tabIndex={0}
                             onClick={() => {
@@ -66,13 +74,14 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                             onKeyDown={(e) => {
                                 if ([" ", "Enter"].includes(e.key)) {
                                     e.preventDefault();
-                                    if (e.target instanceof HTMLElement) openCollection(item.id);
+                                    if (e.target instanceof HTMLElement)
+                                        openCollection(item.id);
                                 }
                             }}
                         >
                             <Button
                                 variant={"ghost"}
-                                className="w-full h-full"
+                                className="h-full w-full"
                                 title={t("collections.addCurrentTab")}
                                 onMouseUp={(e) => {
                                     e.stopPropagation();
@@ -82,16 +91,21 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    operations.addActiveTabToCollection(item.id);
+                                    operations.addActiveTabToCollection(
+                                        item.id
+                                    );
                                 }}
                             >
                                 <Plus />
                             </Button>
-                            <div className="p-2 flex flex-col item-center justify-center">
-                                <span className="text-lg truncate" title={item.title}>
+                            <div className="flex flex-col items-center justify-center p-2">
+                                <span
+                                    className="truncate text-lg"
+                                    title={item.title}
+                                >
                                     {item.title}
                                 </span>
-                                <span className="text-xs text-muted-foreground">
+                                <span className="text-muted-foreground text-xs">
                                     {item.itemLen}{" "}
                                     {item.itemLen > 1
                                         ? t("collections.items")
@@ -104,15 +118,22 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                         className="w-62"
                         onContextMenu={(e) => {
                             e.preventDefault();
-                            if (e.target instanceof HTMLElement) e.target.click();
+                            if (e.target instanceof HTMLElement)
+                                e.target.click();
                         }}
                     >
                         <ContextMenuItem
                             onClick={() => {
                                 (async () => {
-                                    const collection = collectionData.find((e) => e.id === item.id);
+                                    const collection = collectionData.find(
+                                        (e) => e.id === item.id
+                                    );
                                     if (collection)
-                                        for (let i = 0; i < collection.items.length; i++) {
+                                        for (
+                                            let i = 0;
+                                            i < collection.items.length;
+                                            i++
+                                        ) {
                                             const url = collection.items[i].url;
                                             if (url)
                                                 window.browser.tabs.create({
@@ -128,9 +149,13 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                         <ContextMenuItem
                             onClick={() => {
                                 (async () => {
-                                    const collection = collectionData.find((e) => e.id === item.id);
+                                    const collection = collectionData.find(
+                                        (e) => e.id === item.id
+                                    );
                                     if (collection) {
-                                        const urls = collection.items.map((e) => e.url);
+                                        const urls = collection.items.map(
+                                            (e) => e.url
+                                        );
                                         window.browser.windows.create({
                                             url: urls,
                                             state: "maximized",
@@ -144,9 +169,13 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                         <ContextMenuItem
                             onClick={() => {
                                 (async () => {
-                                    const collection = collectionData.find((e) => e.id === item.id);
+                                    const collection = collectionData.find(
+                                        (e) => e.id === item.id
+                                    );
                                     if (collection) {
-                                        const urls = collection.items.map((e) => e.url);
+                                        const urls = collection.items.map(
+                                            (e) => e.url
+                                        );
                                         window.browser.windows.create({
                                             url: urls,
                                             state: "maximized",
@@ -162,7 +191,9 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                         <ContextMenuItem
                             onClick={() => {
                                 (async () => {
-                                    const collection = collectionData.find((e) => e.id === item.id);
+                                    const collection = collectionData.find(
+                                        (e) => e.id === item.id
+                                    );
                                     if (collection) {
                                         const data = window.formatCopyData(
                                             appSetting.copyDataFormat,
@@ -178,7 +209,7 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                         </ContextMenuItem>
                         <ContextMenuItem asChild>
                             <AlertDialogTrigger asChild>
-                                <ContextMenuItem className="focus:text-destructive-foreground focus:bg-destructive">
+                                <ContextMenuItem className="focus:bg-destructive focus:text-destructive-foreground">
                                     {t("collections.deleteCollection")}
                                 </ContextMenuItem>
                             </AlertDialogTrigger>
@@ -191,11 +222,15 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                             {t("collections.deleteCollectionTitle")}
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                            {t("collections.deleteCollectionDescription", { title: item.title })}
+                            {t("collections.deleteCollectionDescription", {
+                                title: item.title,
+                            })}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                        <AlertDialogCancel>
+                            {t("common.cancel")}
+                        </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={() => {
                                 operations.removeCollections(item.id);

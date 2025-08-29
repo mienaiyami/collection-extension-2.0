@@ -1,8 +1,8 @@
-import readline from "readline";
 import { exec } from "child_process";
-import pkgJSON from "./package.json";
-import dotenv from "dotenv";
 import fs from "fs";
+import readline from "readline";
+import dotenv from "dotenv";
+import pkgJSON from "./package.json";
 
 dotenv.config();
 

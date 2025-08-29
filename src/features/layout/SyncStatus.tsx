@@ -1,12 +1,16 @@
-import { Cloud, CloudOff, HelpCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useEffect, useState } from "react";
-import Browser from "webextension-polyfill";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
-import { toast } from "sonner";
+import type { TFunction } from "i18next";
+import { Cloud, CloudOff, HelpCircle, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { TFunction } from "i18next";
+import { toast } from "sonner";
+import type Browser from "webextension-polyfill";
 
 const getIcon = (status: SyncState["status"] | undefined) => {
     switch (status) {
@@ -31,9 +35,12 @@ const getTooltipContent = (
     details: string;
 } => {
     if (syncState === null)
-        return { message: t("sync.statusUnknown"), details: t("sync.tryLoggingInAgain") };
+        return {
+            message: t("sync.statusUnknown"),
+            details: t("sync.tryLoggingInAgain"),
+        };
     const lastSyncedDetails = t("sync.lastSynced", {
-        time: new Date(syncState.lastSynced!).toLocaleString(),
+        time: new Date(syncState.lastSynced ?? 0).toLocaleString(),
     });
     switch (syncState.status) {
         case "synced":
@@ -62,7 +69,10 @@ const getTooltipContent = (
                 details: t("sync.pleaseLoginToSync"),
             };
         default:
-            return { message: t("sync.statusUnknown"), details: t("sync.tryLoggingInAgain") };
+            return {
+                message: t("sync.statusUnknown"),
+                details: t("sync.tryLoggingInAgain"),
+            };
     }
 };
 export const SyncStatus = () => {
@@ -78,13 +88,17 @@ export const SyncStatus = () => {
         const onStorageChangeListener = (changes: {
             [key: string]: Browser.Storage.StorageChange;
         }) => {
-            if (changes.syncState && changes.syncState.newValue) {
+            if (changes.syncState?.newValue) {
                 setSyncState(changes.syncState.newValue as SyncState);
             }
         };
-        window.browser.storage.local.onChanged.addListener(onStorageChangeListener);
+        window.browser.storage.local.onChanged.addListener(
+            onStorageChangeListener
+        );
         return () => {
-            window.browser.storage.local.onChanged.removeListener(onStorageChangeListener);
+            window.browser.storage.local.onChanged.removeListener(
+                onStorageChangeListener
+            );
         };
     }, []);
 
@@ -115,9 +129,13 @@ export const SyncStatus = () => {
             </TooltipTrigger>
             <TooltipContent className="max-w-xs text-center">
                 <div className="flex flex-col items-start">
-                    <span className="font-semibold">{tooltipContent.message}</span>
+                    <span className="font-semibold">
+                        {tooltipContent.message}
+                    </span>
                     {tooltipContent.details && (
-                        <span className="text-sm">{tooltipContent.details}</span>
+                        <span className="text-sm">
+                            {tooltipContent.details}
+                        </span>
                     )}
                 </div>
             </TooltipContent>

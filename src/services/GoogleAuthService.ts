@@ -161,9 +161,8 @@ export class GoogleAuthService {
                 const token = await this.getAccessToken(signal);
                 if (token) {
                     return token;
-                } else {
-                    throw new Error("Failed to get access token");
                 }
+                throw new Error("Failed to get access token");
             }
             throw new Error("Not logged in with Google");
         }
@@ -200,7 +199,7 @@ export class GoogleAuthService {
             return;
         }
         try {
-            await fetch("https://accounts.google.com/o/oauth2/revoke?token=" + refreshToken);
+            await fetch(`https://accounts.google.com/o/oauth2/revoke?token=${refreshToken}`);
             console.log("Logged out from Google");
         } catch (error) {
             console.error("Failed to logout from Google", error);

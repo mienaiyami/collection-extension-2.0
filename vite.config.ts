@@ -1,7 +1,7 @@
+import { writeFileSync } from "fs";
 import path from "path";
 import react from "@vitejs/plugin-react-swc";
-import { defineConfig, PluginOption } from "vite";
-import { writeFileSync } from "fs";
+import { type PluginOption, defineConfig } from "vite";
 import packageJson from "./package.json";
 
 const isDev = process.env.NODE_ENV === "development";

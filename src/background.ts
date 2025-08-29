@@ -1,4 +1,13 @@
+import i18next from "i18next";
 import browser from "webextension-polyfill";
+import { z } from "zod";
+import { GoogleAuthService } from "./services/GoogleAuthService";
+import { SyncService } from "./services/SyncService";
+import type {
+    CollectionMessage,
+    CollectionOperationResponse,
+    MessageResponse,
+} from "./types/messages";
 import {
     appSettingSchema,
     collectionSchema,
@@ -7,11 +16,6 @@ import {
     initAppSetting,
     wait,
 } from "./utils";
-import { MessageResponse, CollectionMessage, CollectionOperationResponse } from "./types/messages";
-import { z } from "zod";
-import { GoogleAuthService } from "./services/GoogleAuthService";
-import { SyncService } from "./services/SyncService";
-import i18next from "i18next";
 import "./i18n/config"; // Import i18n configuration
 // import { GoogleDriveService } from "./services/GoogleDriveService";
 // import { GoogleAuthService } from "./services/GoogleAuthService";
@@ -105,7 +109,7 @@ const createLocalBackup = () =>
         .get(["collectionData", "deletedCollectionData"])
         .then(({ collectionData, deletedCollectionData }) => {
             if (!collectionData) return;
-            if (collectionData instanceof Array && collectionData.length === 0) return;
+            if (Array.isArray(collectionData) && collectionData.length === 0) return;
             if (!deletedCollectionData) deletedCollectionData = [];
             console.log("Creating local backup...");
             return browser.storage.local
@@ -240,10 +244,10 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
                 );
             } else if (isAllTabs) {
                 const window = await browser.windows.getCurrent();
-                if (window)
+                if (window?.id)
                     await CollectionManager.addAllTabsToCollection(
                         response.data.collection.id,
-                        window.id!
+                        window.id
                     );
             }
         } else {
@@ -267,7 +271,7 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
             return;
         } else if (isAllTabs) {
             const window = await browser.windows.getCurrent();
-            if (window) await CollectionManager.addAllTabsToCollection(collectionId, window.id!);
+            if (window?.id) await CollectionManager.addAllTabsToCollection(collectionId, window.id);
         }
         return;
     }
@@ -694,7 +698,7 @@ class CollectionManager {
             // >= v2.4.3 backup = {collectionData: Collection[], deletedCollectionData: DeletedCollection[]
             let parsedCollection: Collection[];
             let parsedDeletedCollection: DeletedCollection[] = [];
-            if (backup instanceof Array) {
+            if (Array.isArray(backup)) {
                 parsedCollection = z.array(collectionSchema).parse(backup);
             } else {
                 parsedCollection = z.array(collectionSchema).parse(backup.collectionData);

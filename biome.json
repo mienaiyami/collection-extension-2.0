@@ -25,7 +25,7 @@
         "formatWithErrors": false,
         "indentStyle": "space",
         "indentWidth": 4,
-        "lineWidth": 140,
+        "lineWidth": 100,
         "lineEnding": "lf",
         "ignore": [
             "dist/**",
@@ -60,10 +60,18 @@
                 "useExhaustiveDependencies": "warn"
             },
             "complexity": {
-                "noExcessiveCognitiveComplexity": "warn"
+                "noExcessiveCognitiveComplexity": "warn",
+                "noForEach": "off",
+                "noStaticOnlyClass": "off",
+                "noThisInStatic": "off"
             },
             "nursery": {
                 "useSortedClasses": "error"
+            },
+            "a11y": {
+                "useValidAnchor": "off",
+                "useAnchorContent": "off",
+                "noNoninteractiveTabindex": "off"
             }
         }
     },

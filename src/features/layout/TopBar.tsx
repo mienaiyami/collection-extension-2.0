@@ -1,18 +1,30 @@
-import { useAppContext } from "@/features/layout/App";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { ChevronLeft, Pin, PinOff, X, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useAppContext } from "@/features/layout/App";
 import { SyncStatus } from "@/features/layout/SyncStatus";
-import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import Settings from "@/features/settings/Settings";
-import { toast } from "sonner";
+import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import {
+    ChevronLeft,
+    Pin,
+    PinOff,
+    Settings as SettingsIcon,
+    X,
+} from "lucide-react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 const TopBar = () => {
-    const { inCollectionView, openCollection, collectionData } = useAppContext();
+    const { inCollectionView, openCollection, collectionData } =
+        useAppContext();
     const [title, setTitle] = useState("");
     const [first, setFirst] = useState(true);
     const operations = useCollectionOperations();
@@ -22,12 +34,15 @@ const TopBar = () => {
     useLayoutEffect(() => {
         setFirst(true);
         if (inCollectionView) {
-            const current = collectionData.find((e) => e.id === inCollectionView);
+            const current = collectionData.find(
+                (e) => e.id === inCollectionView
+            );
             if (current) {
                 setTitle(current.title);
             }
             if (inputRef.current) {
-                if (current && current.createdAt > Date.now() - 1000 * 5) inputRef.current.focus();
+                if (current && current.createdAt > Date.now() - 1000 * 5)
+                    inputRef.current.focus();
             }
         }
     }, [inCollectionView, collectionData]);
@@ -45,16 +60,17 @@ const TopBar = () => {
                 toast.error(t("messages.collectionNameEmpty"));
                 return;
             }
-            if (inCollectionView) operations.renameCollection(inCollectionView, title);
+            if (inCollectionView)
+                operations.renameCollection(inCollectionView, title);
         }, 2000);
         return () => {
             clearTimeout(timeout);
         };
-    }, [title, collectionData, inCollectionView, operations, first]);
+    }, [title, collectionData, inCollectionView, operations, first, t]);
 
     return (
         <Dialog>
-            <div className="p-3 flex flex-row gap-2 items-center w-full border-b">
+            <div className="flex w-full flex-row items-center gap-2 border-b p-3">
                 <TooltipProvider delayDuration={100} disableHoverableContent>
                     {inCollectionView ? (
                         <>
@@ -77,7 +93,10 @@ const TopBar = () => {
                                         e.stopPropagation();
                                     }
                                     if (e.key === "Enter") {
-                                        operations.renameCollection(inCollectionView, title);
+                                        operations.renameCollection(
+                                            inCollectionView,
+                                            title
+                                        );
                                     }
                                 }}
                                 onChange={(e) => {
@@ -93,12 +112,12 @@ const TopBar = () => {
                                     url: window.location.href,
                                 });
                             }}
-                            className="text-3xl font-bold tracking-tight"
+                            className="font-bold text-3xl tracking-tight"
                         >
                             {t("app.title")}
                         </Button>
                     )}
-                    <div className="ml-auto flex flex-row gap-1 items-center">
+                    <div className="ml-auto flex flex-row items-center gap-1">
                         <SyncStatus />
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -129,9 +148,12 @@ const TopBar = () => {
                                         if (window.isSidePanel) {
                                             // note to self, `chrome.sidePanel` is not on `window.browser`, and only available on chromium
                                             if (chrome.sidePanel) {
-                                                chrome.sidePanel.setPanelBehavior({
-                                                    openPanelOnActionClick: false,
-                                                });
+                                                chrome.sidePanel.setPanelBehavior(
+                                                    {
+                                                        openPanelOnActionClick:
+                                                            false,
+                                                    }
+                                                );
                                                 window.close();
                                             } else {
                                                 window.browser.sidebarAction.close();
@@ -142,7 +164,6 @@ const TopBar = () => {
                                             const windowId = (
                                                 await window.browser.windows.getCurrent()
                                             ).id;
-                                            //eslint-disable-next-line
                                             //@ts-ignore
                                             chrome.sidePanel.open({ windowId });
                                             chrome.sidePanel.setPanelBehavior({

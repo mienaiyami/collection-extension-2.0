@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
@@ -7,21 +8,26 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useAppContext } from "@/features/layout/App";
+import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Pencil } from "lucide-react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 const AddUrlManualDialog = () => {
     const [selectedTab, setSelectedTab] = useState("direct");
-    const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+    const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(
+        null
+    );
     const { inCollectionView } = useAppContext();
     const operations = useCollectionOperations();
     const { t } = useTranslation();
@@ -39,7 +45,9 @@ const AddUrlManualDialog = () => {
                         </Button>
                     </DialogTrigger>
                 </TooltipTrigger>
-                <TooltipContent side="bottom">{t("tooltips.addUrls")}</TooltipContent>
+                <TooltipContent side="bottom">
+                    {t("tooltips.addUrls")}
+                </TooltipContent>
             </Tooltip>
             <DialogContent className="max-w-sm sm:max-w-lg">
                 <DialogHeader>
@@ -52,31 +60,44 @@ const AddUrlManualDialog = () => {
                     }}
                 >
                     <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="direct">{t("collections.addDirect")}</TabsTrigger>
-                        <TabsTrigger value="file">{t("collections.addFromFile")}</TabsTrigger>
+                        <TabsTrigger value="direct">
+                            {t("collections.addDirect")}
+                        </TabsTrigger>
+                        <TabsTrigger value="file">
+                            {t("collections.addFromFile")}
+                        </TabsTrigger>
                     </TabsList>
-                    <TabsContent tabIndex={-1} value="direct" className="flex flex-col gap-2">
+                    <TabsContent
+                        tabIndex={-1}
+                        value="direct"
+                        className="flex flex-col gap-2"
+                    >
                         <DialogDescription>
                             {t("dialogs.addUrlsDescription")}
-                            <code className="bg-foreground/10 rounded-sm px-2 py-0.5">
+                            <code className="rounded-sm bg-foreground/10 px-2 py-0.5">
                                 {" "}
                                 || title || imageURL
                             </code>
                             {t("collections.titleNotContain")}
                         </DialogDescription>
                         <textarea
-                            className="w-full min-w-[4rem] h-32 p-2 rounded-md bg-foreground/10 max-h-[40vh] whitespace-nowrap font-mono"
+                            className="h-32 max-h-[40vh] w-full min-w-[4rem] whitespace-nowrap rounded-md bg-foreground/10 p-2 font-mono"
                             placeholder={t("dialogs.addUrlsPlaceholder")}
                             ref={(node) => {
                                 inputRef.current = node;
                             }}
-                        ></textarea>
+                        />
                     </TabsContent>
-                    <TabsContent tabIndex={-1} value="file" className="flex flex-col gap-2">
+                    <TabsContent
+                        tabIndex={-1}
+                        value="file"
+                        className="flex flex-col gap-2"
+                    >
                         <DialogDescription>
                             {t("collections.uploadFile")}
-                            <code> | title | imageURL</code>. {t("collections.makeNewTitleExample")}{" "}
-                            <code className="bg-foreground/10 px-2 py-0.5 rounded-lg">
+                            <code> | title | imageURL</code>.{" "}
+                            {t("collections.makeNewTitleExample")}{" "}
+                            <code className="rounded-lg bg-foreground/10 px-2 py-0.5">
                                 {t("dialogs.addUrlsPlaceholder")}
                             </code>
                             . {t("collections.titleNotContain")}
@@ -97,15 +118,23 @@ const AddUrlManualDialog = () => {
                             onClick={() => {
                                 try {
                                     const parseUrls = (str: string) => {
-                                        const urls = str.split("\n").map((e) => e.trim());
+                                        const urls = str
+                                            .split("\n")
+                                            .map((e) => e.trim());
                                         const items: CollectionItem[] = urls
                                             .map((e) => {
                                                 const split = e.split("||");
                                                 try {
-                                                    const url = new URL(split[0].trim());
-                                                    const title = split[1]?.trim() || url.hostname;
+                                                    const url = new URL(
+                                                        split[0].trim()
+                                                    );
+                                                    const title =
+                                                        split[1]?.trim() ||
+                                                        url.hostname;
                                                     const img = split[2]
-                                                        ? new URL(split[2]?.trim())
+                                                        ? new URL(
+                                                              split[2]?.trim()
+                                                          )
                                                         : "";
                                                     return {
                                                         id: crypto.randomUUID(),
@@ -114,40 +143,61 @@ const AddUrlManualDialog = () => {
                                                         img: img.toString(),
                                                         createdAt: Date.now(),
                                                         updatedAt: Date.now(),
-                                                        orderUpdatedAt: Date.now(),
+                                                        orderUpdatedAt:
+                                                            Date.now(),
                                                     };
                                                 } catch (e) {
                                                     toast.error(
-                                                        t("messages.failedToParseFile", {
-                                                            error: e,
-                                                        })
+                                                        t(
+                                                            "messages.failedToParseFile",
+                                                            {
+                                                                error: e,
+                                                            }
+                                                        )
                                                     );
                                                     return null;
                                                 }
                                             })
                                             .filter((e) => e !== null);
                                         if (items.length === 0)
-                                            return toast.error(t("messages.noUrlsFound"));
+                                            return toast.error(
+                                                t("messages.noUrlsFound")
+                                            );
                                         if (inCollectionView) {
-                                            operations.addToCollection(inCollectionView, items);
+                                            operations.addToCollection(
+                                                inCollectionView,
+                                                items
+                                            );
                                         }
                                     };
                                     if (inputRef.current) {
                                         if (selectedTab === "file") {
-                                            const file = (inputRef.current as HTMLInputElement)
-                                                .files?.[0];
+                                            const file = (
+                                                inputRef.current as HTMLInputElement
+                                            ).files?.[0];
                                             if (file) {
                                                 const reader = new FileReader();
                                                 reader.onload = (e) => {
-                                                    if (typeof e.target?.result === "string")
-                                                        parseUrls(e.target.result);
+                                                    if (
+                                                        typeof e.target
+                                                            ?.result ===
+                                                        "string"
+                                                    )
+                                                        parseUrls(
+                                                            e.target.result
+                                                        );
                                                     else {
-                                                        toast.error(t("messages.failedToReadFile"));
+                                                        toast.error(
+                                                            t(
+                                                                "messages.failedToReadFile"
+                                                            )
+                                                        );
                                                     }
                                                 };
                                                 reader.readAsText(file);
                                             }
-                                        } else parseUrls(inputRef.current.value);
+                                        } else
+                                            parseUrls(inputRef.current.value);
                                     }
                                 } catch (e) {
                                     toast.error(t("messages.failedToAddUrls"));
