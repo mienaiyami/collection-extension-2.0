@@ -89,8 +89,8 @@ jobs:
             - name: Type check
               run: pnpm run tslint
 
-            - name: Lint
-              run: pnpm run lint
+            - name: Lint and Format Check
+              run: pnpm run check
 
     codeql:
         name: CodeQL Analysis
