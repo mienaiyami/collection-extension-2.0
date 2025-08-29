@@ -14,15 +14,17 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { useTranslation } from "react-i18next";
 
 const SettingsDangerZone = () => {
     const [checked, setChecked] = useState(false);
     const [checked1, setChecked1] = useState(false);
     const operations = useCollectionOperations();
+    const { t } = useTranslation();
     return (
         <div className="flex flex-col gap-2 p-2 border rounded-md border-destructive">
             <div className="flex flex-col items-start gap-2">
-                <span className="font-semibold">Danger Zone</span>
+                <span className="font-semibold">{t("settings.dangerZone")}</span>
                 <AlertDialog
                     onOpenChange={() => {
                         setChecked(false);
@@ -33,16 +35,14 @@ const SettingsDangerZone = () => {
                             variant={"destructive"}
                             className="flex flex-row gap-2 items-center"
                         >
-                            Delete All Collection Data (local)
+                            {t("settings.deleteAllLocal")}
                         </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle> Delete All Collection Data (local)</AlertDialogTitle>
+                            <AlertDialogTitle>{t("dialogs.deleteAllLocalTitle")}</AlertDialogTitle>
                             <AlertDialogDescription>
-                                This action will remove all collections related data from your
-                                browser only. This won't affect your data on the Google Drive, if
-                                you have logged in and synced with Google Drive.
+                                {t("dialogs.deleteAllLocalDescription")}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <Label className="flex flex-row gap-1 items-center cursor-pointer">
@@ -51,10 +51,10 @@ const SettingsDangerZone = () => {
                                 checked={checked}
                                 onCheckedChange={() => setChecked((init) => !init)}
                             />
-                            I understand the consequences.
+                            {t("dialogs.understandConsequences")}
                         </Label>
                         <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                             <AlertDialogAction
                                 disabled={!checked}
                                 onClick={() => {
@@ -64,7 +64,7 @@ const SettingsDangerZone = () => {
                                 }}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
-                                Delete
+                                {t("common.delete")}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
@@ -80,19 +80,16 @@ const SettingsDangerZone = () => {
                             variant={"destructive"}
                             className="flex flex-row gap-2 items-center"
                         >
-                            Delete All Sync Data (Google Drive Only)
+                            {t("settings.deleteAllGDriveButton")}
                         </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>
-                                Delete All Sync Data (Google Drive Only)
+                                {t("settings.deleteAllGDriveTitle")}
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                                This action will remove all collections related data from your
-                                Google Drive only. This won't affect your data on the browser. If
-                                you have other devices synced with the same Google Drive account,
-                                the local data on those devices will need to be deleted manually.
+                                {t("settings.deleteAllGDriveDescription")}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <Label className="flex flex-row gap-1 items-center cursor-pointer">
@@ -101,10 +98,10 @@ const SettingsDangerZone = () => {
                                 checked={checked1}
                                 onCheckedChange={() => setChecked1((init) => !init)}
                             />
-                            I understand the consequences.
+                            {t("dialogs.understandConsequences")}
                         </Label>
                         <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                             <AlertDialogAction
                                 disabled={!checked1}
                                 onClick={() => {
@@ -114,7 +111,7 @@ const SettingsDangerZone = () => {
                                 }}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
-                                Delete
+                                {t("common.delete")}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>

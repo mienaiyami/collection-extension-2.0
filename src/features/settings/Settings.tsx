@@ -7,19 +7,23 @@ import CopyDataFormatSetting from "./components/CopyDataFormatSetting";
 import FontSettings from "./components/FontSettings";
 import SettingsDangerZone from "./components/SettingsDangerZone";
 import BackupSettings from "./components/BackupSettings";
+import LanguageSetting from "./components/LanguageSetting";
+import { Trans, useTranslation } from "react-i18next";
 
 const Settings: React.FC = () => {
     const operations = useCollectionOperations();
+    const { t, i18n } = useTranslation();
 
     return (
         <DialogContent className="max-w-sm sm:max-w-lg">
             <DialogHeader>
-                <DialogTitle className="text-2xl">Settings</DialogTitle>
+                <DialogTitle className="text-2xl">{t("settings.title")}</DialogTitle>
             </DialogHeader>
             <div className="w-full overflow-auto max-h-[65vh] flex flex-col gap-2">
                 <ThemeSetting />
+                <LanguageSetting />
                 <div className="flex flex-row items-center gap-2 p-2 border rounded-md">
-                    <span className="font-semibold">Version</span>
+                    <span className="font-semibold">{t("app.version")}</span>
                     <div className="flex flex-row gap-2 ml-auto">
                         {window.browser.runtime.getManifest().version}
                     </div>
@@ -28,39 +32,42 @@ const Settings: React.FC = () => {
                 <CopyDataFormatSetting />
                 <div className="flex flex-col gap-2 p-2 border rounded-md">
                     <div className="flex flex-row gap-2 items-center w-full">
-                        <span className="font-semibold">Data</span>
+                        <span className="font-semibold">{t("settings.data")}</span>
                         <div className="flex flex-row gap-2 ml-auto">
                             <Button
                                 variant={"outline"}
                                 className="flex flex-row gap-2 items-center"
                                 onClick={operations.exportData}
                             >
-                                Export
+                                {t("common.export")}
                             </Button>
                             <Button
                                 variant={"outline"}
                                 className="flex flex-row gap-2 items-center"
                                 onClick={operations.importData}
                             >
-                                Import
+                                {t("common.import")}
                             </Button>
                         </div>
                     </div>
                     {!window.navigator.userAgent.includes("Chrome") && (
                         <p className="text-xs">
-                            To import on non-chromium browsers, first go to{" "}
-                            <a
-                                className="cursor-pointer underline hover:opacity-80"
-                                onClick={() => {
-                                    window.browser.tabs.create({
-                                        url: window.location.href,
-                                    });
+                            <Trans
+                                i18nKey="settings.importHelp"
+                                components={{
+                                    link: (
+                                        <a
+                                            className="cursor-pointer underline hover:opacity-80"
+                                            onClick={() => {
+                                                window.browser.tabs.create({
+                                                    url: window.location.href,
+                                                });
+                                            }}
+                                        />
+                                    ),
+                                    strong: <strong />,
                                 }}
-                            >
-                                Collections page
-                            </a>{" "}
-                            (not popup) or inside a <strong>Sidebar</strong> then click import in
-                            settings.
+                            />
                         </p>
                     )}
                     <p>
@@ -70,13 +77,13 @@ const Settings: React.FC = () => {
                             rel="noreferrer"
                             className="text-sm underline hover:opacity-80"
                         >
-                            Read this if you want to import while Google Drive Sync is enabled.
+                            {t("settings.importWithGDriveHelp")}
                         </a>
                     </p>
                 </div>
                 <GoogleDriveSync />
                 <div className="flex flex-row flex-wrap items-center gap-2 p-2 border rounded-md">
-                    <span className="font-semibold">Links</span>
+                    <span className="font-semibold">{t("settings.links")}</span>
                     <div className="flex flex-row gap-2 ml-auto flex-wrap">
                         <Button
                             variant={"outline"}
@@ -87,7 +94,7 @@ const Settings: React.FC = () => {
                                 });
                             }}
                         >
-                            Homepage
+                            {t("settings.homepage")}
                         </Button>
                         <Button
                             variant={"outline"}
@@ -98,7 +105,7 @@ const Settings: React.FC = () => {
                                 });
                             }}
                         >
-                            Shortcuts
+                            {t("settings.shortcuts")}
                         </Button>
                         <Button
                             variant={"outline"}
@@ -109,7 +116,7 @@ const Settings: React.FC = () => {
                                 });
                             }}
                         >
-                            Changelog
+                            {t("settings.changelog")}
                         </Button>
                         <Button
                             variant={"outline"}
@@ -120,7 +127,7 @@ const Settings: React.FC = () => {
                                 });
                             }}
                         >
-                            Report Issue
+                            {t("settings.reportIssue")}
                         </Button>
                     </div>
                 </div>

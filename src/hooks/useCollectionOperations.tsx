@@ -6,6 +6,7 @@ import {
     CollectionOperationResponse,
 } from "../types/messages";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 type CollectionOperationsContextType = {
     removeCollections: (ids: UUID | UUID[]) => CollectionOperationResponse<"REMOVE_COLLECTIONS">;
@@ -73,6 +74,8 @@ export const useCollectionOperations = () => {
 export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
+    const { t } = useTranslation();
+
     const sendMessage = useCallback(
         <Type extends CollectionOperation["type"]>(
             operation: { type: Type } & Omit<
@@ -108,14 +111,14 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
                 payload: { title, items, fillByData },
             });
             if (!response.success) {
-                toast.error("Failed to create collection", {
+                toast.error(t("messages.failedToCreateCollection"), {
                     description: response.error,
                 });
                 return response;
             }
             return response;
         },
-        [sendMessage]
+        [sendMessage, t]
     );
 
     const removeCollections = useCallback(
@@ -124,7 +127,7 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             //todo : make better undo
             const oldState = await sendMessage({ type: "EXPORT_DATA" });
             if (!oldState.success) {
-                toast.error("Failed to remove collections", {
+                toast.error(t("messages.failedToRemoveCollections"), {
                     description: oldState.error,
                 });
                 return oldState;
@@ -134,7 +137,7 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
                 payload: ids,
             });
             if (!response.success) {
-                toast.error("Failed to remove collections", {
+                toast.error(t("messages.failedToRemoveCollections"), {
                     description: response.error,
                 });
                 return response;
@@ -146,11 +149,13 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
                     displayText.slice(0, 50) +
                     "...";
             }
-            toast.success("Removed Collections", {
-                description: `[${displayText}] removed.`,
+            toast.success(t("messages.removedCollections"), {
+                description: t("messages.removedCollectionsDesc", {
+                    collections: `[${displayText}]`,
+                }),
                 duration: 10000,
                 action: {
-                    label: "Undo",
+                    label: t("common.undo"),
                     onClick: async () => {
                         await sendMessage({
                             type: "IMPORT_DATA",
@@ -161,7 +166,7 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             });
             return response;
         },
-        [sendMessage]
+        [sendMessage, t]
     );
 
     const addActiveTabToCollection = useCallback(
@@ -172,7 +177,7 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
                 currentWindow: true,
             });
             if (!tabs.length) {
-                toast.error("No active tab found");
+                toast.error(t("messages.noActiveTab"));
                 return;
             }
             const tabId = tabs[0].id!;
@@ -181,20 +186,20 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
                 payload: { collectionId, tabId },
             });
             if (!response.success) {
-                toast.error("Failed to add active tab to collection", {
+                toast.error(t("messages.failedToAddActiveTab"), {
                     description: response.error,
                 });
                 return response;
             }
         },
-        [sendMessage]
+        [sendMessage, t]
     );
     const addAllTabsToCollection = useCallback(
         async (collectionId: UUID) => {
             toast.dismiss();
             const activeWindow = await browser.windows.getCurrent();
             if (!activeWindow) {
-                toast.error("Failed to get active window");
+                toast.error(t("messages.failedToGetActiveWindow"));
                 return;
             }
             const windowId = activeWindow.id!;
@@ -203,13 +208,13 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
                 payload: { collectionId, windowId },
             });
             if (!response.success) {
-                toast.error("Failed to add all tabs to collection", {
+                toast.error(t("messages.failedToAddAllTabs"), {
                     description: response.error,
                 });
                 return response;
             }
         },
-        [sendMessage]
+        [sendMessage, t]
     );
 
     const addToCollection = useCallback(
@@ -226,18 +231,18 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             });
 
             if (!response.success) {
-                toast.error("Failed to add to collection", {
+                toast.error(t("messages.failedToAddToCollection"), {
                     description: response.error,
                 });
                 return response;
             }
             const message = Array.isArray(items)
-                ? `Added ${items.length} items to collection`
-                : "Added to collection";
+                ? t("messages.addedItemsToCollection", { count: items.length })
+                : t("messages.addedToCollection");
             if (redoEnabled && oldState && oldState.success) {
                 toast.success(message, {
                     action: {
-                        label: "Undo",
+                        label: t("common.undo"),
                         onClick: async () => {
                             await sendMessage({
                                 type: "SET_COLLECTIONS_DANGEROUSLY",
@@ -249,7 +254,7 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             } else toast.success(message);
             return response;
         },
-        [sendMessage]
+        [sendMessage, t]
     );
 
     const removeFromCollection = useCallback(
@@ -257,7 +262,7 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             toast.dismiss();
             const oldState = await sendMessage({ type: "EXPORT_DATA" });
             if (!oldState.success) {
-                toast.error("Failed to remove from collection", {
+                toast.error(t("messages.failedToRemoveFromCollection"), {
                     description: oldState.error,
                 });
                 return oldState;
@@ -268,18 +273,18 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             });
 
             if (!response.success) {
-                toast.error("Failed to remove from collection", {
+                toast.error(t("messages.failedToRemoveFromCollection"), {
                     description: response.error,
                 });
                 return response;
             }
 
             const itemCount = Array.isArray(itemId) ? itemId.length : 1;
-            toast.success("Removed from Collection", {
-                description: `Removed ${itemCount} item(s) from collection.`,
+            toast.success(t("messages.removedFromCollection"), {
+                description: t("messages.removedFromCollectionCount", { count: itemCount }),
                 duration: itemCount > 10 ? 10000 : 5000,
                 action: {
-                    label: "Undo",
+                    label: t("common.undo"),
                     onClick: async () => {
                         await sendMessage({
                             type: "IMPORT_DATA",
@@ -290,7 +295,7 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             });
             return response;
         },
-        [sendMessage]
+        [sendMessage, t]
     );
 
     const renameCollection = useCallback(
@@ -302,17 +307,20 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             });
 
             if (!response.success) {
-                toast.error("Failed to rename collection", {
+                toast.error(t("messages.failedToRenameCollection"), {
                     description: response.error,
                 });
                 return response;
             }
 
-            toast.success("Renamed Collection", {
-                description: `Collection "${response.data.oldName}" renamed to "${newName}".`,
+            toast.success(t("messages.renamedCollection"), {
+                description: t("messages.renamedCollectionDesc", {
+                    oldName: response.data.oldName,
+                    newName: newName,
+                }),
                 duration: 5000,
                 action: {
-                    label: "Undo",
+                    label: t("common.undo"),
                     onClick: async () => {
                         await sendMessage({
                             type: "RENAME_COLLECTION",
@@ -323,7 +331,7 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             });
             return response;
         },
-        [sendMessage]
+        [sendMessage, t]
     );
 
     const changeCollectionOrder = useCallback(
@@ -335,13 +343,13 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             });
 
             if (!response.success) {
-                toast.error("Failed to reorder collections", {
+                toast.error(t("messages.failedToReorderCollections"), {
                     description: response.error,
                 });
             }
             return response;
         },
-        [sendMessage]
+        [sendMessage, t]
     );
 
     const changeCollectionItemOrder = useCallback(
@@ -353,19 +361,19 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             });
 
             if (!response.success) {
-                toast.error("Failed to reorder items", {
+                toast.error(t("messages.failedToReorderItems"), {
                     description: response.error,
                 });
             }
             return response;
         },
-        [sendMessage]
+        [sendMessage, t]
     );
 
     const exportData = useCallback(async () => {
         const response = await sendMessage({ type: "EXPORT_DATA" });
         if (!response.success) {
-            toast.error("Failed to export data", {
+            toast.error(t("messages.failedToExportData"), {
                 description: response.error,
             });
             return response;
@@ -400,7 +408,7 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
         a.click();
         URL.revokeObjectURL(a.href);
         return response;
-    }, [sendMessage]);
+    }, [sendMessage, t]);
 
     const importData = useCallback(async () => {
         try {
@@ -435,13 +443,13 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
                 });
             }
             if (!file) {
-                return { success: false, error: "No file selected" };
+                return { success: false, error: t("messages.noFileSelected") };
             }
             const text = await file.text();
             const data = JSON.parse(text);
             const oldState = await sendMessage({ type: "EXPORT_DATA" });
             if (!oldState.success) {
-                toast.error("Failed to import data", {
+                toast.error(t("messages.failedToImportData"), {
                     description: oldState.error,
                 });
                 return oldState;
@@ -451,15 +459,15 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
                 payload: data,
             });
             if (!response.success) {
-                toast.error("Failed to import data", {
+                toast.error(t("messages.failedToImportData"), {
                     description: response.error,
                 });
             }
-            toast.success("Imported Successfully", {
-                description: `Imported ${data.length} collection(s).`,
+            toast.success(t("messages.importedSuccessfully"), {
+                description: t("messages.importedCount", { count: data.length }),
                 duration: 20000,
                 action: {
-                    label: "Undo",
+                    label: t("common.undo"),
                     onClick: () => {
                         sendMessage({
                             type: "SET_COLLECTIONS_DANGEROUSLY",
@@ -471,18 +479,18 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             return response;
         } catch (error) {
             console.error(error);
-            toast.error("Failed to import data", {
+            toast.error(t("messages.failedToImportData"), {
                 description: String(error),
             });
             return { success: false, error: String(error) };
         }
-    }, [sendMessage]);
+    }, [sendMessage, t]);
 
     const restoreBackup = useCallback(async () => {
         toast.dismiss();
         const oldState = await sendMessage({ type: "EXPORT_DATA" });
         if (!oldState.success) {
-            toast.error("Failed to restore backup", {
+            toast.error(t("messages.failedToRestoreBackup"), {
                 description: oldState.error,
             });
             return oldState;
@@ -490,15 +498,15 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
 
         const response = await sendMessage({ type: "RESTORE_BACKUP" });
         if (!response.success) {
-            toast.error("Failed to restore backup", {
+            toast.error(t("messages.failedToRestoreBackup"), {
                 description: response.error,
             });
             return response;
         }
-        toast.success("Restored Backup", {
+        toast.success(t("messages.restoredBackup"), {
             duration: 20000,
             action: {
-                label: "Undo",
+                label: t("common.undo"),
                 onClick: async () => {
                     await sendMessage({
                         type: "SET_COLLECTIONS_DANGEROUSLY",
@@ -508,17 +516,17 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             },
         });
         return response;
-    }, [sendMessage]);
+    }, [sendMessage, t]);
 
     const createLocalBackup = useCallback(async () => {
         const response = await sendMessage({ type: "CREATE_LOCAL_BACKUP" });
         if (!response.success) {
-            toast.error("Failed to create local backup", {
+            toast.error(t("messages.failedToCreateLocalBackup"), {
                 description: response.error,
             });
         }
         return response;
-    }, [sendMessage]);
+    }, [sendMessage, t]);
 
     const setAppSetting = useCallback(
         async (payload: Partial<AppSettingType>) => {
@@ -527,13 +535,13 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
                 payload,
             });
             if (!response.success) {
-                toast.error("Failed to set app setting", {
+                toast.error(t("messages.failedToSetAppSetting"), {
                     description: response.error,
                 });
             }
             return response;
         },
-        [sendMessage]
+        [sendMessage, t]
     );
 
     // google drive stuff
@@ -541,89 +549,89 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
     const getGoogleDriveLoginStatus = useCallback(async () => {
         const response = await sendMessage({ type: "GOOGLE_DRIVE_LOGIN_STATUS" });
         if (!response.success) {
-            toast.error("Failed to get login status", {
+            toast.error(t("messages.failedToGetLoginStatus"), {
                 description: response.error,
             });
         }
         return response;
-    }, [sendMessage]);
+    }, [sendMessage, t]);
 
     const loginGoogleDrive = useCallback(async () => {
         const response = await sendMessage({ type: "LOGIN_GOOGLE_DRIVE" });
         if (!response.success) {
-            toast.error("Failed to login", {
+            toast.error(t("messages.failedToLogin"), {
                 description: response.error,
             });
         } else {
-            toast.success("Logged in to Google Drive");
+            toast.success(t("messages.loggedInGoogleDrive"));
         }
         return response;
-    }, [sendMessage]);
+    }, [sendMessage, t]);
 
     const logoutGoogleDrive = useCallback(async () => {
         const response = await sendMessage({ type: "LOGOUT_GOOGLE_DRIVE" });
         if (!response.success) {
-            toast.error("Failed to logout", {
+            toast.error(t("messages.failedToLogout"), {
                 description: response.error,
             });
         } else {
-            toast.success("Logged out from Google Drive");
+            toast.success(t("messages.loggedOutGoogleDrive"));
         }
         return response;
-    }, [sendMessage]);
+    }, [sendMessage, t]);
 
     const getGoogleDriveUserInfo = useCallback(async () => {
         const response = await sendMessage({ type: "GOOGLE_DRIVE_USER_INFO" });
         if (!response.success) {
-            toast.error("Failed to get user info", {
+            toast.error(t("messages.failedToGetUserInfo"), {
                 description: response.error,
             });
         }
         return response;
-    }, [sendMessage]);
+    }, [sendMessage, t]);
 
     const googleDriveSyncNow = useCallback(async () => {
         const response = await sendMessage({ type: "GOOGLE_DRIVE_SYNC_NOW" });
         if (!response.success) {
-            toast.error("Failed to sync now", {
+            toast.error(t("messages.failedToSyncNow"), {
                 description: response.error,
             });
         }
         return response;
-    }, [sendMessage]);
+    }, [sendMessage, t]);
 
     const getGoogleDriveSyncState = useCallback(async () => {
         const response = await sendMessage({ type: "GET_GOOGLE_DRIVE_SYNC_STATE" });
         if (!response.success) {
-            toast.error("Failed to get sync state", {
+            toast.error(t("messages.failedToGetSyncState"), {
                 description: response.error,
             });
         }
         return response;
-    }, [sendMessage]);
+    }, [sendMessage, t]);
 
     const deleteAllLocalCollectionsData = useCallback(async () => {
         const response = await sendMessage({ type: "DELETE_ALL_LOCAL_COLLECTIONS_DATA" });
         if (!response.success) {
-            toast.error("Failed to delete all local collections", {
+            toast.error(t("messages.failedToDeleteAllLocal"), {
                 description: response.error,
             });
         } else {
-            toast.success("Deleted all local collections.");
+            toast.success(t("messages.deletedAllLocal"));
         }
         return response;
-    }, [sendMessage]);
+    }, [sendMessage, t]);
     const deleteAllGDriveSyncedCollectionData = useCallback(async () => {
         const response = await sendMessage({ type: "DELETE_ALL_GDRIVE_SYCNED_COLLECTION_DATA" });
         if (!response.success) {
-            toast.error("Failed to delete all gdrive synced collections", {
+            toast.error(t("messages.failedToDeleteAllGDrive"), {
                 description: response.error,
             });
         } else {
-            toast.success("Deleted all gdrive synced collections.");
+            toast.success(t("messages.deletedAllGDrive"));
         }
         return response;
-    }, [sendMessage]);
+    }, [sendMessage, t]);
     return (
         <CollectionOperationsContext.Provider
             value={{

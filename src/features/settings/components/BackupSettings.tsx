@@ -13,22 +13,24 @@ import { Button } from "@/components/ui/button";
 import { DialogDescription } from "@/components/ui/dialog";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 const BackupSettings = () => {
     const operations = useCollectionOperations();
+    const { t } = useTranslation();
     const [lastBackup, setLastBackup] = useState("");
     useEffect(() => {
         if (!import.meta.env.DEV) {
             window.browser.storage.local.get("lastBackup").then(({ lastBackup }) => {
                 if (lastBackup) setLastBackup(new Date(lastBackup as string).toString());
-                else setLastBackup("Not found");
+                else setLastBackup(t("settings.notFound"));
             });
         }
-    }, []);
+    }, [t]);
     return (
         <div className="flex flex-col gap-2 p-2 border rounded-md">
             <AlertDialog>
                 <div className="flex flex-row items-center gap-2">
-                    <span className="font-semibold">Backup</span>
+                    <span className="font-semibold">{t("settings.backup")}</span>
                     <div className="flex flex-row gap-2 ml-auto">
                         <Button
                             variant={"outline"}
@@ -40,52 +42,50 @@ const BackupSettings = () => {
                                 }
                             }}
                         >
-                            Backup Now
+                            {t("settings.backupNow")}
                         </Button>
                         <AlertDialogTrigger asChild>
                             <Button
                                 variant={"outline"}
                                 className="flex flex-row gap-2 items-center"
                             >
-                                Restore
+                                {t("settings.restore")}
                             </Button>
                         </AlertDialogTrigger>
                     </div>
                 </div>
                 <DialogDescription className="text-left">
-                    Local backup is made every 6 hours (if browser is open). Choose this option if
-                    some error caused all collections to disappear. <br /> <br />
-                    NOTE: Not recommended to be used with Google Drive Sync.{" "}
+                    {t("settings.backupDescription")} <br /> <br />
+                    {t("settings.backupNote")}{" "}
                     <a
                         href="https://github.com/mienaiyami/collection-extension-2.0/wiki#how-to-properly-restore-local-backup-when-logged-in-with-google-drive-for-sync"
                         target="_blank"
                         rel="noreferrer"
                         className="underline hover:opacity-80 font-bold"
                     >
-                        Read more
+                        {t("settings.backupReadMore")}
                     </a>
                     <br />
                     <br />
-                    <code className="rounded-md bg-secondary">Last Backup : {lastBackup}</code>
+                    <code className="rounded-md bg-secondary">
+                        {t("settings.lastBackup")} : {lastBackup}
+                    </code>
                 </DialogDescription>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Restore backup?</AlertDialogTitle>
+                        <AlertDialogTitle>{t("settings.restoreBackupTitle")}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            <strong>Not recommended to be used with Google Drive Sync.</strong>{" "}
-                            <br />
-                            This action will remove all collections and restore from backup. But if
-                            you have deleted any collection before syncing syncing with Google
-                            Drive, it will be lost.
+                            <strong>{t("settings.restoreBackupWarning")}</strong> <br />
+                            {t("settings.restoreBackupDescription")}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={operations.restoreBackup}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                            Restore Backup
+                            {t("settings.restoreBackup")}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

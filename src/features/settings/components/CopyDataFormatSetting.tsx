@@ -2,10 +2,12 @@ import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { COPY_DATA_FORMAT } from "@/utils";
 import { useLayoutEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const CopyDataFormatSetting = () => {
     const { appSetting } = useAppSetting();
     const operations = useCollectionOperations();
+    const { t } = useTranslation();
     const [copyDataFormat, setCopyDataFormat] = useState({
         value: appSetting.copyDataFormat,
         timeout: null as NodeJS.Timeout | null,
@@ -17,10 +19,10 @@ const CopyDataFormatSetting = () => {
     return (
         <div className="flex flex-col gap-2 p-2 border rounded-md">
             <div className="flex flex-col gap-2 items-start w-full">
-                <span className="font-semibold">Copy Data Format</span>
+                <span className="font-semibold">{t("settings.copyDataFormat")}</span>
                 <div className="flex flex-col gap-2 px-2">
                     <pre className="p-2 text-xs rounded-sm font-mono whitespace-break-spaces">
-                        Available variables:
+                        {t("settings.availableVariables")}
                         {`\n${Object.keys(COPY_DATA_FORMAT).join(", ")}`}
                     </pre>
                     <textarea

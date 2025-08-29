@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import Browser from "webextension-polyfill";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { TFunction } from "i18next";
 
 const getIcon = (status: SyncState["status"] | undefined) => {
     switch (status) {
@@ -22,47 +24,51 @@ const getIcon = (status: SyncState["status"] | undefined) => {
 };
 
 const getTooltipContent = (
-    syncState: SyncState | null
+    syncState: SyncState | null,
+    t: TFunction
 ): {
     message: string;
     details: string;
 } => {
     if (syncState === null)
-        return { message: "Sync status unknown", details: "Try logging in again." };
-    const lastSyncedDetails = `Last synced: ${new Date(syncState.lastSynced!).toLocaleString()}`;
+        return { message: t("sync.statusUnknown"), details: t("sync.tryLoggingInAgain") };
+    const lastSyncedDetails = t("sync.lastSynced", {
+        time: new Date(syncState.lastSynced!).toLocaleString(),
+    });
     switch (syncState.status) {
         case "synced":
             return {
-                message: "Synced",
+                message: t("sync.synced"),
                 details: lastSyncedDetails,
             };
         case "syncing":
             return {
-                message: "Syncing",
+                message: t("sync.syncing"),
                 details: lastSyncedDetails,
             };
         case "unsynced":
             return {
-                message: "Changes not synced",
+                message: t("sync.changesNotSynced"),
                 details: lastSyncedDetails,
             };
         case "error":
             return {
-                message: "Error syncing",
-                details: `Sync error: ${syncState.error}`,
+                message: t("sync.syncError"),
+                details: `${t("sync.error")}: ${syncState.error}`,
             };
         case "not-authenticated":
             return {
-                message: "Not authenticated",
-                details: "Please login to sync.",
+                message: t("sync.notAuthenticated"),
+                details: t("sync.pleaseLoginToSync"),
             };
         default:
-            return { message: "Sync status unknown", details: "Try logging in again." };
+            return { message: t("sync.statusUnknown"), details: t("sync.tryLoggingInAgain") };
     }
 };
 export const SyncStatus = () => {
     const [syncState, setSyncState] = useState<SyncState | null>(null);
     const operations = useCollectionOperations();
+    const { t } = useTranslation();
 
     useEffect(() => {
         (async () => {
@@ -82,7 +88,7 @@ export const SyncStatus = () => {
         };
     }, []);
 
-    const tooltipContent = getTooltipContent(syncState);
+    const tooltipContent = getTooltipContent(syncState, t);
 
     return (
         <Tooltip>
@@ -94,7 +100,7 @@ export const SyncStatus = () => {
                         onClick={async () => {
                             const res = await operations.googleDriveSyncNow();
                             if (res.success) {
-                                toast.success("Synced successfully");
+                                toast.success(t("messages.syncedSuccessfully"));
                             }
                         }}
                         disabled={

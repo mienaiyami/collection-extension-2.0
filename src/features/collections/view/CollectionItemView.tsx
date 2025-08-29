@@ -21,11 +21,13 @@ import { useAppSetting } from "@/hooks/appSetting-provider";
 import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { useTranslation } from "react-i18next";
 
 const CollectionItemView = () => {
     const { collectionData, inCollectionView, openCollection } = useAppContext();
     const operations = useCollectionOperations();
     const { appSetting } = useAppSetting();
+    const { t } = useTranslation();
 
     const [selected, setSelected] = useState<UUID[]>([]);
 
@@ -181,7 +183,7 @@ const CollectionItemView = () => {
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom">
-                                    Add current tab to collection
+                                    {t("tooltips.addCurrentTab")}
                                 </TooltipContent>
                             </Tooltip>
                             <Separator orientation="vertical" />
@@ -198,7 +200,7 @@ const CollectionItemView = () => {
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom">
-                                    Add all opened tabs to collection
+                                    {t("tooltips.addAllTabs")}
                                 </TooltipContent>
                             </Tooltip>
                             <Separator orientation="vertical" />
@@ -208,7 +210,9 @@ const CollectionItemView = () => {
                 )}
                 {selected.length > 0 && (
                     <div className="p-2 flex flex-row w-full h-full items-center">
-                        <span className="p-1">{selected.length} selected</span>
+                        <span className="p-1">
+                            {selected.length} {t("collections.selected")}
+                        </span>
                         <Button
                             className="p-1 ml-auto"
                             variant={"ghost"}
@@ -228,7 +232,7 @@ const CollectionItemView = () => {
                                     }
                             }}
                         >
-                            Open
+                            {t("collections.open")}
                         </Button>
                         <Button
                             className="p-1"
@@ -245,7 +249,7 @@ const CollectionItemView = () => {
                                     });
                             }}
                         >
-                            New Window
+                            {t("collections.newWindow")}
                         </Button>
                         <Button
                             className="p-1"
@@ -263,20 +267,20 @@ const CollectionItemView = () => {
                                             incognito: true,
                                         })
                                         .catch((e) => {
-                                            toast.error("Error", {
+                                            toast.error(t("common.error"), {
                                                 description: e,
                                             });
                                         });
                             }}
                         >
-                            Incognito
+                            {t("collections.incognito")}
                         </Button>
                         <Button
                             className="p-1"
                             variant={"ghost"}
                             size={"icon"}
                             ref={selected_copy}
-                            title="Copy Data"
+                            title={t("collections.copyData")}
                             onClick={() => {
                                 const items = currentCollection.items.filter((e) =>
                                     selected.includes(e.id)
@@ -289,7 +293,9 @@ const CollectionItemView = () => {
                                             currentCollection.title
                                         )
                                     );
-                                    toast.success(`Copied ${items.length} items`);
+                                    toast.success(
+                                        t("messages.copiedItems", { count: items.length })
+                                    );
                                 }
                             }}
                         >
@@ -323,7 +329,7 @@ const CollectionItemView = () => {
                         className="p-3 flex flex-col gap-2"
                     >
                         {itemsOrder.length <= 0 ? (
-                            <p>No Items</p>
+                            <p>{t("collections.noItems")}</p>
                         ) : (
                             itemsOrder.map((id) => {
                                 const e = currentCollectionItemsMap?.get(id);
@@ -356,14 +362,13 @@ const CollectionItemView = () => {
                 }}
             >
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Delete URLs?</AlertDialogTitle>
+                    <AlertDialogTitle>{t("collections.deleteUrls")}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete {selected.length}{" "}
-                        URLs.
+                        {t("collections.deleteUrlsDescription", { count: selected.length })}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                     <AlertDialogAction
                         onClick={() => {
                             inCollectionView &&
@@ -371,13 +376,13 @@ const CollectionItemView = () => {
                         }}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
-                        Delete
+                        {t("common.delete")}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     ) : (
-        <p>Collection not found</p>
+        <p>{t("collections.collectionNotFound")}</p>
     );
 };
 

@@ -23,6 +23,7 @@ import {
 import { Reorder, motion } from "framer-motion";
 import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { useTranslation } from "react-i18next";
 
 type PropType = {
     id: UUID;
@@ -33,6 +34,7 @@ type PropType = {
 const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void }) => {
     const { collectionData, openCollection } = useAppContext();
     const operations = useCollectionOperations();
+    const { t } = useTranslation();
 
     const { appSetting } = useAppSetting();
 
@@ -71,7 +73,7 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                             <Button
                                 variant={"ghost"}
                                 className="w-full h-full"
-                                title="Add Current Tab"
+                                title={t("collections.addCurrentTab")}
                                 onMouseUp={(e) => {
                                     e.stopPropagation();
                                 }}
@@ -90,7 +92,10 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                                     {item.title}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                    {item.itemLen} {item.itemLen > 1 ? "Items" : "Item"}
+                                    {item.itemLen}{" "}
+                                    {item.itemLen > 1
+                                        ? t("collections.items")
+                                        : t("collections.item")}
                                 </span>
                             </div>
                         </motion.div>
@@ -118,7 +123,7 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                                 })();
                             }}
                         >
-                            Open All
+                            {t("collections.openAll")}
                         </ContextMenuItem>
                         <ContextMenuItem
                             onClick={() => {
@@ -134,7 +139,7 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                                 })();
                             }}
                         >
-                            Open All in New Window
+                            {t("collections.openAllInNewWindow")}
                         </ContextMenuItem>
                         <ContextMenuItem
                             onClick={() => {
@@ -151,7 +156,7 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                                 })();
                             }}
                         >
-                            Open All in Incognito Window
+                            {t("collections.openAllInIncognitoWindow")}
                         </ContextMenuItem>
                         <ContextMenuSeparator />
                         <ContextMenuItem
@@ -169,12 +174,12 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                                 })();
                             }}
                         >
-                            Copy Data
+                            {t("collections.copyData")}
                         </ContextMenuItem>
                         <ContextMenuItem asChild>
                             <AlertDialogTrigger asChild>
                                 <ContextMenuItem className="focus:text-destructive-foreground focus:bg-destructive">
-                                    Delete Collection
+                                    {t("collections.deleteCollection")}
                                 </ContextMenuItem>
                             </AlertDialogTrigger>
                         </ContextMenuItem>
@@ -182,22 +187,22 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                 </ContextMenu>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Delete collection?</AlertDialogTitle>
+                        <AlertDialogTitle>
+                            {t("collections.deleteCollectionTitle")}
+                        </AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the
-                            collection '{item.title}
-                            '.
+                            {t("collections.deleteCollectionDescription", { title: item.title })}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={() => {
                                 operations.removeCollections(item.id);
                             }}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                            Delete
+                            {t("common.delete")}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -11,6 +11,8 @@ import { MessageResponse, CollectionMessage, CollectionOperationResponse } from 
 import { z } from "zod";
 import { GoogleAuthService } from "./services/GoogleAuthService";
 import { SyncService } from "./services/SyncService";
+import i18next from "i18next";
+import "./i18n/config"; // Import i18n configuration
 // import { GoogleDriveService } from "./services/GoogleDriveService";
 // import { GoogleAuthService } from "./services/GoogleAuthService";
 
@@ -38,24 +40,24 @@ const setAddPageToCollectionContextMenu = async () => {
     }
     browser.contextMenus.create({
         id: CONTEXT_MENU_PARENT_ID_PAGE,
-        title: "Add page to collections",
+        title: i18next.t("background.contextMenu.addPageToCollections"),
         contexts: ["all"],
     });
     browser.contextMenus.create({
         id: CONTEXT_MENU_PARENT_ID_ALL_TABS,
-        title: "Add all tabs to collections",
+        title: i18next.t("background.contextMenu.addAllTabsToCollections"),
         contexts: ["all"],
     });
 
     browser.contextMenus.create({
         id: `collection-new-${CONTEXT_MENU_PARENT_ID_PAGE}`,
-        title: "Add to new Collection",
+        title: i18next.t("background.contextMenu.addToNewCollection"),
         contexts: ["all"],
         parentId: CONTEXT_MENU_PARENT_ID_PAGE,
     });
     browser.contextMenus.create({
         id: `collection-new-${CONTEXT_MENU_PARENT_ID_ALL_TABS}`,
-        title: "Add to new Collection",
+        title: i18next.t("background.contextMenu.addToNewCollection"),
         contexts: ["all"],
         parentId: CONTEXT_MENU_PARENT_ID_ALL_TABS,
     });
@@ -105,7 +107,7 @@ const createLocalBackup = () =>
             if (!collectionData) return;
             if (collectionData instanceof Array && collectionData.length === 0) return;
             if (!deletedCollectionData) deletedCollectionData = [];
-            console.log("Creating local backup.");
+            console.log("Creating local backup...");
             return browser.storage.local
                 .set({
                     backup: {
@@ -115,7 +117,7 @@ const createLocalBackup = () =>
                 })
                 .then(() => {
                     const date = new Date().toJSON();
-                    console.log("Local backup created.", date);
+                    console.log("Local backup created:", date);
                     browser.storage.local.set({
                         lastBackup: date,
                     });
@@ -319,7 +321,7 @@ class CollectionManager {
                         (change.syncState.newValue as SyncState | undefined)?.status === "synced"
                     ) {
                         console.log(
-                            "Collection data changed was probably triggered by sync. Ignoring Sync."
+                            "Collection data change was probably triggered by sync. Ignoring sync."
                         );
                         return;
                     }
