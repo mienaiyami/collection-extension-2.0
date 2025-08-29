@@ -4,11 +4,13 @@ import { useAppContext } from "@/features/layout/App";
 import Collection from "../item/Collection";
 import { Reorder } from "framer-motion";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { useTranslation } from "react-i18next";
 // import { useVirtualizer } from "@tanstack/react-virtual";
 
 const CollectionView = () => {
     const { collectionData, setScrollPos, scrollPos, setOpenColOnCreate } = useAppContext();
     const operations = useCollectionOperations();
+    const { t } = useTranslation();
     const [collectionOrder, setCollectionOrder] = useState<
         { id: UUID; title: string; itemLen: number }[]
     >([]);
@@ -55,7 +57,7 @@ const CollectionView = () => {
                         }
                     }}
                 >
-                    New Empty
+                    {t("collections.newEmpty")}
                 </Button>
                 <Button
                     variant={"ghost"}
@@ -65,12 +67,12 @@ const CollectionView = () => {
                         });
                     }}
                 >
-                    New from Opened tabs
+                    {t("collections.newFromOpenedTabs")}
                 </Button>
             </div>
             {collectionData.length === 0 ? (
                 <div className="p-2 h-full overflow-hidden overflow-y-auto">
-                    <p>No Collections</p>
+                    <p>{t("collections.noCollections")}</p>
                 </div>
             ) : (
                 <div

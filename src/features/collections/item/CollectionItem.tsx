@@ -12,6 +12,7 @@ import { AppWindow, Check } from "lucide-react";
 import { Reorder } from "framer-motion";
 import { toast } from "sonner";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { useTranslation } from "react-i18next";
 
 type PropType = CollectionItem & {
     changeSelected: (id: UUID, checked: boolean) => void;
@@ -23,6 +24,7 @@ type PropType = CollectionItem & {
 const CollectionItem = (props: PropType) => {
     const { inCollectionView } = useAppContext();
     const operations = useCollectionOperations();
+    const { t } = useTranslation();
     const [imgLoaded, setImgLoaded] = useState(false);
 
     const draggingRef = useRef(false);
@@ -223,7 +225,7 @@ const CollectionItem = (props: PropType) => {
                             })();
                         }}
                     >
-                        Open
+                        {t("collections.openInNewTab")}
                     </ContextMenuItem>
                     <ContextMenuItem
                         onClick={() => {
@@ -235,7 +237,7 @@ const CollectionItem = (props: PropType) => {
                             })();
                         }}
                     >
-                        Open in New Window
+                        {t("collections.openInNewWindow")}
                     </ContextMenuItem>
                     <ContextMenuItem
                         onClick={() => {
@@ -252,7 +254,7 @@ const CollectionItem = (props: PropType) => {
                             })();
                         }}
                     >
-                        Open in Incognito Window
+                        {t("collections.openInIncognito")}
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem
@@ -262,7 +264,7 @@ const CollectionItem = (props: PropType) => {
                             })();
                         }}
                     >
-                        Copy URL
+                        {t("collections.copyUrls")}
                     </ContextMenuItem>
                     <ContextMenuItem
                         onClick={() => {
@@ -271,7 +273,7 @@ const CollectionItem = (props: PropType) => {
                         }}
                         className="focus:text-destructive-foreground focus:bg-destructive"
                     >
-                        Delete Item
+                        {t("collections.deleteItem")}
                     </ContextMenuItem>
                 </ContextMenuContent>
             </ContextMenu>

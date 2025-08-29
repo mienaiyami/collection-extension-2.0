@@ -5,20 +5,24 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { initAppSetting } from "@/utils";
+import { useTranslation } from "react-i18next";
 
 const FontSettings = () => {
     const { appSetting } = useAppSetting();
     const operations = useCollectionOperations();
+    const { t } = useTranslation();
     return (
         <div className="flex flex-col gap-2 p-2 border rounded-md">
             <div className="flex flex-col gap-2 items-start w-full">
-                <span className="font-semibold">Font Options</span>
+                <span className="font-semibold">{t("settings.fontOptions")}</span>
                 <div className="flex flex-col gap-2 px-4 py-2">
                     <TooltipProvider delayDuration={100} disableHoverableContent>
                         <Tooltip>
                             <TooltipTrigger className="cursor-default">
                                 <Label className="flex flex-row items-center justify-start gap-2">
-                                    <span className="min-w-[6rem] text-left">Font Size</span>
+                                    <span className="min-w-[6rem] text-left">
+                                        {t("settings.fontSize")}
+                                    </span>
                                     <Input
                                         type="number"
                                         value={appSetting.font.size}
@@ -54,15 +58,15 @@ const FontSettings = () => {
                                 </Label>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p className="max-w-[16rem]">
-                                    You can use arrow up/down to increase/decrease font size.
-                                </p>
+                                <p className="max-w-[16rem]">{t("settings.fontSizeTooltip")}</p>
                             </TooltipContent>
                         </Tooltip>
                         <Tooltip>
                             <TooltipTrigger className="cursor-default">
                                 <Label className="flex flex-row items-center justify-start gap-2">
-                                    <span className="min-w-[6rem] text-left">Font Family</span>
+                                    <span className="min-w-[6rem] text-left">
+                                        {t("settings.fontFamily")}
+                                    </span>
                                     <Input
                                         type="text"
                                         value={appSetting.font.family}
@@ -80,9 +84,7 @@ const FontSettings = () => {
                                 </Label>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p className="max-w-[16rem]">
-                                    Enter full name of a local font, like "Inter", "Inter Black".
-                                </p>
+                                <p className="max-w-[16rem]">{t("settings.fontFamilyTooltip")}</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
@@ -93,7 +95,7 @@ const FontSettings = () => {
                                 operations.setAppSetting(initAppSetting);
                             }}
                         >
-                            Reset
+                            {t("settings.resetFont")}
                         </Button>
                     </div>
                 </div>

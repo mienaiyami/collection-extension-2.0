@@ -41,6 +41,7 @@ This extension simplifies tab management by allowing users to group multiple ope
 
 - Side panel integration - works seamlessly with browser UI
 - Light/dark mode themes
+- Multi-language support with community translations
 
 ### Privacy & Sync
 
@@ -113,11 +114,23 @@ For detailed development instructions, see our [Contributing Guide](docs/contrib
 - **Package Manager**: pnpm
 - **Browser APIs**: Chrome Extension API, WebExtension Polyfill
 
+## Translation Status
+
+Help us make Collections accessible worldwide! 🌍
+
+| Language | Status | Contributor | Last Updated |
+|----------|--------|-------------|--------------|
+| English (en) | ✅ Complete | Built-in | Always current |
+| Spanish (es) | 🚧 In Progress | name | 2025-09-XX |
+
+Want to contribute translations? Check our [Translation Guide](docs/translation-guide.md)!
+
 ## Documentation
 
 - [User Guide](docs/guide.md) - Build instructions and usage tips
 - [Wiki](https://github.com/mienaiyami/collection-extension-2.0/wiki) - More information about the extension
 - [Contributing](docs/contribute.md) - How to contribute to the project
+- [Translation Guide](docs/translation-guide.md) - How to add translations
 - [Report Issues](https://github.com/mienaiyami/collection-extension-2.0/issues/new/choose) - Bug reports and feature requests
 
 ## Contributing

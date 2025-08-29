@@ -3,6 +3,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./features/layout/App.tsx";
 import "./globals.css";
+import "./i18n/config";
 
 // if (typeof window !== "undefined") {
 //     console.log(scan);

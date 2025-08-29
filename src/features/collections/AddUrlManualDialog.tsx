@@ -17,12 +17,14 @@ import { DialogClose } from "@radix-ui/react-dialog";
 import { Pencil } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { useTranslation } from "react-i18next";
 
 const AddUrlManualDialog = () => {
     const [selectedTab, setSelectedTab] = useState("direct");
     const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
     const { inCollectionView } = useAppContext();
     const operations = useCollectionOperations();
+    const { t } = useTranslation();
     return (
         <Dialog>
             <Tooltip>
@@ -37,11 +39,11 @@ const AddUrlManualDialog = () => {
                         </Button>
                     </DialogTrigger>
                 </TooltipTrigger>
-                <TooltipContent side="bottom">Manually Add URLs</TooltipContent>
+                <TooltipContent side="bottom">{t("tooltips.addUrls")}</TooltipContent>
             </Tooltip>
             <DialogContent className="max-w-sm sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>Add Links</DialogTitle>
+                    <DialogTitle>{t("collections.addUrls")}</DialogTitle>
                 </DialogHeader>
                 <Tabs
                     defaultValue="direct"
@@ -50,22 +52,21 @@ const AddUrlManualDialog = () => {
                     }}
                 >
                     <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="direct">Direct</TabsTrigger>
-                        <TabsTrigger value="file">From File</TabsTrigger>
+                        <TabsTrigger value="direct">{t("collections.addDirect")}</TabsTrigger>
+                        <TabsTrigger value="file">{t("collections.addFromFile")}</TabsTrigger>
                     </TabsList>
                     <TabsContent tabIndex={-1} value="direct" className="flex flex-col gap-2">
                         <DialogDescription>
-                            Enter URLs (new line separated) to add to collection. To add url with
-                            title, follow the url with
+                            {t("dialogs.addUrlsDescription")}
                             <code className="bg-foreground/10 rounded-sm px-2 py-0.5">
                                 {" "}
                                 || title || imageURL
                             </code>
-                            Make sure that the title should not contain "||".
+                            {t("collections.titleNotContain")}
                         </DialogDescription>
                         <textarea
                             className="w-full min-w-[4rem] h-32 p-2 rounded-md bg-foreground/10 max-h-[40vh] whitespace-nowrap font-mono"
-                            placeholder="https://example.com || Example || https://image.url.png"
+                            placeholder={t("dialogs.addUrlsPlaceholder")}
                             ref={(node) => {
                                 inputRef.current = node;
                             }}
@@ -73,13 +74,12 @@ const AddUrlManualDialog = () => {
                     </TabsContent>
                     <TabsContent tabIndex={-1} value="file" className="flex flex-col gap-2">
                         <DialogDescription>
-                            Upload a file containing URLs to add to collection. To add url with
-                            title, follow the url with
-                            <code> | title | imageURL</code>. For example:{" "}
+                            {t("collections.uploadFile")}
+                            <code> | title | imageURL</code>. {t("collections.makeNewTitleExample")}{" "}
                             <code className="bg-foreground/10 px-2 py-0.5 rounded-lg">
-                                https://example.com || Example || https://image.url.png
+                                {t("dialogs.addUrlsPlaceholder")}
                             </code>
-                            . Make sure that the title should not contain "||".
+                            . {t("collections.titleNotContain")}
                         </DialogDescription>
                         <Input
                             type="file"
@@ -117,12 +117,17 @@ const AddUrlManualDialog = () => {
                                                         orderUpdatedAt: Date.now(),
                                                     };
                                                 } catch (e) {
-                                                    toast.error(`Failed to parse: ${e}`);
+                                                    toast.error(
+                                                        t("messages.failedToParseFile", {
+                                                            error: e,
+                                                        })
+                                                    );
                                                     return null;
                                                 }
                                             })
                                             .filter((e) => e !== null);
-                                        if (items.length === 0) return toast.error("No URLs found");
+                                        if (items.length === 0)
+                                            return toast.error(t("messages.noUrlsFound"));
                                         if (inCollectionView) {
                                             operations.addToCollection(inCollectionView, items);
                                         }
@@ -137,7 +142,7 @@ const AddUrlManualDialog = () => {
                                                     if (typeof e.target?.result === "string")
                                                         parseUrls(e.target.result);
                                                     else {
-                                                        toast.error("Failed to read file");
+                                                        toast.error(t("messages.failedToReadFile"));
                                                     }
                                                 };
                                                 reader.readAsText(file);
@@ -145,12 +150,12 @@ const AddUrlManualDialog = () => {
                                         } else parseUrls(inputRef.current.value);
                                     }
                                 } catch (e) {
-                                    toast.error("Failed to add URLs");
+                                    toast.error(t("messages.failedToAddUrls"));
                                     console.error(e);
                                 }
                             }}
                         >
-                            Add URLs
+                            {t("collections.addUrlsButton")}
                         </Button>
                     </DialogClose>
                 </DialogFooter>

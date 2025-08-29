@@ -9,6 +9,7 @@ import { SyncStatus } from "@/features/layout/SyncStatus";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import Settings from "@/features/settings/Settings";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 const TopBar = () => {
     const { inCollectionView, openCollection, collectionData } = useAppContext();
@@ -16,6 +17,7 @@ const TopBar = () => {
     const [first, setFirst] = useState(true);
     const operations = useCollectionOperations();
     const inputRef = useRef<HTMLInputElement>(null);
+    const { t } = useTranslation();
 
     useLayoutEffect(() => {
         setFirst(true);
@@ -40,7 +42,7 @@ const TopBar = () => {
             const found = collectionData.find((e) => e.id === inCollectionView);
             if (!found || found.title === title) return;
             if (title === "") {
-                toast.error("Collection name cannot be empty");
+                toast.error(t("messages.collectionNameEmpty"));
                 return;
             }
             if (inCollectionView) operations.renameCollection(inCollectionView, title);
@@ -93,7 +95,7 @@ const TopBar = () => {
                             }}
                             className="text-3xl font-bold tracking-tight"
                         >
-                            Collections
+                            {t("app.title")}
                         </Button>
                     )}
                     <div className="ml-auto flex flex-row gap-1 items-center">
@@ -107,7 +109,7 @@ const TopBar = () => {
                                 </DialogTrigger>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>Settings</p>
+                                <p>{t("tooltips.settings")}</p>
                             </TooltipContent>
                         </Tooltip>
                         <Tooltip>
@@ -156,7 +158,7 @@ const TopBar = () => {
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>Toggle Sidebar</p>
+                                <p>{t("tooltips.toggleSidebar")}</p>
                             </TooltipContent>
                         </Tooltip>
                         <Tooltip>
@@ -173,7 +175,7 @@ const TopBar = () => {
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>Close</p>
+                                <p>{t("tooltips.close")}</p>
                             </TooltipContent>
                         </Tooltip>
                     </div>

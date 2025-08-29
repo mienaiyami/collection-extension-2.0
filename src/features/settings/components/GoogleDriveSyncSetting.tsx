@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Loader2, RotateCcw } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 const CHECK_USER_INTERVAL = 1000 * 60;
 
@@ -11,6 +12,7 @@ const GoogleDriveSync = () => {
     const [loggedInUser, setLoggedInUser] = useState<GoogleDriveUserData | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const { t } = useTranslation();
     const { getGoogleDriveUserInfo, googleDriveSyncNow, logoutGoogleDrive, loginGoogleDrive } =
         useCollectionOperations();
     const checkUser = useCallback(async () => {
@@ -35,12 +37,12 @@ const GoogleDriveSync = () => {
         <div className="flex flex-col gap-2 p-2 border rounded-md">
             <TooltipProvider>
                 <div className="flex flex-col items-start gap-2">
-                    <span className="font-semibold">Google Drive Sync (Beta)</span>
+                    <span className="font-semibold">{t("settings.googleDriveSyncBeta")}</span>
                     {loggedInUser ? (
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div className="flex items-center gap-2">
-                                    <span>Logged in as : </span>
+                                    <span>{t("settings.loggedInAs")} : </span>
                                     <TooltipContent>
                                         <p>{loggedInUser.email}</p>
                                     </TooltipContent>
@@ -70,7 +72,7 @@ const GoogleDriveSync = () => {
                             </span>
                         </div>
                     ) : (
-                        <span>Not logged in</span>
+                        <span>{t("settings.notLoggedIn")}</span>
                     )}
                     <div className="flex flex-col gap-2">
                         {loggedInUser ? (
@@ -82,12 +84,12 @@ const GoogleDriveSync = () => {
                                         setLoading(true);
                                         const response = await googleDriveSyncNow();
                                         if (response.success) {
-                                            toast.success("Synced successfully");
+                                            toast.success(t("messages.syncedSuccessfully"));
                                         }
                                         setLoading(false);
                                     }}
                                 >
-                                    Sync Now
+                                    {t("settings.syncNow")}
                                 </Button>
                                 <Button
                                     variant="outline"
@@ -99,7 +101,7 @@ const GoogleDriveSync = () => {
                                         setLoading(false);
                                     }}
                                 >
-                                    Logout
+                                    {t("settings.logout")}
                                 </Button>
                             </>
                         ) : (
@@ -120,16 +122,16 @@ const GoogleDriveSync = () => {
                                     {loading ? (
                                         <Loader2 className="animate-spin" />
                                     ) : (
-                                        "Login with Google Drive"
+                                        t("settings.loginWithGoogleDrive")
                                     )}
                                 </Button>
                             )
                         )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                        <span className="font-semibold">Note:</span> This feature is in beta. Please
-                        report any issues. <br />
-                        Syncing may take 5-40MB of data per sync depending on your data size.
+                        <span className="font-semibold">Note:</span>{" "}
+                        {t("settings.googleDriveSyncNote")} <br />
+                        {t("settings.googleDriveSyncDataUsage")}
                     </p>
                 </div>
             </TooltipProvider>
