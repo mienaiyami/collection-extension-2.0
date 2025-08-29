@@ -8,8 +8,8 @@ export class SyncService {
 
     static readonly SYNC_DEBOUNCE_TIME = 1000 * 60 * 1;
     static readonly SYNC_RECENCY_THRESHOLD = 1000 * 60;
-    static readonly SYNC_DATA_FILE_NAME = `collections-sync-data.json`;
-    static readonly SYNC_DATA_FOLDER_NAME = `appDataFolder`;
+    static readonly SYNC_DATA_FILE_NAME = "collections-sync-data.json";
+    static readonly SYNC_DATA_FOLDER_NAME = "appDataFolder";
     static readonly PERIODIC_SYNC_INTERVAL = 1000 * 60 * 20;
 
     private static syncAbortController: AbortController | null = null;

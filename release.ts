@@ -1,6 +1,6 @@
-import { exec } from "child_process";
-import fs from "fs";
-import readline from "readline";
+import { exec } from "node:child_process";
+import fs from "node:fs";
+import readline from "node:readline";
 import dotenv from "dotenv";
 import pkgJSON from "./package.json";
 
@@ -19,7 +19,7 @@ const tagAndPush = (): Promise<void> =>
     new Promise((resolve) => {
         log(`Tagging v${pkgJSON.version} and pushing tags.`);
         const push = () => {
-            const gitSpawn = exec(`git push --tags`);
+            const gitSpawn = exec("git push --tags");
             gitSpawn.stderr?.on("data", (data) => {
                 process.stdout.write(`\x1b[91m${data}\x1b[0m`);
             });
@@ -44,9 +44,7 @@ const signFireFoxAddon = (): Promise<void> =>
     new Promise((resolve) => {
         log("Signing Firefox add-on...");
         const pwshSpawn = exec(
-            "cd ./dist && web-ext sign --channel=listed " +
-                `--api-key=${process.env.AMO_JWT_ISSUER} ` +
-                `--api-secret=${process.env.AMO_JWT_SECRET}`
+            `cd ./dist && web-ext sign --channel=listed --api-key=${process.env.AMO_JWT_ISSUER} --api-secret=${process.env.AMO_JWT_SECRET}`
         );
 
         pwshSpawn.stdout?.on("data", (data) => {

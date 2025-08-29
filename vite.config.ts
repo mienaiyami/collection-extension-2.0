@@ -1,5 +1,5 @@
-import { writeFileSync } from "fs";
-import path from "path";
+import { writeFileSync } from "node:fs";
+import path from "node:path";
 import react from "@vitejs/plugin-react-swc";
 import { type PluginOption, defineConfig } from "vite";
 import packageJson from "./package.json";
@@ -124,8 +124,8 @@ export default defineConfig({
             },
             output: {
                 entryFileNames: (asset) => {
-                    if (["background", "content"].includes(asset.name)) return `[name].js`;
-                    return `assets/[name]-[hash].js`;
+                    if (["background", "content"].includes(asset.name)) return "[name].js";
+                    return "assets/[name]-[hash].js";
                 },
             },
         },

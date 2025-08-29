@@ -144,10 +144,7 @@ export const CollectionOperationsProvider: React.FC<{
             }
             let displayText = response.data.removedCollections.join(", ");
             if (displayText.length > 30) {
-                displayText =
-                    `{${response.data.removedCollections.length}: }` +
-                    displayText.slice(0, 50) +
-                    "...";
+                displayText = `{${response.data.removedCollections.length}: }${displayText.slice(0, 50)}...`;
             }
             toast.success(t("messages.removedCollections"), {
                 description: t("messages.removedCollectionsDesc", {
@@ -407,7 +404,7 @@ export const CollectionOperationsProvider: React.FC<{
             type: "application/json",
         });
         a.href = URL.createObjectURL(file);
-        a.download = downloadName + ".json";
+        a.download = `${downloadName}.json`;
         a.click();
         URL.revokeObjectURL(a.href);
         return response;
