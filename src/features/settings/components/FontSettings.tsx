@@ -1,12 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { initAppSetting } from "@/utils";
@@ -19,14 +14,9 @@ const FontSettings = () => {
     return (
         <div className="flex flex-col gap-2 rounded-md border p-2">
             <div className="flex w-full flex-col items-start gap-2">
-                <span className="font-semibold">
-                    {t("settings.fontOptions")}
-                </span>
+                <span className="font-semibold">{t("settings.fontOptions")}</span>
                 <div className="flex flex-col gap-2 px-4 py-2">
-                    <TooltipProvider
-                        delayDuration={100}
-                        disableHoverableContent
-                    >
+                    <TooltipProvider delayDuration={100} disableHoverableContent>
                         <Tooltip>
                             <TooltipTrigger className="cursor-default">
                                 <Label className="flex flex-row items-center justify-start gap-2">
@@ -46,17 +36,14 @@ const FontSettings = () => {
                                                 "Alt",
                                                 "Escape",
                                             ];
-                                            if (!allowedKeys.includes(e.key))
-                                                e.preventDefault();
+                                            if (!allowedKeys.includes(e.key)) e.preventDefault();
                                         }}
                                         min={10}
                                         max={30}
                                         step={0.1}
                                         onChange={(e) => {
                                             if (!e.currentTarget) return;
-                                            let size = Number(
-                                                e.currentTarget.value
-                                            );
+                                            let size = Number(e.currentTarget.value);
                                             if (size < 10) size = 10;
                                             if (size > 30) size = 30;
                                             operations.setAppSetting({
@@ -71,9 +58,7 @@ const FontSettings = () => {
                                 </Label>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p className="max-w-[16rem]">
-                                    {t("settings.fontSizeTooltip")}
-                                </p>
+                                <p className="max-w-[16rem]">{t("settings.fontSizeTooltip")}</p>
                             </TooltipContent>
                         </Tooltip>
                         <Tooltip>
@@ -90,8 +75,7 @@ const FontSettings = () => {
                                             operations.setAppSetting({
                                                 font: {
                                                     ...appSetting.font,
-                                                    family: e.currentTarget
-                                                        .value,
+                                                    family: e.currentTarget.value,
                                                 },
                                             });
                                         }}
@@ -100,9 +84,7 @@ const FontSettings = () => {
                                 </Label>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p className="max-w-[16rem]">
-                                    {t("settings.fontFamilyTooltip")}
-                                </p>
+                                <p className="max-w-[16rem]">{t("settings.fontFamilyTooltip")}</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>

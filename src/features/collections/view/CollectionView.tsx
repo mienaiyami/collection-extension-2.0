@@ -8,8 +8,7 @@ import Collection from "../item/Collection";
 // import { useVirtualizer } from "@tanstack/react-virtual";
 
 const CollectionView = () => {
-    const { collectionData, setScrollPos, scrollPos, setOpenColOnCreate } =
-        useAppContext();
+    const { collectionData, setScrollPos, scrollPos, setOpenColOnCreate } = useAppContext();
     const operations = useCollectionOperations();
     const { t } = useTranslation();
     const [collectionOrder, setCollectionOrder] = useState<
@@ -63,15 +62,9 @@ const CollectionView = () => {
                 <Button
                     variant={"ghost"}
                     onClick={async () => {
-                        operations.makeNewCollection(
-                            new Date().toLocaleString(),
-                            [],
-                            {
-                                activeWindowId: (
-                                    await window.browser.windows.getCurrent()
-                                ).id,
-                            }
-                        );
+                        operations.makeNewCollection(new Date().toLocaleString(), [], {
+                            activeWindowId: (await window.browser.windows.getCurrent()).id,
+                        });
                     }}
                 >
                     {t("collections.newFromOpenedTabs")}

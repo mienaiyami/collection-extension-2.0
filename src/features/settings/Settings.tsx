@@ -1,9 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { Trans, useTranslation } from "react-i18next";
 import BackupSettings from "./components/BackupSettings";
@@ -21,9 +17,7 @@ const Settings: React.FC = () => {
     return (
         <DialogContent className="max-w-sm sm:max-w-lg">
             <DialogHeader>
-                <DialogTitle className="text-2xl">
-                    {t("settings.title")}
-                </DialogTitle>
+                <DialogTitle className="text-2xl">{t("settings.title")}</DialogTitle>
             </DialogHeader>
             <div className="flex max-h-[65vh] w-full flex-col gap-2 overflow-auto">
                 <ThemeSetting />
@@ -38,9 +32,7 @@ const Settings: React.FC = () => {
                 <CopyDataFormatSetting />
                 <div className="flex flex-col gap-2 rounded-md border p-2">
                     <div className="flex w-full flex-row items-center gap-2">
-                        <span className="font-semibold">
-                            {t("settings.data")}
-                        </span>
+                        <span className="font-semibold">{t("settings.data")}</span>
                         <div className="ml-auto flex flex-row gap-2">
                             <Button
                                 variant={"outline"}

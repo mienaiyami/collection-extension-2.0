@@ -1,9 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import type { TFunction } from "i18next";
 import { Cloud, CloudOff, HelpCircle, RefreshCw } from "lucide-react";
@@ -92,13 +88,9 @@ export const SyncStatus = () => {
                 setSyncState(changes.syncState.newValue as SyncState);
             }
         };
-        window.browser.storage.local.onChanged.addListener(
-            onStorageChangeListener
-        );
+        window.browser.storage.local.onChanged.addListener(onStorageChangeListener);
         return () => {
-            window.browser.storage.local.onChanged.removeListener(
-                onStorageChangeListener
-            );
+            window.browser.storage.local.onChanged.removeListener(onStorageChangeListener);
         };
     }, []);
 
@@ -129,13 +121,9 @@ export const SyncStatus = () => {
             </TooltipTrigger>
             <TooltipContent className="max-w-xs text-center">
                 <div className="flex flex-col items-start">
-                    <span className="font-semibold">
-                        {tooltipContent.message}
-                    </span>
+                    <span className="font-semibold">{tooltipContent.message}</span>
                     {tooltipContent.details && (
-                        <span className="text-sm">
-                            {tooltipContent.details}
-                        </span>
+                        <span className="text-sm">{tooltipContent.details}</span>
                     )}
                 </div>
             </TooltipContent>

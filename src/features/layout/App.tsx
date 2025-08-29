@@ -78,18 +78,13 @@ const App = () => {
                 c &&
                 //! todo check for more optimization
                 // using ["id", "title", "items"]
-                JSON.stringify(c.newValue, replacer) !==
-                    JSON.stringify(c.oldValue, replacer)
+                JSON.stringify(c.newValue, replacer) !== JSON.stringify(c.oldValue, replacer)
             )
                 setCollectionData(c.newValue as Collection[]);
         };
-        window.browser.storage.local.onChanged.addListener(
-            onStorageChangeListener
-        );
+        window.browser.storage.local.onChanged.addListener(onStorageChangeListener);
         return () => {
-            window.browser.storage.local.onChanged.removeListener(
-                onStorageChangeListener
-            );
+            window.browser.storage.local.onChanged.removeListener(onStorageChangeListener);
         };
     }, []);
 
@@ -127,10 +122,7 @@ const App = () => {
         if (uuid) {
             const index = collectionData.findIndex((e) => e.id === uuid);
             if (index >= 0) setInCollectionView(uuid);
-            else
-                console.error(
-                    `openCollection: Collection with id ${uuid} not found.`
-                );
+            else console.error(`openCollection: Collection with id ${uuid} not found.`);
         } else if (inCollectionView) {
             setInCollectionView(null);
         }
@@ -152,11 +144,7 @@ const App = () => {
                     <CollectionOperationsProvider>
                         <div className="grid h-full w-full grid-rows-[65px_auto] border">
                             <TopBar />
-                            {inCollectionView ? (
-                                <CollectionItemView />
-                            ) : (
-                                <CollectionView />
-                            )}
+                            {inCollectionView ? <CollectionItemView /> : <CollectionView />}
                         </div>
                     </CollectionOperationsProvider>
                 </AppContext.Provider>

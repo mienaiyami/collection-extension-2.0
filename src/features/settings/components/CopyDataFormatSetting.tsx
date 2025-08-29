@@ -19,9 +19,7 @@ const CopyDataFormatSetting = () => {
     return (
         <div className="flex flex-col gap-2 rounded-md border p-2">
             <div className="flex w-full flex-col items-start gap-2">
-                <span className="font-semibold">
-                    {t("settings.copyDataFormat")}
-                </span>
+                <span className="font-semibold">{t("settings.copyDataFormat")}</span>
                 <div className="flex flex-col gap-2 px-2">
                     <pre className="whitespace-break-spaces rounded-sm p-2 font-mono text-xs">
                         {t("settings.availableVariables")}
@@ -32,8 +30,7 @@ const CopyDataFormatSetting = () => {
                         spellCheck={false}
                         value={copyDataFormat.value}
                         onChange={(e) => {
-                            if (copyDataFormat.timeout)
-                                clearTimeout(copyDataFormat.timeout);
+                            if (copyDataFormat.timeout) clearTimeout(copyDataFormat.timeout);
                             if (!e.currentTarget) return;
                             const value = e.currentTarget.value;
                             setCopyDataFormat({

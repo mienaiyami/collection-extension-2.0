@@ -46,9 +46,7 @@ const CollectionItem = (props: PropType) => {
             <ContextMenu>
                 <ContextMenuTrigger
                     className={`urlItem grid h-24 w-full cursor-pointer grid-cols-[25%_65%_10%] items-center rounded-md border hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20 ${
-                        props.isSelected
-                            ? "ring-2 ring-purple-700 dark:ring-purple-400"
-                            : ""
+                        props.isSelected ? "ring-2 ring-purple-700 dark:ring-purple-400" : ""
                     }`}
                     tabIndex={0}
                     data-url-id={props.id}
@@ -95,10 +93,7 @@ const CollectionItem = (props: PropType) => {
                         switch (e.code) {
                             case "Delete":
                                 inCollectionView &&
-                                    operations.removeFromCollection(
-                                        inCollectionView,
-                                        props.id
-                                    );
+                                    operations.removeFromCollection(inCollectionView, props.id);
                                 break;
                             case "KeyC":
                                 navigator.clipboard.writeText(props.url);
@@ -143,21 +138,14 @@ const CollectionItem = (props: PropType) => {
                             draggable={false}
                             onLoad={(e) => {
                                 setImgLoaded(true);
-                                if (
-                                    e.currentTarget.width <= 100 ||
-                                    e.currentTarget.height <= 100
-                                ) {
+                                if (e.currentTarget.width <= 100 || e.currentTarget.height <= 100) {
                                     e.currentTarget.classList.add("p-3.5");
                                 }
                                 if (
                                     e.currentTarget.width <= 50 ||
                                     e.currentTarget.height <= 50 ||
-                                    e.currentTarget.src
-                                        .toLowerCase()
-                                        .includes(".ico") ||
-                                    e.currentTarget.src
-                                        .toLowerCase()
-                                        .includes(".svg")
+                                    e.currentTarget.src.toLowerCase().includes(".ico") ||
+                                    e.currentTarget.src.toLowerCase().includes(".svg")
                                 )
                                     e.currentTarget.classList.add("p-6");
                             }}
@@ -170,10 +158,7 @@ const CollectionItem = (props: PropType) => {
                         <span className="truncate text-lg" title={props.title}>
                             {props.title}
                         </span>
-                        <span
-                            className="truncate text-muted-foreground text-xs"
-                            title={props.url}
-                        >
+                        <span className="truncate text-muted-foreground text-xs" title={props.url}>
                             {props.url}
                         </span>
                     </div>
@@ -205,9 +190,7 @@ const CollectionItem = (props: PropType) => {
                         >
                             <div
                                 className={`rounded-md border group-hover:border-foreground/20 ${
-                                    props.isSelected
-                                        ? "bg-purple-700 dark:bg-purple-400"
-                                        : ""
+                                    props.isSelected ? "bg-purple-700 dark:bg-purple-400" : ""
                                 } ring-white group-focus:ring-2`}
                             >
                                 <input
@@ -215,18 +198,13 @@ const CollectionItem = (props: PropType) => {
                                     className="hidden"
                                     checked={props.isSelected}
                                     onChange={(e) => {
-                                        props.changeSelected(
-                                            props.id,
-                                            e.currentTarget.checked
-                                        );
+                                        props.changeSelected(props.id, e.currentTarget.checked);
                                     }}
                                 />
                                 <Check
                                     className="text-white"
                                     style={{
-                                        visibility: props.isSelected
-                                            ? "visible"
-                                            : "hidden",
+                                        visibility: props.isSelected ? "visible" : "hidden",
                                     }}
                                 />
                             </div>
@@ -294,10 +272,7 @@ const CollectionItem = (props: PropType) => {
                     <ContextMenuItem
                         onClick={() => {
                             inCollectionView &&
-                                operations.removeFromCollection(
-                                    inCollectionView,
-                                    props.id
-                                );
+                                operations.removeFromCollection(inCollectionView, props.id);
                         }}
                         className="focus:bg-destructive focus:text-destructive-foreground"
                     >

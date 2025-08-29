@@ -1,30 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAppContext } from "@/features/layout/App";
 import { SyncStatus } from "@/features/layout/SyncStatus";
 import Settings from "@/features/settings/Settings";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
-import {
-    ChevronLeft,
-    Pin,
-    PinOff,
-    Settings as SettingsIcon,
-    X,
-} from "lucide-react";
+import { ChevronLeft, Pin, PinOff, Settings as SettingsIcon, X } from "lucide-react";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 const TopBar = () => {
-    const { inCollectionView, openCollection, collectionData } =
-        useAppContext();
+    const { inCollectionView, openCollection, collectionData } = useAppContext();
     const [title, setTitle] = useState("");
     const [first, setFirst] = useState(true);
     const operations = useCollectionOperations();
@@ -34,15 +22,12 @@ const TopBar = () => {
     useLayoutEffect(() => {
         setFirst(true);
         if (inCollectionView) {
-            const current = collectionData.find(
-                (e) => e.id === inCollectionView
-            );
+            const current = collectionData.find((e) => e.id === inCollectionView);
             if (current) {
                 setTitle(current.title);
             }
             if (inputRef.current) {
-                if (current && current.createdAt > Date.now() - 1000 * 5)
-                    inputRef.current.focus();
+                if (current && current.createdAt > Date.now() - 1000 * 5) inputRef.current.focus();
             }
         }
     }, [inCollectionView, collectionData]);
@@ -60,8 +45,7 @@ const TopBar = () => {
                 toast.error(t("messages.collectionNameEmpty"));
                 return;
             }
-            if (inCollectionView)
-                operations.renameCollection(inCollectionView, title);
+            if (inCollectionView) operations.renameCollection(inCollectionView, title);
         }, 2000);
         return () => {
             clearTimeout(timeout);
@@ -93,10 +77,7 @@ const TopBar = () => {
                                         e.stopPropagation();
                                     }
                                     if (e.key === "Enter") {
-                                        operations.renameCollection(
-                                            inCollectionView,
-                                            title
-                                        );
+                                        operations.renameCollection(inCollectionView, title);
                                     }
                                 }}
                                 onChange={(e) => {
@@ -140,20 +121,17 @@ const TopBar = () => {
                                         display: chrome.sidePanel
                                             ? "flex"
                                             : // checking only when firefox
-                                            window.isSidePanel
-                                            ? "none"
-                                            : "flex",
+                                              window.isSidePanel
+                                              ? "none"
+                                              : "flex",
                                     }}
                                     onClick={async () => {
                                         if (window.isSidePanel) {
                                             // note to self, `chrome.sidePanel` is not on `window.browser`, and only available on chromium
                                             if (chrome.sidePanel) {
-                                                chrome.sidePanel.setPanelBehavior(
-                                                    {
-                                                        openPanelOnActionClick:
-                                                            false,
-                                                    }
-                                                );
+                                                chrome.sidePanel.setPanelBehavior({
+                                                    openPanelOnActionClick: false,
+                                                });
                                                 window.close();
                                             } else {
                                                 window.browser.sidebarAction.close();

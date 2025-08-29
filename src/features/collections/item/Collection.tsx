@@ -74,8 +74,7 @@ const Collection = ({
                             onKeyDown={(e) => {
                                 if ([" ", "Enter"].includes(e.key)) {
                                     e.preventDefault();
-                                    if (e.target instanceof HTMLElement)
-                                        openCollection(item.id);
+                                    if (e.target instanceof HTMLElement) openCollection(item.id);
                                 }
                             }}
                         >
@@ -91,18 +90,13 @@ const Collection = ({
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    operations.addActiveTabToCollection(
-                                        item.id
-                                    );
+                                    operations.addActiveTabToCollection(item.id);
                                 }}
                             >
                                 <Plus />
                             </Button>
                             <div className="flex flex-col items-center justify-center p-2">
-                                <span
-                                    className="truncate text-lg"
-                                    title={item.title}
-                                >
+                                <span className="truncate text-lg" title={item.title}>
                                     {item.title}
                                 </span>
                                 <span className="text-muted-foreground text-xs">
@@ -118,22 +112,15 @@ const Collection = ({
                         className="w-62"
                         onContextMenu={(e) => {
                             e.preventDefault();
-                            if (e.target instanceof HTMLElement)
-                                e.target.click();
+                            if (e.target instanceof HTMLElement) e.target.click();
                         }}
                     >
                         <ContextMenuItem
                             onClick={() => {
                                 (async () => {
-                                    const collection = collectionData.find(
-                                        (e) => e.id === item.id
-                                    );
+                                    const collection = collectionData.find((e) => e.id === item.id);
                                     if (collection)
-                                        for (
-                                            let i = 0;
-                                            i < collection.items.length;
-                                            i++
-                                        ) {
+                                        for (let i = 0; i < collection.items.length; i++) {
                                             const url = collection.items[i].url;
                                             if (url)
                                                 window.browser.tabs.create({
@@ -149,13 +136,9 @@ const Collection = ({
                         <ContextMenuItem
                             onClick={() => {
                                 (async () => {
-                                    const collection = collectionData.find(
-                                        (e) => e.id === item.id
-                                    );
+                                    const collection = collectionData.find((e) => e.id === item.id);
                                     if (collection) {
-                                        const urls = collection.items.map(
-                                            (e) => e.url
-                                        );
+                                        const urls = collection.items.map((e) => e.url);
                                         window.browser.windows.create({
                                             url: urls,
                                             state: "maximized",
@@ -169,13 +152,9 @@ const Collection = ({
                         <ContextMenuItem
                             onClick={() => {
                                 (async () => {
-                                    const collection = collectionData.find(
-                                        (e) => e.id === item.id
-                                    );
+                                    const collection = collectionData.find((e) => e.id === item.id);
                                     if (collection) {
-                                        const urls = collection.items.map(
-                                            (e) => e.url
-                                        );
+                                        const urls = collection.items.map((e) => e.url);
                                         window.browser.windows.create({
                                             url: urls,
                                             state: "maximized",
@@ -191,9 +170,7 @@ const Collection = ({
                         <ContextMenuItem
                             onClick={() => {
                                 (async () => {
-                                    const collection = collectionData.find(
-                                        (e) => e.id === item.id
-                                    );
+                                    const collection = collectionData.find((e) => e.id === item.id);
                                     if (collection) {
                                         const data = window.formatCopyData(
                                             appSetting.copyDataFormat,
@@ -228,9 +205,7 @@ const Collection = ({
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>
-                            {t("common.cancel")}
-                        </AlertDialogCancel>
+                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={() => {
                                 operations.removeCollections(item.id);

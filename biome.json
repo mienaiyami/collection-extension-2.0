@@ -6,19 +6,8 @@
         "useIgnoreFile": true
     },
     "files": {
-        "include": [
-            "src/**/*",
-            "*.ts",
-            "*.tsx",
-            "*.js",
-            "*.jsx"
-        ],
-        "ignore": [
-            "dist/**",
-            "build/**",
-            "node_modules/**",
-            "*.d.ts"
-        ]
+        "include": ["src/**/*", "*.ts", "*.tsx", "*.js", "*.jsx"],
+        "ignore": ["dist/**", "build/**", "node_modules/**", "*.d.ts"]
     },
     "formatter": {
         "enabled": true,
@@ -27,20 +16,14 @@
         "indentWidth": 4,
         "lineWidth": 100,
         "lineEnding": "lf",
-        "ignore": [
-            "dist/**",
-            "build/**"
-        ]
+        "ignore": ["dist/**", "build/**"]
     },
     "organizeImports": {
         "enabled": true
     },
     "linter": {
         "enabled": true,
-        "ignore": [
-            "dist/**",
-            "build/**"
-        ],
+        "ignore": ["dist/**", "build/**"],
         "rules": {
             "recommended": true,
             "suspicious": {
@@ -85,10 +68,7 @@
             "bracketSameLine": false,
             "arrowParentheses": "always"
         },
-        "globals": [
-            "chrome",
-            "browser"
-        ]
+        "globals": ["chrome", "browser"]
     },
     "json": {
         "formatter": {

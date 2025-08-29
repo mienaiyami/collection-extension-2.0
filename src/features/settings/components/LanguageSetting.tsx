@@ -27,8 +27,7 @@ const languages: Language[] = [
 const LanguageSetting = () => {
     const { t, i18n } = useTranslation();
 
-    const currentLanguage =
-        languages.find((lang) => lang.code === i18n.language) || languages[0];
+    const currentLanguage = languages.find((lang) => lang.code === i18n.language) || languages[0];
 
     const changeLanguage = (languageCode: string) => {
         i18n.changeLanguage(languageCode);
@@ -49,22 +48,15 @@ const LanguageSetting = () => {
                                 <ChevronDown className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                            align="end"
-                            className="min-w-[200px]"
-                        >
+                        <DropdownMenuContent align="end" className="min-w-[200px]">
                             {languages.map((language) => (
                                 <DropdownMenuItem
                                     key={language.code}
-                                    onClick={() =>
-                                        changeLanguage(language.code)
-                                    }
+                                    onClick={() => changeLanguage(language.code)}
                                     className="flex flex-row items-center justify-between"
                                 >
                                     <div className="flex flex-col items-start">
-                                        <span className="font-medium">
-                                            {language.nativeName}
-                                        </span>
+                                        <span className="font-medium">{language.nativeName}</span>
                                         <span className="text-muted-foreground text-xs">
                                             {language.name}
                                         </span>

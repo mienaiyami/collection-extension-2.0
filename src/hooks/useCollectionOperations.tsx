@@ -9,9 +9,7 @@ import type {
 } from "../types/messages";
 
 type CollectionOperationsContextType = {
-    removeCollections: (
-        ids: UUID | UUID[]
-    ) => CollectionOperationResponse<"REMOVE_COLLECTIONS">;
+    removeCollections: (ids: UUID | UUID[]) => CollectionOperationResponse<"REMOVE_COLLECTIONS">;
     makeNewCollection: (
         title: string,
         items?: CollectionItem[],
@@ -25,20 +23,12 @@ type CollectionOperationsContextType = {
     addActiveTabToCollection: (
         collectionId: UUID
     ) => Promise<
-        | MessageResponse<
-              Extract<CollectionOperation, { type: "ADD_TAB_TO_COLLECTION" }>
-          >
-        | undefined
+        MessageResponse<Extract<CollectionOperation, { type: "ADD_TAB_TO_COLLECTION" }>> | undefined
     >;
     addAllTabsToCollection: (
         collectionId: UUID
     ) => Promise<
-        | MessageResponse<
-              Extract<
-                  CollectionOperation,
-                  { type: "ADD_ALL_TABS_TO_COLLECTION" }
-              >
-          >
+        | MessageResponse<Extract<CollectionOperation, { type: "ADD_ALL_TABS_TO_COLLECTION" }>>
         | undefined
     >;
     removeFromCollection: (
@@ -73,8 +63,7 @@ type CollectionOperationsContextType = {
     deleteAllGDriveSyncedCollectionData: () => CollectionOperationResponse<"DELETE_ALL_GDRIVE_SYCNED_COLLECTION_DATA">;
 };
 
-const CollectionOperationsContext =
-    createContext<CollectionOperationsContextType | null>(null);
+const CollectionOperationsContext = createContext<CollectionOperationsContextType | null>(null);
 
 export const useCollectionOperations = () => {
     const context = useContext(CollectionOperationsContext);
@@ -93,9 +82,7 @@ export const CollectionOperationsProvider: React.FC<{
                 Extract<CollectionOperation, { type: Type }>,
                 "response"
             >
-        ): Promise<
-            MessageResponse<Extract<CollectionOperation, { type: Type }>>
-        > => {
+        ): Promise<MessageResponse<Extract<CollectionOperation, { type: Type }>>> => {
             try {
                 return browser.runtime.sendMessage(operation);
             } catch (error) {
@@ -238,8 +225,7 @@ export const CollectionOperationsProvider: React.FC<{
             redoEnabled = false
         ) => {
             toast.dismiss();
-            const oldState =
-                redoEnabled && (await sendMessage({ type: "EXPORT_DATA" }));
+            const oldState = redoEnabled && (await sendMessage({ type: "EXPORT_DATA" }));
             const response = await sendMessage({
                 type: "ADD_TO_COLLECTION",
                 payload: { collectionId, items },

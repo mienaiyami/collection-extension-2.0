@@ -1,10 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { Loader2, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -14,17 +9,12 @@ import { toast } from "sonner";
 const CHECK_USER_INTERVAL = 1000 * 60;
 
 const GoogleDriveSync = () => {
-    const [loggedInUser, setLoggedInUser] =
-        useState<GoogleDriveUserData | null>(null);
+    const [loggedInUser, setLoggedInUser] = useState<GoogleDriveUserData | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const { t } = useTranslation();
-    const {
-        getGoogleDriveUserInfo,
-        googleDriveSyncNow,
-        logoutGoogleDrive,
-        loginGoogleDrive,
-    } = useCollectionOperations();
+    const { getGoogleDriveUserInfo, googleDriveSyncNow, logoutGoogleDrive, loginGoogleDrive } =
+        useCollectionOperations();
     const checkUser = useCallback(async () => {
         const res = await getGoogleDriveUserInfo();
         if (res.success) {
@@ -47,9 +37,7 @@ const GoogleDriveSync = () => {
         <div className="flex flex-col gap-2 rounded-md border p-2">
             <TooltipProvider>
                 <div className="flex flex-col items-start gap-2">
-                    <span className="font-semibold">
-                        {t("settings.googleDriveSyncBeta")}
-                    </span>
+                    <span className="font-semibold">{t("settings.googleDriveSyncBeta")}</span>
                     {loggedInUser ? (
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -94,12 +82,9 @@ const GoogleDriveSync = () => {
                                     disabled={loading}
                                     onClick={async () => {
                                         setLoading(true);
-                                        const response =
-                                            await googleDriveSyncNow();
+                                        const response = await googleDriveSyncNow();
                                         if (response.success) {
-                                            toast.success(
-                                                t("messages.syncedSuccessfully")
-                                            );
+                                            toast.success(t("messages.syncedSuccessfully"));
                                         }
                                         setLoading(false);
                                     }}
@@ -126,13 +111,10 @@ const GoogleDriveSync = () => {
                                     disabled={loading}
                                     onClick={async () => {
                                         setLoading(true);
-                                        const response =
-                                            await loginGoogleDrive();
+                                        const response = await loginGoogleDrive();
                                         if (response.success) {
-                                            const res =
-                                                await getGoogleDriveUserInfo();
-                                            if (res.success)
-                                                setLoggedInUser(res.data);
+                                            const res = await getGoogleDriveUserInfo();
+                                            if (res.success) setLoggedInUser(res.data);
                                         }
                                         setLoading(false);
                                     }}
