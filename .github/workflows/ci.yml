@@ -43,24 +43,19 @@ jobs:
                       echo "should-run=true" >> $GITHUB_OUTPUT
                   fi
 
-    # Lint and type checking with matrix strategy for multiple Node versions
     lint-and-type-check:
-        name: Lint and Type Check (Node ${{ matrix.node-version }})
+        name: Lint and Type Check
         runs-on: ubuntu-latest
         needs: pre-check
         if: needs.pre-check.outputs.should-run == 'true'
-        strategy:
-            matrix:
-                node-version: [22]
-            fail-fast: false
         steps:
             - name: Checkout
               uses: actions/checkout@v4
 
-            - name: Setup Node.js ${{ matrix.node-version }}
+            - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: ${{ matrix.node-version }}
+                  node-version: ${{ env.NODE_VERSION }}
                   registry-url: "https://registry.npmjs.org"
 
             - name: Setup pnpm
@@ -78,9 +73,9 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: ${{ env.STORE_PATH }}
-                  key: ${{ runner.os }}-pnpm-store-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+                  key: ${{ runner.os }}-pnpm-store-${{ env.NODE_VERSION }}-${{ hashFiles('**/pnpm-lock.yaml') }}
                   restore-keys: |
-                      ${{ runner.os }}-pnpm-store-${{ matrix.node-version }}-
+                      ${{ runner.os }}-pnpm-store-${{ env.NODE_VERSION }}-
                       ${{ runner.os }}-pnpm-store-
 
             - name: Install dependencies
@@ -158,7 +153,7 @@ jobs:
               with:
                   fail-on-severity: moderate
                   allow-licenses: MIT, ISC, Apache-2.0, BSD-2-Clause, BSD-3-Clause, 0BSD
-                  comment-summary-in-pr: always
+                  comment-summary-in-pr: on-failure 
 
     security-audit:
         name: Security Audit
