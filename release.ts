@@ -1,9 +1,9 @@
 import { exec, execFile } from "node:child_process";
 import fs from "node:fs";
+import path from "node:path";
 import readline from "node:readline";
 import dotenv from "dotenv";
 import pkgJSON from "./package.json";
-import path from "node:path";
 
 dotenv.config();
 
