@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
@@ -7,17 +8,16 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAppContext } from "@/features/layout/App";
+import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Pencil } from "lucide-react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 const AddUrlManualDialog = () => {
     const [selectedTab, setSelectedTab] = useState("direct");
@@ -58,25 +58,25 @@ const AddUrlManualDialog = () => {
                     <TabsContent tabIndex={-1} value="direct" className="flex flex-col gap-2">
                         <DialogDescription>
                             {t("dialogs.addUrlsDescription")}
-                            <code className="bg-foreground/10 rounded-sm px-2 py-0.5">
+                            <code className="rounded-sm bg-foreground/10 px-2 py-0.5">
                                 {" "}
                                 || title || imageURL
                             </code>
                             {t("collections.titleNotContain")}
                         </DialogDescription>
                         <textarea
-                            className="w-full min-w-[4rem] h-32 p-2 rounded-md bg-foreground/10 max-h-[40vh] whitespace-nowrap font-mono"
+                            className="h-32 max-h-[40vh] w-full min-w-[4rem] whitespace-nowrap rounded-md bg-foreground/10 p-2 font-mono"
                             placeholder={t("dialogs.addUrlsPlaceholder")}
                             ref={(node) => {
                                 inputRef.current = node;
                             }}
-                        ></textarea>
+                        />
                     </TabsContent>
                     <TabsContent tabIndex={-1} value="file" className="flex flex-col gap-2">
                         <DialogDescription>
                             {t("collections.uploadFile")}
                             <code> | title | imageURL</code>. {t("collections.makeNewTitleExample")}{" "}
-                            <code className="bg-foreground/10 px-2 py-0.5 rounded-lg">
+                            <code className="rounded-lg bg-foreground/10 px-2 py-0.5">
                                 {t("dialogs.addUrlsPlaceholder")}
                             </code>
                             . {t("collections.titleNotContain")}

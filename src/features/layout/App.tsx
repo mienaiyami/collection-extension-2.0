@@ -1,13 +1,14 @@
-import React, { createContext, useContext, useLayoutEffect, useState } from "react";
-import { ThemeProvider } from "@/hooks/theme-provider";
-import { AppSettingProvider } from "@/hooks/appSetting-provider";
+import { Toaster } from "@/components/ui/sonner";
+import CollectionItemView from "@/features/collections/view/CollectionItemView";
 import CollectionView from "@/features/collections/view/CollectionView";
 import TopBar from "@/features/layout/TopBar";
-import CollectionItemView from "@/features/collections/view/CollectionItemView";
-import Browser from "webextension-polyfill";
-import { Toaster } from "@/components/ui/sonner";
-import { toast } from "sonner";
+import { AppSettingProvider } from "@/hooks/appSetting-provider";
+import { ThemeProvider } from "@/hooks/theme-provider";
 import { CollectionOperationsProvider } from "@/hooks/useCollectionOperations";
+import type React from "react";
+import { createContext, useContext, useLayoutEffect, useState } from "react";
+import { toast } from "sonner";
+import type Browser from "webextension-polyfill";
 
 type AppContextType = {
     collectionData: Collection[];
@@ -37,55 +38,54 @@ const App = () => {
         if (import.meta.env.DEV) {
             throw new Error("Removing DEV mode. 2025/01/23");
             // setCollectionData(testData);
-        } else {
-            window.browser.storage.local
-                .get("collectionData")
-                .then(({ collectionData: _collectionData }) => {
-                    if (_collectionData === undefined) {
-                        setCollectionData([]);
-                    } else setCollectionData(_collectionData as Collection[]);
-                });
+        }
+        window.browser.storage.local
+            .get("collectionData")
+            .then(({ collectionData: _collectionData }) => {
+                if (_collectionData === undefined) {
+                    setCollectionData([]);
+                } else setCollectionData(_collectionData as Collection[]);
+            });
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const replacer = (key: string, value: any) => {
-                if (key === "") return value;
-                if (Number.isInteger(Number(key))) return value;
-                if (key === "id") return value;
-                if (key === "updatedAt") return value;
-                if (key === "orderUpdatedAt") return value;
-                if (key === "items") {
-                    let str = "";
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    value.forEach((e: any) => {
-                        str += e.id;
-                    });
-                    return str;
-                }
-            };
-            const onStorageChangeListener = (changes: {
-                [key: string]: Browser.Storage.StorageChange;
-            }) => {
-                const c = changes.collectionData;
-                if (c) toast.dismiss();
-                /*
+        // biome-ignore lint/suspicious/noExplicitAny: Chrome API types
+        const replacer = (key: string, value: any) => {
+            if (key === "") return value;
+            if (Number.isInteger(Number(key))) return value;
+            if (key === "id") return value;
+            if (key === "updatedAt") return value;
+            if (key === "orderUpdatedAt") return value;
+            if (key === "items") {
+                let str = "";
+                // biome-ignore lint/suspicious/noExplicitAny: Chrome API types
+                value.forEach((e: any) => {
+                    str += e.id;
+                });
+                return str;
+            }
+        };
+        const onStorageChangeListener = (changes: {
+            [key: string]: Browser.Storage.StorageChange;
+        }) => {
+            const c = changes.collectionData;
+            if (c) toast.dismiss();
+            /*
                 benchmark result on 38MB data for stringify
                 1. without replacer: ~300ms
                 2. replacer as  ["id", "title", "items"] : ~1.4ms
                 3. replacer fn : 0.8ms
                 */
-                if (
-                    c &&
-                    //! todo check for more optimization
-                    // using ["id", "title", "items"]
-                    JSON.stringify(c.newValue, replacer) !== JSON.stringify(c.oldValue, replacer)
-                )
-                    setCollectionData(c.newValue as Collection[]);
-            };
-            window.browser.storage.local.onChanged.addListener(onStorageChangeListener);
-            return () => {
-                window.browser.storage.local.onChanged.removeListener(onStorageChangeListener);
-            };
-        }
+            if (
+                c &&
+                //! todo check for more optimization
+                // using ["id", "title", "items"]
+                JSON.stringify(c.newValue, replacer) !== JSON.stringify(c.oldValue, replacer)
+            )
+                setCollectionData(c.newValue as Collection[]);
+        };
+        window.browser.storage.local.onChanged.addListener(onStorageChangeListener);
+        return () => {
+            window.browser.storage.local.onChanged.removeListener(onStorageChangeListener);
+        };
     }, []);
 
     useLayoutEffect(() => {
@@ -142,7 +142,7 @@ const App = () => {
                     }}
                 >
                     <CollectionOperationsProvider>
-                        <div className="w-full h-full border grid grid-rows-[65px_auto]">
+                        <div className="grid h-full w-full grid-rows-[65px_auto] border">
                             <TopBar />
                             {inCollectionView ? <CollectionItemView /> : <CollectionView />}
                         </div>

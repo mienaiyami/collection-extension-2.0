@@ -12,8 +12,8 @@ const FontSettings = () => {
     const operations = useCollectionOperations();
     const { t } = useTranslation();
     return (
-        <div className="flex flex-col gap-2 p-2 border rounded-md">
-            <div className="flex flex-col gap-2 items-start w-full">
+        <div className="flex flex-col gap-2 rounded-md border p-2">
+            <div className="flex w-full flex-col items-start gap-2">
                 <span className="font-semibold">{t("settings.fontOptions")}</span>
                 <div className="flex flex-col gap-2 px-4 py-2">
                     <TooltipProvider delayDuration={100} disableHoverableContent>

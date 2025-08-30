@@ -1,8 +1,3 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { useAppContext } from "@/features/layout/App";
-import CollectionItem from "../item/CollectionItem";
-import { Copy, CopyPlus, FilePlus, Trash, X } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -14,14 +9,19 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAppContext } from "@/features/layout/App";
+import { useAppSetting } from "@/hooks/appSetting-provider";
+import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { Reorder } from "framer-motion";
+import { Copy, CopyPlus, FilePlus, Trash, X } from "lucide-react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import AddUrlManualDialog from "../AddUrlManualDialog";
-import { useAppSetting } from "@/hooks/appSetting-provider";
-import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@/components/ui/tooltip";
-import { Separator } from "@/components/ui/separator";
-import { useCollectionOperations } from "@/hooks/useCollectionOperations";
-import { useTranslation } from "react-i18next";
+import CollectionItem from "../item/CollectionItem";
 
 const CollectionItemView = () => {
     const { collectionData, inCollectionView, openCollection } = useAppContext();
@@ -160,9 +160,9 @@ const CollectionItemView = () => {
 
     return currentCollection ? (
         <AlertDialog>
-            <div className="min-h-full grid grid-rows-[3rem_auto]">
+            <div className="grid min-h-full grid-rows-[3rem_auto]">
                 {selected.length === 0 && (
-                    <div className="p-1 grid grid-cols-[1fr_1px_1fr_1px_0.4fr] h-full items-center">
+                    <div className="grid h-full grid-cols-[1fr_1px_1fr_1px_0.4fr] items-center p-1">
                         <TooltipProvider
                             disableHoverableContent
                             delayDuration={200}
@@ -209,12 +209,12 @@ const CollectionItemView = () => {
                     </div>
                 )}
                 {selected.length > 0 && (
-                    <div className="p-2 flex flex-row w-full h-full items-center">
+                    <div className="flex h-full w-full flex-row items-center p-2">
                         <span className="p-1">
                             {selected.length} {t("collections.selected")}
                         </span>
                         <Button
-                            className="p-1 ml-auto"
+                            className="ml-auto p-1"
                             variant={"ghost"}
                             ref={selected_open}
                             onClick={() => {
@@ -294,7 +294,9 @@ const CollectionItemView = () => {
                                         )
                                     );
                                     toast.success(
-                                        t("messages.copiedItems", { count: items.length })
+                                        t("messages.copiedItems", {
+                                            count: items.length,
+                                        })
                                     );
                                 }
                             }}
@@ -326,7 +328,7 @@ const CollectionItemView = () => {
                         onReorder={(e) => {
                             setItemsOrder(e);
                         }}
-                        className="p-3 flex flex-col gap-2"
+                        className="flex flex-col gap-2 p-3"
                     >
                         {itemsOrder.length <= 0 ? (
                             <p>{t("collections.noItems")}</p>
@@ -364,7 +366,9 @@ const CollectionItemView = () => {
                 <AlertDialogHeader>
                     <AlertDialogTitle>{t("collections.deleteUrls")}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        {t("collections.deleteUrlsDescription", { count: selected.length })}
+                        {t("collections.deleteUrlsDescription", {
+                            count: selected.length,
+                        })}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

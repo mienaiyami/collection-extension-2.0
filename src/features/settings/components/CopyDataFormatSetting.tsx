@@ -17,16 +17,16 @@ const CopyDataFormatSetting = () => {
         setCopyDataFormat({ value: appSetting.copyDataFormat, timeout: null });
     }, [appSetting.copyDataFormat]);
     return (
-        <div className="flex flex-col gap-2 p-2 border rounded-md">
-            <div className="flex flex-col gap-2 items-start w-full">
+        <div className="flex flex-col gap-2 rounded-md border p-2">
+            <div className="flex w-full flex-col items-start gap-2">
                 <span className="font-semibold">{t("settings.copyDataFormat")}</span>
                 <div className="flex flex-col gap-2 px-2">
-                    <pre className="p-2 text-xs rounded-sm font-mono whitespace-break-spaces">
+                    <pre className="whitespace-break-spaces rounded-sm p-2 font-mono text-xs">
                         {t("settings.availableVariables")}
                         {`\n${Object.keys(COPY_DATA_FORMAT).join(", ")}`}
                     </pre>
                     <textarea
-                        className="p-2 text-sm rounded-md min-h-[2em] max-h-[5em] bg-foreground/5"
+                        className="max-h-[5em] min-h-[2em] rounded-md bg-foreground/5 p-2 text-sm"
                         spellCheck={false}
                         value={copyDataFormat.value}
                         onChange={(e) => {
@@ -42,7 +42,7 @@ const CopyDataFormatSetting = () => {
                                 }, 2000),
                             });
                         }}
-                    ></textarea>
+                    />
                 </div>
             </div>
         </div>

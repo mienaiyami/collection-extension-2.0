@@ -1,10 +1,10 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/features/layout/App";
-import Collection from "../item/Collection";
-import { Reorder } from "framer-motion";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { Reorder } from "framer-motion";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import Collection from "../item/Collection";
 // import { useVirtualizer } from "@tanstack/react-virtual";
 
 const CollectionView = () => {
@@ -44,8 +44,8 @@ const CollectionView = () => {
     }, []);
 
     return (
-        <div className="min-h-full grid grid-rows-[3rem_auto]">
-            <div className="p-1 grid grid-cols-2 h-full items-center">
+        <div className="grid min-h-full grid-rows-[3rem_auto]">
+            <div className="grid h-full grid-cols-2 items-center p-1">
                 <Button
                     variant={"ghost"}
                     onClick={async () => {
@@ -71,12 +71,12 @@ const CollectionView = () => {
                 </Button>
             </div>
             {collectionData.length === 0 ? (
-                <div className="p-2 h-full overflow-hidden overflow-y-auto">
+                <div className="h-full overflow-hidden overflow-y-auto p-2">
                     <p>{t("collections.noCollections")}</p>
                 </div>
             ) : (
                 <div
-                    className="p-2 h-full overflow-hidden overflow-y-auto"
+                    className="h-full overflow-hidden overflow-y-auto p-2"
                     ref={ref}
                     onScroll={(e) => {
                         setScrollPos(e.currentTarget.scrollTop);
@@ -89,7 +89,7 @@ const CollectionView = () => {
                         onReorder={(e) => {
                             setCollectionOrder(e);
                         }}
-                        className="p-1 flex flex-col gap-2"
+                        className="flex flex-col gap-2 p-1"
                     >
                         {collectionOrder.map((e) => (
                             <Collection

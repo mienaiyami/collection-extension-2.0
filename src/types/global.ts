@@ -1,12 +1,12 @@
-import browser from "webextension-polyfill";
-import {
+import type browser from "webextension-polyfill";
+import type { z } from "zod";
+import type {
     appSettingSchema,
     collectionItemSchema,
     collectionSchema,
     deletedCollectionItemSchema,
     syncDataSchema,
 } from "../utils";
-import { z } from "zod";
 
 export type Equals<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2
     ? true
@@ -45,4 +45,5 @@ declare global {
     type AppSettingType = z.infer<typeof appSettingSchema>;
 }
 
+// biome-ignore lint/complexity/noUselessEmptyExport: <explanation>
 export {};

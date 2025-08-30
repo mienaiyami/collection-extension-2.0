@@ -27,14 +27,14 @@ const BackupSettings = () => {
         }
     }, [t]);
     return (
-        <div className="flex flex-col gap-2 p-2 border rounded-md">
+        <div className="flex flex-col gap-2 rounded-md border p-2">
             <AlertDialog>
                 <div className="flex flex-row items-center gap-2">
                     <span className="font-semibold">{t("settings.backup")}</span>
-                    <div className="flex flex-row gap-2 ml-auto">
+                    <div className="ml-auto flex flex-row gap-2">
                         <Button
                             variant={"outline"}
-                            className="flex flex-row gap-2 items-center"
+                            className="flex flex-row items-center gap-2"
                             onClick={async () => {
                                 const res = await operations.createLocalBackup();
                                 if (res.success) {
@@ -47,7 +47,7 @@ const BackupSettings = () => {
                         <AlertDialogTrigger asChild>
                             <Button
                                 variant={"outline"}
-                                className="flex flex-row gap-2 items-center"
+                                className="flex flex-row items-center gap-2"
                             >
                                 {t("settings.restore")}
                             </Button>
@@ -61,7 +61,7 @@ const BackupSettings = () => {
                         href="https://github.com/mienaiyami/collection-extension-2.0/wiki#how-to-properly-restore-local-backup-when-logged-in-with-google-drive-for-sync"
                         target="_blank"
                         rel="noreferrer"
-                        className="underline hover:opacity-80 font-bold"
+                        className="font-bold underline hover:opacity-80"
                     >
                         {t("settings.backupReadMore")}
                     </a>

@@ -140,7 +140,7 @@ export type MessageResponse<
         type: string;
         payload?: unknown;
         response?: unknown;
-    }
+    },
 > =
     | ({
           success: true;

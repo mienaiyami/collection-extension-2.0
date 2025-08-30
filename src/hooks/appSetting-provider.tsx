@@ -1,6 +1,6 @@
 import { initAppSetting } from "@/utils";
 import { createContext, useContext, useLayoutEffect, useState } from "react";
-import Browser from "webextension-polyfill";
+import type Browser from "webextension-polyfill";
 
 type AppSettingProviderProps = {
     children: React.ReactNode;

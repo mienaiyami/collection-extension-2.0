@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
-import { useCollectionOperations } from "@/hooks/useCollectionOperations";
-import { toast } from "sonner";
-import { Loader2, RotateCcw } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { Loader2, RotateCcw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 const CHECK_USER_INTERVAL = 1000 * 60;
 
@@ -34,7 +34,7 @@ const GoogleDriveSync = () => {
     }, [loggedInUser, error]);
 
     return (
-        <div className="flex flex-col gap-2 p-2 border rounded-md">
+        <div className="flex flex-col gap-2 rounded-md border p-2">
             <TooltipProvider>
                 <div className="flex flex-col items-start gap-2">
                     <span className="font-semibold">{t("settings.googleDriveSyncBeta")}</span>
@@ -49,7 +49,7 @@ const GoogleDriveSync = () => {
                                     <img
                                         src={loggedInUser.imageUrl}
                                         alt="User"
-                                        className="w-8 h-8 rounded-full"
+                                        className="h-8 w-8 rounded-full"
                                         draggable={false}
                                     />
                                     <span>{loggedInUser.displayName}</span>
@@ -57,7 +57,7 @@ const GoogleDriveSync = () => {
                             </TooltipTrigger>
                         </Tooltip>
                     ) : error ? (
-                        <div className="flex flex-row gap-1 items-center">
+                        <div className="flex flex-row items-center gap-1">
                             <Button
                                 size={"icon"}
                                 variant={"ghost"}
@@ -67,7 +67,7 @@ const GoogleDriveSync = () => {
                             >
                                 <RotateCcw />
                             </Button>
-                            <span className="text-destructive border border-destructive rounded-sm p-2">
+                            <span className="rounded-sm border border-destructive bg-destructive p-2 text-destructive-foreground">
                                 {error}
                             </span>
                         </div>
@@ -128,7 +128,7 @@ const GoogleDriveSync = () => {
                             )
                         )}
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                         <span className="font-semibold">Note:</span>{" "}
                         {t("settings.googleDriveSyncNote")} <br />
                         {t("settings.googleDriveSyncDataUsage")}

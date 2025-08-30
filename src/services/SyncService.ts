@@ -1,6 +1,6 @@
 import { getReaderProgressFromResponse_JSON, syncDataSchema, wait } from "@/utils";
-import { GoogleAuthService } from "./GoogleAuthService";
 import browser from "webextension-polyfill";
+import { GoogleAuthService } from "./GoogleAuthService";
 
 export class SyncService {
     private static readonly MAX_RETRIES = 3;
@@ -8,8 +8,8 @@ export class SyncService {
 
     static readonly SYNC_DEBOUNCE_TIME = 1000 * 60 * 1;
     static readonly SYNC_RECENCY_THRESHOLD = 1000 * 60;
-    static readonly SYNC_DATA_FILE_NAME = `collections-sync-data.json`;
-    static readonly SYNC_DATA_FOLDER_NAME = `appDataFolder`;
+    static readonly SYNC_DATA_FILE_NAME = "collections-sync-data.json";
+    static readonly SYNC_DATA_FOLDER_NAME = "appDataFolder";
     static readonly PERIODIC_SYNC_INTERVAL = 1000 * 60 * 20;
 
     private static syncAbortController: AbortController | null = null;
@@ -149,7 +149,7 @@ export class SyncService {
                         throw error;
                     }
                 }
-                const delay = this.INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
+                const delay = this.INITIAL_RETRY_DELAY * 2 ** retryCount;
                 console.error(`Error uploading syncData: ${error}. Retrying in ${delay}ms`);
                 await wait(delay);
             }
@@ -215,7 +215,7 @@ export class SyncService {
                 if (retryCount >= this.MAX_RETRIES || this.syncAbortController?.signal.aborted) {
                     throw error;
                 }
-                const delay = this.INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
+                const delay = this.INITIAL_RETRY_DELAY * 2 ** retryCount;
                 console.error(`Error downloading syncData: ${error}. Retrying in ${delay}ms`);
                 await wait(delay);
             }
@@ -258,6 +258,7 @@ export class SyncService {
             }
         });
         return Array.from(itemMap.values()).sort((a, b) => {
+            // biome-ignore lint/style/noNonNullAssertion: <explanation>
             return positionMap.get(a.id)! - positionMap.get(b.id)! || a.createdAt - b.createdAt;
         });
     }
@@ -328,6 +329,7 @@ export class SyncService {
         });
         return {
             collectionData: Array.from(collectionMap.values()).sort((a, b) => {
+                // biome-ignore lint/style/noNonNullAssertion: <explanation>
                 return positionMap.get(a.id)! - positionMap.get(b.id)! || a.createdAt - b.createdAt;
             }),
             deletedCollectionData: Array.from(deletedMap.values()),

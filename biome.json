@@ -1,0 +1,84 @@
+{
+    "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+    "vcs": {
+        "enabled": true,
+        "clientKind": "git",
+        "useIgnoreFile": true
+    },
+    "files": {
+        "include": ["src/**/*", "*.ts", "*.tsx", "*.js", "*.jsx"],
+        "ignore": ["dist/**", "build/**", "node_modules/**", "*.d.ts"]
+    },
+    "formatter": {
+        "enabled": true,
+        "formatWithErrors": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 100,
+        "ignore": ["dist/**", "build/**"]
+    },
+    "organizeImports": {
+        "enabled": true
+    },
+    "linter": {
+        "enabled": true,
+        "ignore": ["dist/**", "build/**"],
+        "rules": {
+            "recommended": true,
+            "suspicious": {
+                "noExplicitAny": "warn",
+                "noArrayIndexKey": "warn"
+            },
+            "style": {
+                "noUnusedTemplateLiteral": "warn",
+                "useConst": "error",
+                "useTemplate": "warn"
+            },
+            "correctness": {
+                "noUnusedVariables": {
+                    "level": "warn",
+                    "fix": "none"
+                },
+                "useExhaustiveDependencies": "warn"
+            },
+            "complexity": {
+                "noExcessiveCognitiveComplexity": "warn",
+                "noForEach": "off",
+                "noStaticOnlyClass": "off",
+                "noThisInStatic": "off"
+            },
+            "nursery": {
+                "useSortedClasses": "error"
+            },
+            "a11y": {
+                "useValidAnchor": "off",
+                "useAnchorContent": "off",
+                "noNoninteractiveTabindex": "off"
+            }
+        }
+    },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "double",
+            "trailingCommas": "es5",
+            "semicolons": "always",
+            "quoteProperties": "asNeeded",
+            "bracketSpacing": true,
+            "bracketSameLine": false,
+            "arrowParentheses": "always"
+        },
+        "globals": ["chrome", "browser"]
+    },
+    "json": {
+        "formatter": {
+            "enabled": true,
+            "indentWidth": 4
+        }
+    },
+    "css": {
+        "formatter": {
+            "enabled": true,
+            "indentWidth": 2
+        }
+    }
+}

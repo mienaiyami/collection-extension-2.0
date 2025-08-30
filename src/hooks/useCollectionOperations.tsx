@@ -1,12 +1,12 @@
 import { createContext, useCallback, useContext } from "react";
-import browser from "webextension-polyfill";
-import {
-    CollectionOperation,
-    MessageResponse,
-    CollectionOperationResponse,
-} from "../types/messages";
-import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import browser from "webextension-polyfill";
+import type {
+    CollectionOperation,
+    CollectionOperationResponse,
+    MessageResponse,
+} from "../types/messages";
 
 type CollectionOperationsContextType = {
     removeCollections: (ids: UUID | UUID[]) => CollectionOperationResponse<"REMOVE_COLLECTIONS">;
@@ -71,9 +71,9 @@ export const useCollectionOperations = () => {
     return context;
 };
 
-export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode }> = ({
-    children,
-}) => {
+export const CollectionOperationsProvider: React.FC<{
+    children: React.ReactNode;
+}> = ({ children }) => {
     const { t } = useTranslation();
 
     const sendMessage = useCallback(
@@ -144,10 +144,7 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             }
             let displayText = response.data.removedCollections.join(", ");
             if (displayText.length > 30) {
-                displayText =
-                    `{${response.data.removedCollections.length}: }` +
-                    displayText.slice(0, 50) +
-                    "...";
+                displayText = `{${response.data.removedCollections.length}: }${displayText.slice(0, 50)}...`;
             }
             toast.success(t("messages.removedCollections"), {
                 description: t("messages.removedCollectionsDesc", {
@@ -180,6 +177,7 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
                 toast.error(t("messages.noActiveTab"));
                 return;
             }
+            // biome-ignore lint/style/noNonNullAssertion: <explanation>
             const tabId = tabs[0].id!;
             const response = await sendMessage({
                 type: "ADD_TAB_TO_COLLECTION",
@@ -198,11 +196,11 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
         async (collectionId: UUID) => {
             toast.dismiss();
             const activeWindow = await browser.windows.getCurrent();
-            if (!activeWindow) {
+            if (!activeWindow?.id) {
                 toast.error(t("messages.failedToGetActiveWindow"));
                 return;
             }
-            const windowId = activeWindow.id!;
+            const windowId = activeWindow.id;
             const response = await sendMessage({
                 type: "ADD_ALL_TABS_TO_COLLECTION",
                 payload: { collectionId, windowId },
@@ -281,7 +279,9 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
 
             const itemCount = Array.isArray(itemId) ? itemId.length : 1;
             toast.success(t("messages.removedFromCollection"), {
-                description: t("messages.removedFromCollectionCount", { count: itemCount }),
+                description: t("messages.removedFromCollectionCount", {
+                    count: itemCount,
+                }),
                 duration: itemCount > 10 ? 10000 : 5000,
                 action: {
                     label: t("common.undo"),
@@ -404,7 +404,7 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
             type: "application/json",
         });
         a.href = URL.createObjectURL(file);
-        a.download = downloadName + ".json";
+        a.download = `${downloadName}.json`;
         a.click();
         URL.revokeObjectURL(a.href);
         return response;
@@ -464,7 +464,9 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
                 });
             }
             toast.success(t("messages.importedSuccessfully"), {
-                description: t("messages.importedCount", { count: data.length }),
+                description: t("messages.importedCount", {
+                    count: data.length,
+                }),
                 duration: 20000,
                 action: {
                     label: t("common.undo"),
@@ -547,7 +549,9 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
     // google drive stuff
 
     const getGoogleDriveLoginStatus = useCallback(async () => {
-        const response = await sendMessage({ type: "GOOGLE_DRIVE_LOGIN_STATUS" });
+        const response = await sendMessage({
+            type: "GOOGLE_DRIVE_LOGIN_STATUS",
+        });
         if (!response.success) {
             toast.error(t("messages.failedToGetLoginStatus"), {
                 description: response.error,
@@ -601,7 +605,9 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
     }, [sendMessage, t]);
 
     const getGoogleDriveSyncState = useCallback(async () => {
-        const response = await sendMessage({ type: "GET_GOOGLE_DRIVE_SYNC_STATE" });
+        const response = await sendMessage({
+            type: "GET_GOOGLE_DRIVE_SYNC_STATE",
+        });
         if (!response.success) {
             toast.error(t("messages.failedToGetSyncState"), {
                 description: response.error,
@@ -611,7 +617,9 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
     }, [sendMessage, t]);
 
     const deleteAllLocalCollectionsData = useCallback(async () => {
-        const response = await sendMessage({ type: "DELETE_ALL_LOCAL_COLLECTIONS_DATA" });
+        const response = await sendMessage({
+            type: "DELETE_ALL_LOCAL_COLLECTIONS_DATA",
+        });
         if (!response.success) {
             toast.error(t("messages.failedToDeleteAllLocal"), {
                 description: response.error,
@@ -622,7 +630,9 @@ export const CollectionOperationsProvider: React.FC<{ children: React.ReactNode 
         return response;
     }, [sendMessage, t]);
     const deleteAllGDriveSyncedCollectionData = useCallback(async () => {
-        const response = await sendMessage({ type: "DELETE_ALL_GDRIVE_SYCNED_COLLECTION_DATA" });
+        const response = await sendMessage({
+            type: "DELETE_ALL_GDRIVE_SYCNED_COLLECTION_DATA",
+        });
         if (!response.success) {
             toast.error(t("messages.failedToDeleteAllGDrive"), {
                 description: response.error,

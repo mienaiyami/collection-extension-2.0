@@ -1,14 +1,3 @@
-import { useRef } from "react";
-import {
-    ContextMenu,
-    ContextMenuContent,
-    ContextMenuItem,
-    ContextMenuSeparator,
-    ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useAppContext } from "@/features/layout/App";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -20,9 +9,20 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Reorder, motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuSeparator,
+    ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { useAppContext } from "@/features/layout/App";
 import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { Reorder, motion } from "framer-motion";
+import { Plus } from "lucide-react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 type PropType = {
@@ -31,7 +31,13 @@ type PropType = {
     itemLen: number;
 };
 
-const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void }) => {
+const Collection = ({
+    item,
+    onDragEnd,
+}: {
+    item: PropType;
+    onDragEnd: () => void;
+}) => {
     const { collectionData, openCollection } = useAppContext();
     const operations = useCollectionOperations();
     const { t } = useTranslation();
@@ -57,7 +63,9 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                 <ContextMenu>
                     <ContextMenuTrigger asChild>
                         <motion.div
-                            className={`collection handle w-full h-16 rounded-md grid grid-cols-[15%_70%_15%] hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20 border`}
+                            className={
+                                " handle grid h-16 w-full grid-cols-[15%_70%_15%] rounded-md border hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20"
+                            }
                             data-collection-id={item.id}
                             tabIndex={0}
                             onClick={() => {
@@ -72,7 +80,7 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                         >
                             <Button
                                 variant={"ghost"}
-                                className="w-full h-full"
+                                className="h-full w-full"
                                 title={t("collections.addCurrentTab")}
                                 onMouseUp={(e) => {
                                     e.stopPropagation();
@@ -87,11 +95,11 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                             >
                                 <Plus />
                             </Button>
-                            <div className="p-2 flex flex-col item-center justify-center">
-                                <span className="text-lg truncate" title={item.title}>
+                            <div className="flex flex-col items-center justify-center p-2">
+                                <span className="truncate text-lg" title={item.title}>
                                     {item.title}
                                 </span>
-                                <span className="text-xs text-muted-foreground">
+                                <span className="text-muted-foreground text-xs">
                                     {item.itemLen}{" "}
                                     {item.itemLen > 1
                                         ? t("collections.items")
@@ -178,7 +186,7 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                         </ContextMenuItem>
                         <ContextMenuItem asChild>
                             <AlertDialogTrigger asChild>
-                                <ContextMenuItem className="focus:text-destructive-foreground focus:bg-destructive">
+                                <ContextMenuItem className="focus:bg-destructive focus:text-destructive-foreground">
                                     {t("collections.deleteCollection")}
                                 </ContextMenuItem>
                             </AlertDialogTrigger>
@@ -191,7 +199,9 @@ const Collection = ({ item, onDragEnd }: { item: PropType; onDragEnd: () => void
                             {t("collections.deleteCollectionTitle")}
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                            {t("collections.deleteCollectionDescription", { title: item.title })}
+                            {t("collections.deleteCollectionDescription", {
+                                title: item.title,
+                            })}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

@@ -1,15 +1,15 @@
-import { useAppContext } from "@/features/layout/App";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { ChevronLeft, Pin, PinOff, X, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAppContext } from "@/features/layout/App";
 import { SyncStatus } from "@/features/layout/SyncStatus";
-import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import Settings from "@/features/settings/Settings";
-import { toast } from "sonner";
+import { useCollectionOperations } from "@/hooks/useCollectionOperations";
+import { ChevronLeft, Pin, PinOff, Settings as SettingsIcon, X } from "lucide-react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 const TopBar = () => {
     const { inCollectionView, openCollection, collectionData } = useAppContext();
@@ -50,11 +50,11 @@ const TopBar = () => {
         return () => {
             clearTimeout(timeout);
         };
-    }, [title, collectionData, inCollectionView, operations, first]);
+    }, [title, collectionData, inCollectionView, operations, first, t]);
 
     return (
         <Dialog>
-            <div className="p-3 flex flex-row gap-2 items-center w-full border-b">
+            <div className="flex w-full flex-row items-center gap-2 border-b p-3">
                 <TooltipProvider delayDuration={100} disableHoverableContent>
                     {inCollectionView ? (
                         <>
@@ -93,12 +93,12 @@ const TopBar = () => {
                                     url: window.location.href,
                                 });
                             }}
-                            className="text-3xl font-bold tracking-tight"
+                            className="font-bold text-3xl tracking-tight"
                         >
                             {t("app.title")}
                         </Button>
                     )}
-                    <div className="ml-auto flex flex-row gap-1 items-center">
+                    <div className="ml-auto flex flex-row items-center gap-1">
                         <SyncStatus />
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -121,9 +121,9 @@ const TopBar = () => {
                                         display: chrome.sidePanel
                                             ? "flex"
                                             : // checking only when firefox
-                                            window.isSidePanel
-                                            ? "none"
-                                            : "flex",
+                                              window.isSidePanel
+                                              ? "none"
+                                              : "flex",
                                     }}
                                     onClick={async () => {
                                         if (window.isSidePanel) {
@@ -142,7 +142,6 @@ const TopBar = () => {
                                             const windowId = (
                                                 await window.browser.windows.getCurrent()
                                             ).id;
-                                            //eslint-disable-next-line
                                             //@ts-ignore
                                             chrome.sidePanel.open({ windowId });
                                             chrome.sidePanel.setPanelBehavior({

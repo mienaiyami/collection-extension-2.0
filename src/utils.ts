@@ -41,7 +41,7 @@ Object.freeze(COPY_DATA_FORMAT);
 
 // need this coz `window` is not defined in the background script
 if (!isBackgroundScript()) {
-    self.isSidePanel = window && window.location.href.includes("side_panel.html");
+    self.isSidePanel = window?.location.href.includes("side_panel.html");
     if (self.isSidePanel) document.body.classList.add("sidePanel");
 
     self.browser = browser;
@@ -52,6 +52,7 @@ if (!isBackgroundScript()) {
         data: CollectionItem | CollectionItem[],
         collectionName: string
     ) => {
+        // biome-ignore lint/style/noParameterAssign: <explanation>
         if (!format) format = "{{url}}";
         const formatData = (d: CollectionItem, i?: number) => {
             let formatted = format;
@@ -82,12 +83,9 @@ export const getReaderProgressFromResponse_JSON = async <T = unknown>(
     const reader = response.body?.getReader();
     if (!reader) throw new Error("No reader available");
     let receivedLength = 0;
-    const totalLength = response.headers.get("content-length")
-        ? parseInt(response.headers.get("content-length")!)
-        : 0;
+    const totalLength = Number.parseInt(response.headers.get("content-length") ?? "0");
     const chunks: Uint8Array[] = [];
     console.group("Downloading ", response.url);
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         if (abortSignal?.aborted) throw new Error(abortSignal.reason || "Aborted");
         const { done, value } = await reader.read();
@@ -128,14 +126,14 @@ export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
                 return imageUrl;
             },
         });
-        if (result[0] && result[0].result) return result[0].result as string;
+        if (result[0]?.result) return result[0].result as string;
         if (!browser.tabs.captureTab && !tab.active) return tab.favIconUrl || "";
 
         const capture =
             (await browser.tabs.captureTab?.(tab.id)) || (await browser.tabs.captureVisibleTab());
         const canvas = new OffscreenCanvas(128, 128);
-        const w = tab.width || 128,
-            h = tab.height || 128;
+        const w = tab.width || 128;
+        const h = tab.height || 128;
         const ratio = w / h;
         const ctx = canvas.getContext("2d");
         const originalBlob = await fetch(capture).then((res) => res.blob());
@@ -151,7 +149,10 @@ export const getImgFromTab = async (tab: browser.Tabs.Tab): Promise<string> => {
             canvas.width,
             canvas.height
         );
-        const blob = await canvas.convertToBlob({ type: "image/png", quality: 0.85 });
+        const blob = await canvas.convertToBlob({
+            type: "image/png",
+            quality: 0.85,
+        });
         if (!blob) return tab.favIconUrl || "";
         return new Promise((res) => {
             const reader = new FileReader();
