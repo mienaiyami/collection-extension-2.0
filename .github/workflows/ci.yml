@@ -151,7 +151,7 @@ jobs:
             - name: Dependency Review
               uses: actions/dependency-review-action@v4
               with:
-                  fail-on-severity: moderate
+                  fail-on-severity: critical
                   allow-licenses: MIT, ISC, Apache-2.0, BSD-2-Clause, BSD-3-Clause, 0BSD
                   comment-summary-in-pr: on-failure 
 
@@ -179,4 +179,4 @@ jobs:
               run: pnpm install --frozen-lockfile --prefer-offline
 
             - name: Run security audit
-              run: pnpm audit --audit-level moderate
+              run: pnpm audit --audit-level critical
