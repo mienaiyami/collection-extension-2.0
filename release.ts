@@ -1,8 +1,9 @@
-import { exec } from "node:child_process";
+import { exec, execFile } from "node:child_process";
 import fs from "node:fs";
 import readline from "node:readline";
 import dotenv from "dotenv";
 import pkgJSON from "./package.json";
+import path from "node:path";
 
 dotenv.config();
 
@@ -43,8 +44,17 @@ const tagAndPush = (): Promise<void> =>
 const signFireFoxAddon = (): Promise<void> =>
     new Promise((resolve) => {
         log("Signing Firefox add-on...");
-        const pwshSpawn = exec(
-            `cd ./dist && web-ext sign --channel=listed --api-key=${process.env.AMO_JWT_ISSUER} --api-secret=${process.env.AMO_JWT_SECRET}`
+        const pwshSpawn = execFile(
+            "web-ext",
+            [
+                "sign",
+                "--channel=listed",
+                `--api-key=${process.env.AMO_JWT_ISSUER}`,
+                `--api-secret=${process.env.AMO_JWT_SECRET}`,
+            ],
+            {
+                cwd: path.join(process.cwd(), "dist"),
+            }
         );
 
         pwshSpawn.stdout?.on("data", (data) => {
@@ -85,7 +95,7 @@ const publishChromeExtension = async (): Promise<void> => {
             throw new Error("Access token not found in response");
         }
 
-        const zipFile = fs.readFileSync("./build.zip");
+        const zipFile = fs.readFileSync(path.join(process.cwd(), "build.zip"));
         const uploadResponse = await fetch(
             `https://www.googleapis.com/upload/chromewebstore/v1.1/items/${process.env.CHROME_EXTENSION_ID}`,
             {
