@@ -8,6 +8,17 @@ Organize and manage tabs effortlessly with collections, batch operations, keyboa
 
 This extension simplifies tab management by allowing users to group multiple open tabs into collections, accessible through a side panel. It offers features like batch opening of URLs, keyboard shortcuts for quick actions, and support for incognito mode. Additionally, users can easily export and import collections for backup or sharing purposes.
 
+## Join the Community
+
+If you have questions, ideas, or want to stay updated with development, join our Discord server.
+
+- Get help and support  
+- Share feedback and feature requests  
+- Discuss new ideas and upcoming updates  
+- Connect with other users
+
+**Join the Discord:** <https://discord.gg/9xSDEdgY>
+
 ## Installation
 
 | Store | Link | Notes |

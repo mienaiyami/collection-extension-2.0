@@ -15,7 +15,8 @@
         "indentStyle": "space",
         "indentWidth": 4,
         "lineWidth": 100,
-        "ignore": ["dist/**", "build/**"]
+        "ignore": ["dist/**", "build/**"],
+        "lineEnding": "lf"
     },
     "organizeImports": {
         "enabled": true
