@@ -33,8 +33,10 @@ export const AppSettingProvider = ({ children }: AppSettingProviderProps) => {
             [key: string]: Browser.Storage.StorageChange;
         }) => {
             if (changes.appSetting) {
-                if (JSON.stringify(changes.appSetting.newValue) !== JSON.stringify(appSetting))
-                    setAppSetting(changes.appSetting.newValue as AppSettingType);
+                const newValue = changes.appSetting.newValue as AppSettingType;
+                setAppSetting((prev) =>
+                    JSON.stringify(newValue) !== JSON.stringify(prev) ? newValue : prev
+                );
             }
         };
         window.browser.storage.local.onChanged.addListener(onStorageChangeListener);
