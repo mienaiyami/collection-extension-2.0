@@ -154,7 +154,7 @@ const CollectionItem = (props: PropType) => {
                             }}
                         />
                     </div>
-                    <div className="flex flex-col items-center justify-center p-2">
+                    <div className="flex flex-col justify-center p-2">
                         <span className="truncate text-lg" title={props.title}>
                             {props.title}
                         </span>
