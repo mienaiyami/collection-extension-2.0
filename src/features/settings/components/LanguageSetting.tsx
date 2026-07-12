@@ -17,8 +17,8 @@ type Language = {
 const languages: Language[] = [
     { code: "en", name: "English", nativeName: "English" },
     { code: "es", name: "Spanish", nativeName: "Español" },
+    { code: "fr", name: "French", nativeName: "Français" },
     // Add more languages as they become available
-    // { code: 'fr', name: 'French', nativeName: 'Français' },
     // { code: 'de', name: 'German', nativeName: 'Deutsch' },
     // { code: 'ja', name: 'Japanese', nativeName: '日本語' },
     // { code: 'zh-CN', name: 'Chinese (Simplified)', nativeName: '简体中文' },

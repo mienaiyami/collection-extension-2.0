@@ -133,6 +133,7 @@ Help us make Collections accessible worldwide! 🌍
 |----------|--------|-------------|--------------|
 | English (en) | ✅ Complete | Built-in | Always current |
 | Spanish (es) | 🚧 In Progress | name | 2025-09-XX |
+| French (fr) | ✅ Complete | [swirti](https://github.com/swirti) ([#29](https://github.com/mienaiyami/collection-extension-2.0/issues/29)) | 2026-07-13 |
 
 Want to contribute translations? Check our [Translation Guide](docs/translation-guide.md)!
 
