@@ -1,111 +1,336 @@
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+    applyRangeSelection,
+    pruneSelectionToVisible,
+} from "@/features/collections/selection/range-select";
 import { useAppContext } from "@/features/layout/App";
+import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { Reorder } from "framer-motion";
-import React, { useLayoutEffect, useRef, useState } from "react";
+import { Copy, Trash, X } from "lucide-react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import Collection from "../item/Collection";
-// import { useVirtualizer } from "@tanstack/react-virtual";
+import SearchSortControls from "../search-sort/search-sort-controls";
+import { useCollectionSearchSort } from "../search-sort/use-collection-search-sort";
+import { useOpenManyWarning } from "../use-open-many-warning";
 
 const CollectionView = () => {
     const { collectionData, setScrollPos, scrollPos, setOpenColOnCreate } = useAppContext();
     const operations = useCollectionOperations();
+    const { appSetting } = useAppSetting();
     const { t } = useTranslation();
-    const [collectionOrder, setCollectionOrder] = useState<
-        { id: UUID; title: string; itemLen: number }[]
-    >([]);
-    // will not work with Reorder, need to implement separate mode for reorder and normal(with virtualizer)
-    // const virtualizer = useVirtualizer({
-    //     count: collectionData.length,
-    //     getScrollElement: () => ref.current,
-    //     estimateSize: () => 72,
-    //     overscan: 1,
-    // });
-    useLayoutEffect(() => {
-        setCollectionOrder(
-            collectionData.map((e) => ({
-                id: e.id,
-                title: e.title,
-                itemLen: e.items.length,
-            }))
-        );
-    }, [collectionData]);
+    const {
+        canDrag,
+        collectionOrder,
+        controlsProps,
+        search,
+        searchText,
+        setCollectionOrder,
+        visibleCollections,
+    } = useCollectionSearchSort(collectionData);
+
+    const { requestOpenMany, openManyWarningDialog } = useOpenManyWarning();
+
+    const [selected, setSelected] = useState<UUID[]>([]);
+    const [lastChanged, setLastChanged] = useState<{
+        id: UUID;
+        type: "select" | "deselect";
+    } | null>(null);
+    const [deleteConfirmed, setDeleteConfirmed] = useState(false);
+
+    const selected_deleteRef = useRef<HTMLButtonElement>(null);
+    const selected_open = useRef<HTMLButtonElement>(null);
+    const selected_copy = useRef<HTMLButtonElement>(null);
     const ref = useRef<HTMLDivElement>(null);
+    const initialScrollPos = useRef(scrollPos);
+
+    const selectedCollections = collectionData.filter((collection) =>
+        selected.includes(collection.id)
+    );
+    const selectedItemCount = selectedCollections.reduce(
+        (sum, collection) => sum + collection.items.length,
+        0
+    );
+
+    const changeSelected = (id: UUID, checked: boolean) => {
+        setLastChanged({
+            id,
+            type: checked ? "select" : "deselect",
+        });
+        setSelected((init) => {
+            if (!checked) {
+                return init.filter((itemId) => itemId !== id);
+            }
+            return [...new Set([...init, id])];
+        });
+    };
+
+    const onShiftPlusClick = (onItem: UUID) => {
+        if (!lastChanged) return;
+        const orderedIds = visibleCollections.map((collection) => collection.id);
+        setSelected((init) =>
+            applyRangeSelection(init, orderedIds, lastChanged.id, onItem, lastChanged.type)
+        );
+    };
 
     useLayoutEffect(() => {
         const timeout = setTimeout(() => {
-            ref.current?.scrollTo({
-                top: scrollPos,
-            });
+            ref.current?.scrollTo({ top: initialScrollPos.current });
         }, 0);
-        return () => {
-            clearTimeout(timeout);
-        };
+        return () => clearTimeout(timeout);
     }, []);
 
+    /* Drop selection that fell out of the visible (filtered) list. */
+    useLayoutEffect(() => {
+        const visibleIds = visibleCollections.map((collection) => collection.id);
+        setSelected((prev) => pruneSelectionToVisible(prev, visibleIds));
+    }, [visibleCollections]);
+
+    useLayoutEffect(() => {
+        const keyHandler = (e: KeyboardEvent) => {
+            const isTextInput =
+                document.activeElement?.tagName === "INPUT" ||
+                document.activeElement?.tagName === "TEXTAREA" ||
+                (document.activeElement as HTMLElement)?.isContentEditable;
+            if (isTextInput) return;
+
+            switch (e.code) {
+                case "Delete":
+                    if (selected.length > 0) selected_deleteRef.current?.click();
+                    break;
+                case "KeyT":
+                    if (selected.length > 0) selected_open.current?.click();
+                    break;
+                case "KeyC":
+                    if (selected.length > 0) selected_copy.current?.click();
+                    break;
+                case "Escape":
+                    setSelected([]);
+                    break;
+                case "KeyA":
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        setSelected(visibleCollections.map((collection) => collection.id));
+                    }
+                    break;
+                default:
+                    break;
+            }
+        };
+        window.addEventListener("keydown", keyHandler);
+        return () => window.removeEventListener("keydown", keyHandler);
+    }, [selected.length, visibleCollections]);
+
     return (
-        <div className="grid min-h-full grid-rows-[3rem_auto]">
-            <div className="grid h-full grid-cols-2 items-center p-1">
-                <Button
-                    variant={"ghost"}
-                    onClick={async () => {
-                        const response = await operations.makeNewCollection(
-                            new Date().toLocaleString()
-                        );
-                        if (response.success) {
-                            setOpenColOnCreate(response.data.collection.id);
-                        }
-                    }}
-                >
-                    {t("collections.newEmpty")}
-                </Button>
-                <Button
-                    variant={"ghost"}
-                    onClick={async () => {
-                        operations.makeNewCollection(new Date().toLocaleString(), [], {
-                            activeWindowId: (await window.browser.windows.getCurrent()).id,
-                        });
-                    }}
-                >
-                    {t("collections.newFromOpenedTabs")}
-                </Button>
-            </div>
-            {collectionData.length === 0 ? (
-                <div className="h-full overflow-hidden overflow-y-auto p-2">
-                    <p>{t("collections.noCollections")}</p>
+        <>
+            <AlertDialog
+                onOpenChange={(open) => {
+                    if (!open) setDeleteConfirmed(false);
+                }}
+            >
+                <div className="grid min-h-full grid-rows-[auto_auto_1fr]">
+                    <SearchSortControls {...controlsProps} />
+
+                    {selected.length === 0 ? (
+                        <div className="grid h-12 grid-cols-2 items-center border-border border-b p-1">
+                            <Button
+                                variant={"ghost"}
+                                onClick={async () => {
+                                    const response = await operations.makeNewCollection(
+                                        new Date().toLocaleString()
+                                    );
+                                    if (response.success) {
+                                        setOpenColOnCreate(response.data.collection.id);
+                                    }
+                                }}
+                            >
+                                {t("collections.newEmpty")}
+                            </Button>
+                            <Button
+                                variant={"ghost"}
+                                onClick={async () => {
+                                    operations.makeNewCollection(new Date().toLocaleString(), [], {
+                                        activeWindowId: (await window.browser.windows.getCurrent())
+                                            .id,
+                                    });
+                                }}
+                            >
+                                {t("collections.newFromOpenedTabs")}
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="flex h-12 w-full flex-row items-center border-border border-b p-2">
+                            <span className="p-1">
+                                {selected.length} {t("collections.selected")}
+                            </span>
+                            <Button
+                                className="ml-auto p-1"
+                                variant={"ghost"}
+                                ref={selected_open}
+                                onClick={() => {
+                                    const urls = selectedCollections.flatMap((collection) =>
+                                        collection.items.map((item) => item.url).filter(Boolean)
+                                    );
+                                    requestOpenMany(urls, (urlsToOpen) => {
+                                        for (const url of urlsToOpen) {
+                                            window.browser.tabs.create({
+                                                url,
+                                                active: false,
+                                            });
+                                        }
+                                    });
+                                }}
+                            >
+                                {t("collections.openAll")}
+                            </Button>
+                            <Button
+                                className="p-1"
+                                variant={"ghost"}
+                                size={"icon"}
+                                ref={selected_copy}
+                                title={t("collections.copyData")}
+                                onClick={() => {
+                                    const chunks = selectedCollections.map((collection) =>
+                                        window.formatCopyData(
+                                            appSetting.copyDataFormat,
+                                            collection.items,
+                                            collection.title
+                                        )
+                                    );
+                                    navigator.clipboard.writeText(
+                                        chunks.filter(Boolean).join("\n\n")
+                                    );
+                                    toast.success(
+                                        t("messages.copiedItems", {
+                                            count: selectedItemCount,
+                                        })
+                                    );
+                                }}
+                            >
+                                <Copy />
+                            </Button>
+                            <AlertDialogTrigger asChild ref={selected_deleteRef}>
+                                <Button className="p-1" variant={"ghost"} size={"icon"}>
+                                    <Trash />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <Button
+                                className="p-1"
+                                variant={"ghost"}
+                                size={"icon"}
+                                onClick={() => setSelected([])}
+                            >
+                                <X />
+                            </Button>
+                        </div>
+                    )}
+
+                    {collectionData.length === 0 ? (
+                        <div className="h-full overflow-hidden overflow-y-auto p-2">
+                            <p>{t("collections.noCollections")}</p>
+                        </div>
+                    ) : visibleCollections.length === 0 && searchText ? (
+                        <div className="h-full overflow-hidden overflow-y-auto p-2">
+                            <p>{t("collections.noSearchResults", { query: search })}</p>
+                        </div>
+                    ) : (
+                        <div
+                            className="h-full overflow-hidden overflow-y-auto p-2"
+                            ref={ref}
+                            onScroll={(e) => {
+                                setScrollPos(e.currentTarget.scrollTop);
+                            }}
+                        >
+                            <Reorder.Group
+                                axis="y"
+                                layoutScroll
+                                values={visibleCollections}
+                                onReorder={(newOrder) => {
+                                    if (canDrag) setCollectionOrder(newOrder);
+                                }}
+                                className="flex flex-col gap-2 p-1"
+                            >
+                                {visibleCollections.map((collection) => (
+                                    <Collection
+                                        key={collection.id}
+                                        item={collection}
+                                        canDrag={canDrag}
+                                        isSelected={selected.includes(collection.id)}
+                                        anySelected={selected.length > 0}
+                                        changeSelected={changeSelected}
+                                        onShiftPlusClick={onShiftPlusClick}
+                                        requestOpenMany={requestOpenMany}
+                                        onDragEnd={() => {
+                                            if (canDrag) {
+                                                operations.changeCollectionOrder(
+                                                    collectionOrder.map((item) => item.id)
+                                                );
+                                            }
+                                        }}
+                                    />
+                                ))}
+                            </Reorder.Group>
+                        </div>
+                    )}
                 </div>
-            ) : (
-                <div
-                    className="h-full overflow-hidden overflow-y-auto p-2"
-                    ref={ref}
-                    onScroll={(e) => {
-                        setScrollPos(e.currentTarget.scrollTop);
+                <AlertDialogContent
+                    onKeyDown={(e) => {
+                        e.stopPropagation();
                     }}
                 >
-                    <Reorder.Group
-                        axis="y"
-                        layoutScroll
-                        values={collectionOrder}
-                        onReorder={(e) => {
-                            setCollectionOrder(e);
-                        }}
-                        className="flex flex-col gap-2 p-1"
-                    >
-                        {collectionOrder.map((e) => (
-                            <Collection
-                                key={e.id}
-                                item={e}
-                                onDragEnd={() =>
-                                    operations.changeCollectionOrder(
-                                        collectionOrder.map((e) => e.id)
-                                    )
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {t("collections.deleteCollectionsTitle")}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {t("collections.deleteCollectionsDescription", {
+                                collectionCount: selected.length,
+                                itemCount: selectedItemCount,
+                            })}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <Label className="flex cursor-pointer flex-row items-center gap-1">
+                        <Checkbox
+                            className="rounded-md"
+                            checked={deleteConfirmed}
+                            onCheckedChange={() => setDeleteConfirmed((init) => !init)}
+                        />
+                        {t("collections.deleteCollectionsConfirm")}
+                    </Label>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={!deleteConfirmed}
+                            onClick={() => {
+                                if (deleteConfirmed) {
+                                    operations.removeCollections(selected);
+                                    setSelected([]);
                                 }
-                            />
-                        ))}
-                    </Reorder.Group>
-                </div>
-            )}
-        </div>
+                            }}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {t("common.delete")}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            {openManyWarningDialog}
+        </>
     );
 };
 

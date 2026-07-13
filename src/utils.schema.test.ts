@@ -14,6 +14,38 @@ describe("appSettingSchema", () => {
                 family: "Inter",
             },
             copyDataFormat: "{{url}}",
+            collectionListView: {
+                searchMode: "title",
+                sortBy: "default",
+                sortDir: "asc",
+                filtersOpen: false,
+            },
+            collectionItemView: {
+                sortBy: "default",
+                sortDir: "asc",
+                filtersOpen: false,
+            },
+        });
+    });
+
+    it("fills collection view defaults when older settings omit them", () => {
+        expect(
+            appSettingSchema.parse({
+                version: 1,
+                font: { size: 16, family: "Inter" },
+                copyDataFormat: "{{url}}",
+            })
+        ).toMatchObject({
+            version: 1,
+            collectionListView: {
+                searchMode: "title",
+                sortBy: "default",
+                filtersOpen: false,
+            },
+            collectionItemView: {
+                sortBy: "default",
+                filtersOpen: false,
+            },
         });
     });
 });

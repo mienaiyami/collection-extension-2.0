@@ -1,3 +1,26 @@
+## Unreleased
+
+### Localization & docs
+
+- added: multi-language support with i18next (English / Spanish(incomplete) / French)
+- added: French translation by @swirti (#29, #30)
+- added: Discord invite link in the README
+
+### Fixes
+
+- fixed: sync alarm scheduling after the v2.5.1 release
+- fixed: stale app setting UI when reverting to defaults (#31)
+- fixed: invalid `items-center` on collection item title layouts (#32)
+
+### Collections — search, sort & multi-select
+
+- added: search and sort on the collections list and inside a collection, with a collapsible filters panel (based on work by @shanksxz in `feat/search-and-sort`)
+- added: collection list search modes — title only, or title + items (deep), with a hint when the match is from nested items only
+- added: sort by default (manual), name, modified, date (plus item count on the list), with ascending/descending; drag-reorder only when search is empty and sort is default
+- added: multi-select collections (checkbox, Shift+click range, Ctrl+A for visible rows) with batch open, copy, and delete (delete requires confirmation)
+- added: warning dialog before opening many links at once (≥20; may lag or crash the browser)
+- added: persist list/item search mode, sort, sort direction, and filters-panel open state in app settings; keep collection list search text for the session when opening a collection and going back
+
 ## v2.5.1
 
 - fixed: sync behavior, prevent fake sync loops.

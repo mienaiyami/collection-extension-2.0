@@ -17,6 +17,9 @@ type AppContextType = {
     scrollPos: number;
     setScrollPos: React.Dispatch<React.SetStateAction<number>>;
     setOpenColOnCreate: React.Dispatch<React.SetStateAction<null | UUID>>;
+    /** Session-only Collection View search; survives open/close of a collection. */
+    collectionListSearch: string;
+    setCollectionListSearch: React.Dispatch<React.SetStateAction<string>>;
 };
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -33,6 +36,7 @@ const App = () => {
     const [openColOnCreate, setOpenColOnCreate] = useState<null | UUID>(null);
 
     const [scrollPos, setScrollPos] = useState(0);
+    const [collectionListSearch, setCollectionListSearch] = useState("");
 
     useLayoutEffect(() => {
         if (import.meta.env.DEV) {
@@ -139,6 +143,8 @@ const App = () => {
                         setScrollPos,
                         scrollPos,
                         setOpenColOnCreate,
+                        collectionListSearch,
+                        setCollectionListSearch,
                     }}
                 >
                     <CollectionOperationsProvider>
