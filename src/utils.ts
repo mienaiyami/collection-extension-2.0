@@ -191,6 +191,19 @@ export const getDataFromTab = async (tab: browser.Tabs.Tab): Promise<CollectionI
     };
 };
 
+export const collectionListViewSettingSchema = z.object({
+    searchMode: z.enum(["title", "deep"]).default("title"),
+    sortBy: z.enum(["default", "name", "itemCount", "modified", "date"]).default("default"),
+    sortDir: z.enum(["asc", "desc"]).default("asc"),
+    filtersOpen: z.boolean().default(false),
+});
+
+export const collectionItemViewSettingSchema = z.object({
+    sortBy: z.enum(["default", "name", "modified", "date"]).default("default"),
+    sortDir: z.enum(["asc", "desc"]).default("asc"),
+    filtersOpen: z.boolean().default(false),
+});
+
 export const appSettingSchema = z
     .object({
         version: z.number().default(1),
@@ -201,6 +214,10 @@ export const appSettingSchema = z
             })
             .default({}),
         copyDataFormat: z.string().default("{{url}}"),
+        /** Persisted Collection View search-mode / sort / filters panel. */
+        collectionListView: collectionListViewSettingSchema.default({}),
+        /** Persisted Collection Item View sort / filters panel. */
+        collectionItemView: collectionItemViewSettingSchema.default({}),
     })
     .strip();
 export const initAppSetting = appSettingSchema.parse({});

@@ -21,41 +21,56 @@ import { useAppContext } from "@/features/layout/App";
 import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { Reorder, motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 
-type PropType = {
+/** Narrow row props for the collection list — no search-sort timestamps leak here. */
+type CollectionRowItem = {
     id: UUID;
     title: string;
     itemLen: number;
+    matchedViaItems?: boolean;
+};
+
+type PropType = {
+    item: CollectionRowItem;
+    onDragEnd: () => void;
+    canDrag: boolean;
+    isSelected: boolean;
+    anySelected: boolean;
+    changeSelected: (id: UUID, checked: boolean) => void;
+    onShiftPlusClick: (id: UUID) => void;
+    requestOpenMany: (urls: string[], open: (urls: string[]) => void) => void;
 };
 
 const Collection = ({
     item,
     onDragEnd,
-}: {
-    item: PropType;
-    onDragEnd: () => void;
-}) => {
+    canDrag,
+    isSelected,
+    anySelected,
+    changeSelected,
+    onShiftPlusClick,
+    requestOpenMany,
+}: PropType) => {
     const { collectionData, openCollection } = useAppContext();
     const operations = useCollectionOperations();
     const { t } = useTranslation();
-
     const { appSetting } = useAppSetting();
-
     const draggingRef = useRef(false);
 
     return (
         <Reorder.Item
             value={item}
             whileDrag={{ backdropFilter: "blur(4px)" }}
+            dragListener={canDrag && !anySelected}
             onDragStart={() => {
                 draggingRef.current = true;
             }}
             onDragEnd={() => {
                 draggingRef.current = false;
-                onDragEnd();
+                if (canDrag) onDragEnd();
             }}
             transition={{ duration: 0.2 }}
         >
@@ -63,9 +78,9 @@ const Collection = ({
                 <ContextMenu>
                     <ContextMenuTrigger asChild>
                         <motion.div
-                            className={
-                                " handle grid h-16 w-full grid-cols-[15%_70%_15%] rounded-md border hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20"
-                            }
+                            className={`handle grid h-16 w-full grid-cols-[15%_60%_15%_10%] rounded-md border hover:bg-foreground/10 active:bg-foreground/20 data-[state=open]:bg-foreground/20 ${
+                                isSelected ? "ring-2 ring-purple-700 dark:ring-purple-400" : ""
+                            }`}
                             data-collection-id={item.id}
                             tabIndex={0}
                             onClick={() => {
@@ -104,7 +119,59 @@ const Collection = ({
                                     {item.itemLen > 1
                                         ? t("collections.items")
                                         : t("collections.item")}
+                                    {item.matchedViaItems ? (
+                                        <span className="ml-1 text-primary">
+                                            · {t("collections.matchedViaItems")}
+                                        </span>
+                                    ) : null}
                                 </span>
+                            </div>
+                            <div />
+                            <div className="grid h-full w-full cursor-default place-items-center">
+                                <label
+                                    onMouseUp={(e) => {
+                                        e.stopPropagation();
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (window.shiftKeyHeld) {
+                                            e.preventDefault();
+                                            onShiftPlusClick(item.id);
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if ([" ", "Enter"].includes(e.key)) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            if (e.shiftKey) {
+                                                onShiftPlusClick(item.id);
+                                            } else e.currentTarget.click();
+                                        }
+                                    }}
+                                    tabIndex={0}
+                                    className="group flex h-full items-center justify-center focus:outline-none"
+                                >
+                                    <div
+                                        className={`rounded-md border group-hover:border-foreground/20 ${
+                                            isSelected ? "bg-purple-700 dark:bg-purple-400" : ""
+                                        } ring-white group-focus:ring-2`}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            className="hidden"
+                                            checked={isSelected}
+                                            onChange={(e) => {
+                                                changeSelected(item.id, e.currentTarget.checked);
+                                            }}
+                                        />
+                                        <Check
+                                            className="text-white"
+                                            style={{
+                                                visibility: isSelected ? "visible" : "hidden",
+                                            }}
+                                        />
+                                    </div>
+                                </label>
                             </div>
                         </motion.div>
                     </ContextMenuTrigger>
@@ -117,51 +184,48 @@ const Collection = ({
                     >
                         <ContextMenuItem
                             onClick={() => {
-                                (async () => {
-                                    const collection = collectionData.find((e) => e.id === item.id);
-                                    if (collection)
-                                        for (let i = 0; i < collection.items.length; i++) {
-                                            const url = collection.items[i].url;
-                                            if (url)
-                                                window.browser.tabs.create({
-                                                    url,
-                                                    active: false,
-                                                });
-                                        }
-                                })();
+                                const collection = collectionData.find((e) => e.id === item.id);
+                                if (!collection) return;
+                                const urls = collection.items.map((e) => e.url).filter(Boolean);
+                                requestOpenMany(urls, (urlsToOpen) => {
+                                    for (const url of urlsToOpen) {
+                                        window.browser.tabs.create({
+                                            url,
+                                            active: false,
+                                        });
+                                    }
+                                });
                             }}
                         >
                             {t("collections.openAll")}
                         </ContextMenuItem>
                         <ContextMenuItem
                             onClick={() => {
-                                (async () => {
-                                    const collection = collectionData.find((e) => e.id === item.id);
-                                    if (collection) {
-                                        const urls = collection.items.map((e) => e.url);
-                                        window.browser.windows.create({
-                                            url: urls,
-                                            state: "maximized",
-                                        });
-                                    }
-                                })();
+                                const collection = collectionData.find((e) => e.id === item.id);
+                                if (!collection) return;
+                                const urls = collection.items.map((e) => e.url).filter(Boolean);
+                                requestOpenMany(urls, (urlsToOpen) => {
+                                    window.browser.windows.create({
+                                        url: urlsToOpen,
+                                        state: "maximized",
+                                    });
+                                });
                             }}
                         >
                             {t("collections.openAllInNewWindow")}
                         </ContextMenuItem>
                         <ContextMenuItem
                             onClick={() => {
-                                (async () => {
-                                    const collection = collectionData.find((e) => e.id === item.id);
-                                    if (collection) {
-                                        const urls = collection.items.map((e) => e.url);
-                                        window.browser.windows.create({
-                                            url: urls,
-                                            state: "maximized",
-                                            incognito: true,
-                                        });
-                                    }
-                                })();
+                                const collection = collectionData.find((e) => e.id === item.id);
+                                if (!collection) return;
+                                const urls = collection.items.map((e) => e.url).filter(Boolean);
+                                requestOpenMany(urls, (urlsToOpen) => {
+                                    window.browser.windows.create({
+                                        url: urlsToOpen,
+                                        state: "maximized",
+                                        incognito: true,
+                                    });
+                                });
                             }}
                         >
                             {t("collections.openAllInIncognitoWindow")}

@@ -17,11 +17,15 @@ import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { Reorder } from "framer-motion";
 import { Copy, CopyPlus, FilePlus, Trash, X } from "lucide-react";
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import AddUrlManualDialog from "../AddUrlManualDialog";
 import CollectionItem from "../item/CollectionItem";
+import SearchSortControls from "../search-sort/search-sort-controls";
+import { useCollectionItemSearchSort } from "../search-sort/use-collection-item-search-sort";
+import { applyRangeSelection, pruneSelectionToVisible } from "../selection/range-select";
+import { useOpenManyWarning } from "../use-open-many-warning";
 
 const CollectionItemView = () => {
     const { collectionData, inCollectionView, openCollection } = useAppContext();
@@ -32,7 +36,7 @@ const CollectionItemView = () => {
     const [selected, setSelected] = useState<UUID[]>([]);
 
     const [itemsOrder, setItemsOrder] = useState<UUID[]>([]);
-    // will be used to as starting point when using shift+click
+    /* Anchor for Shift+click range selection (select vs deselect mode). */
     const [lastChanged, setLastChanged] = useState<{
         id: UUID;
         type: "select" | "deselect";
@@ -53,6 +57,11 @@ const CollectionItemView = () => {
         }
     }, [currentCollection]);
 
+    const { canDrag, controlsProps, search, searchText, visibleItemsOrder } =
+        useCollectionItemSearchSort(itemsOrder, currentCollectionItemsMap);
+
+    const { requestOpenMany, openManyWarningDialog } = useOpenManyWarning();
+
     const changeSelected = (id: UUID, checked: boolean) => {
         setLastChanged({
             id,
@@ -60,45 +69,34 @@ const CollectionItemView = () => {
         });
         setSelected((init) => {
             if (!checked) {
-                const index = init.findIndex((e) => e === id);
-                if (index >= 0) init.splice(index, 1);
-            } else init.push(id);
-            return [...init];
+                return init.filter((itemId) => itemId !== id);
+            }
+            return [...new Set([...init, id])];
         });
     };
 
-    const onShiftPlusClick = useCallback(
-        (onItem: UUID) => {
-            if (!lastChanged) return;
-            const indexInMain = itemsOrder.findIndex((e) => e === onItem);
-            const indexOfLastChanged = itemsOrder.findIndex((e) => e === lastChanged.id);
-            if (indexInMain === -1 || indexOfLastChanged === -1) return;
-            const start = Math.min(indexInMain, indexOfLastChanged);
-            const end = Math.max(indexInMain, indexOfLastChanged);
-            // const selectedItems = itemsOrder.slice(start, end + 1);
-            setSelected((init) => {
-                const dup = [...init];
-                if (lastChanged.type === "select") {
-                    dup.push(...itemsOrder.slice(start, end + 1));
-                } else {
-                    for (let i = start; i <= end; i++) {
-                        const index = dup.findIndex((e) => e === itemsOrder[i]);
-                        if (index >= 0) dup.splice(index, 1);
-                    }
-                }
-                return [...new Set(dup)];
-            });
-        },
-        [itemsOrder, lastChanged]
-    );
+    const onShiftPlusClick = (onItem: UUID) => {
+        if (!lastChanged) return;
+        setSelected((init) =>
+            applyRangeSelection(init, visibleItemsOrder, lastChanged.id, onItem, lastChanged.type)
+        );
+    };
 
     useLayoutEffect(() => {
         setItemsOrder(currentCollection?.items.map((e) => e.id) || []);
     }, [currentCollection]);
 
-    // todo : update for performance
+    /* Clear selection when opening a different collection. */
     useLayoutEffect(() => {
         setSelected([]);
+    }, [inCollectionView]);
+
+    /* Drop selection that fell out of the visible (filtered) list. */
+    useLayoutEffect(() => {
+        setSelected((prev) => pruneSelectionToVisible(prev, visibleItemsOrder));
+    }, [visibleItemsOrder]);
+
+    useLayoutEffect(() => {
         const keyHandler = (e: KeyboardEvent) => {
             if (!currentCollection) return;
             const isTextInput =
@@ -108,7 +106,7 @@ const CollectionItemView = () => {
             if (isTextInput) return;
             switch (e.code) {
                 case "Delete":
-                    selected_deleteRef.current?.click();
+                    if (selected.length > 0) selected_deleteRef.current?.click();
                     break;
                 case "KeyN":
                     {
@@ -117,16 +115,19 @@ const CollectionItemView = () => {
                     }
                     break;
                 case "KeyT":
-                    selected_open.current?.click();
+                    if (selected.length > 0) selected_open.current?.click();
                     break;
                 case "Escape":
                     setSelected([]);
                     break;
                 case "KeyC":
-                    selected_copy.current?.click();
+                    if (selected.length > 0) selected_copy.current?.click();
                     break;
                 case "KeyA":
-                    if (e.ctrlKey) setSelected(currentCollection.items.map((e) => e.id));
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        setSelected(visibleItemsOrder);
+                    }
                     break;
                 case "ArrowLeft":
                     if (e.altKey) openCollection(null);
@@ -156,235 +157,255 @@ const CollectionItemView = () => {
             window.removeEventListener("keydown", keyHandler);
             window.browser.runtime.onMessage.removeListener(onMessage);
         };
-    }, [collectionData, inCollectionView, currentCollection, openCollection]);
+    }, [
+        collectionData,
+        inCollectionView,
+        currentCollection,
+        openCollection,
+        selected.length,
+        visibleItemsOrder,
+    ]);
 
     return currentCollection ? (
-        <AlertDialog>
-            <div className="grid min-h-full grid-rows-[3rem_auto]">
-                {selected.length === 0 && (
-                    <div className="grid h-full grid-cols-[1fr_1px_1fr_1px_0.4fr] items-center p-1">
-                        <TooltipProvider
-                            disableHoverableContent
-                            delayDuration={200}
-                            skipDelayDuration={500}
-                        >
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant={"ghost"}
-                                        onClick={() => {
-                                            operations.addActiveTabToCollection(
-                                                currentCollection.id
-                                            );
-                                        }}
-                                        // title="Add current tab to collection"
-                                    >
-                                        <FilePlus />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom">
-                                    {t("tooltips.addCurrentTab")}
-                                </TooltipContent>
-                            </Tooltip>
-                            <Separator orientation="vertical" />
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant={"ghost"}
-                                        onClick={() => {
-                                            operations.addAllTabsToCollection(currentCollection.id);
-                                        }}
-                                        // title="Add all opened tabs to collection"
-                                    >
-                                        <CopyPlus />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom">
-                                    {t("tooltips.addAllTabs")}
-                                </TooltipContent>
-                            </Tooltip>
-                            <Separator orientation="vertical" />
-                            <AddUrlManualDialog />
-                        </TooltipProvider>
-                    </div>
-                )}
-                {selected.length > 0 && (
-                    <div className="flex h-full w-full flex-row items-center p-2">
-                        <span className="p-1">
-                            {selected.length} {t("collections.selected")}
-                        </span>
-                        <Button
-                            className="ml-auto p-1"
-                            variant={"ghost"}
-                            ref={selected_open}
-                            onClick={() => {
-                                const items = currentCollection.items.filter((e) =>
-                                    selected.includes(e.id)
-                                );
-                                if (items)
-                                    for (let i = 0; i < items.length; i++) {
-                                        const url = items[i].url;
-                                        if (url)
+        <>
+            <AlertDialog>
+                <div className="grid min-h-full grid-rows-[auto_auto_1fr]">
+                    <SearchSortControls {...controlsProps} />
+                    {selected.length === 0 && (
+                        <div className="grid h-full grid-cols-[1fr_1px_1fr_1px_0.4fr] items-center border-border border-b p-1">
+                            <TooltipProvider
+                                disableHoverableContent
+                                delayDuration={200}
+                                skipDelayDuration={500}
+                            >
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant={"ghost"}
+                                            onClick={() => {
+                                                operations.addActiveTabToCollection(
+                                                    currentCollection.id
+                                                );
+                                            }}
+                                            // title="Add current tab to collection"
+                                        >
+                                            <FilePlus />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom">
+                                        {t("tooltips.addCurrentTab")}
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Separator orientation="vertical" />
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant={"ghost"}
+                                            onClick={() => {
+                                                operations.addAllTabsToCollection(
+                                                    currentCollection.id
+                                                );
+                                            }}
+                                            // title="Add all opened tabs to collection"
+                                        >
+                                            <CopyPlus />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom">
+                                        {t("tooltips.addAllTabs")}
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Separator orientation="vertical" />
+                                <AddUrlManualDialog />
+                            </TooltipProvider>
+                        </div>
+                    )}
+                    {selected.length > 0 && (
+                        <div className="flex h-full w-full flex-row items-center border-border border-b p-2">
+                            <span className="p-1">
+                                {selected.length} {t("collections.selected")}
+                            </span>
+                            <Button
+                                className="ml-auto p-1"
+                                variant={"ghost"}
+                                ref={selected_open}
+                                onClick={() => {
+                                    const items = currentCollection.items.filter((e) =>
+                                        selected.includes(e.id)
+                                    );
+                                    const urls = items.map((e) => e.url).filter(Boolean);
+                                    requestOpenMany(urls, (urlsToOpen) => {
+                                        for (const url of urlsToOpen) {
                                             window.browser.tabs.create({
                                                 url,
                                                 active: false,
                                             });
-                                    }
-                            }}
-                        >
-                            {t("collections.open")}
-                        </Button>
-                        <Button
-                            className="p-1"
-                            variant={"ghost"}
-                            ref={selected_openNewWindow}
-                            onClick={() => {
-                                const items = currentCollection.items.filter((e) =>
-                                    selected.includes(e.id)
-                                );
-                                if (items)
-                                    window.browser.windows.create({
-                                        url: items.map((e) => e.url),
-                                        state: "normal",
+                                        }
                                     });
-                            }}
-                        >
-                            {t("collections.newWindow")}
-                        </Button>
-                        <Button
-                            className="p-1"
-                            variant={"ghost"}
-                            ref={selected_openIncognito}
-                            onClick={() => {
-                                const items = currentCollection.items.filter((e) =>
-                                    selected.includes(e.id)
-                                );
-                                if (items)
-                                    window.browser.windows
-                                        .create({
-                                            url: items.map((e) => e.url),
-                                            state: "maximized",
-                                            incognito: true,
-                                        })
-                                        .catch((e) => {
-                                            toast.error(t("common.error"), {
-                                                description: e,
-                                            });
-                                        });
-                            }}
-                        >
-                            {t("collections.incognito")}
-                        </Button>
-                        <Button
-                            className="p-1"
-                            variant={"ghost"}
-                            size={"icon"}
-                            ref={selected_copy}
-                            title={t("collections.copyData")}
-                            onClick={() => {
-                                const items = currentCollection.items.filter((e) =>
-                                    selected.includes(e.id)
-                                );
-                                if (items && items.length > 0) {
-                                    navigator.clipboard.writeText(
-                                        window.formatCopyData(
-                                            appSetting.copyDataFormat,
-                                            items,
-                                            currentCollection.title
-                                        )
-                                    );
-                                    toast.success(
-                                        t("messages.copiedItems", {
-                                            count: items.length,
-                                        })
-                                    );
-                                }
-                            }}
-                        >
-                            <Copy />
-                        </Button>
-
-                        <AlertDialogTrigger asChild ref={selected_deleteRef}>
-                            <Button className="p-1" variant={"ghost"} size={"icon"}>
-                                <Trash />
+                                }}
+                            >
+                                {t("collections.open")}
                             </Button>
-                        </AlertDialogTrigger>
-                        <Button
-                            className="p-1"
-                            variant={"ghost"}
-                            size={"icon"}
-                            onClick={() => {
-                                setSelected([]);
+                            <Button
+                                className="p-1"
+                                variant={"ghost"}
+                                ref={selected_openNewWindow}
+                                onClick={() => {
+                                    const items = currentCollection.items.filter((e) =>
+                                        selected.includes(e.id)
+                                    );
+                                    const urls = items.map((e) => e.url).filter(Boolean);
+                                    requestOpenMany(urls, (urlsToOpen) => {
+                                        window.browser.windows.create({
+                                            url: urlsToOpen,
+                                            state: "normal",
+                                        });
+                                    });
+                                }}
+                            >
+                                {t("collections.newWindow")}
+                            </Button>
+                            <Button
+                                className="p-1"
+                                variant={"ghost"}
+                                ref={selected_openIncognito}
+                                onClick={() => {
+                                    const items = currentCollection.items.filter((e) =>
+                                        selected.includes(e.id)
+                                    );
+                                    const urls = items.map((e) => e.url).filter(Boolean);
+                                    requestOpenMany(urls, (urlsToOpen) => {
+                                        window.browser.windows
+                                            .create({
+                                                url: urlsToOpen,
+                                                state: "maximized",
+                                                incognito: true,
+                                            })
+                                            .catch((e) => {
+                                                toast.error(t("common.error"), {
+                                                    description: e,
+                                                });
+                                            });
+                                    });
+                                }}
+                            >
+                                {t("collections.incognito")}
+                            </Button>
+                            <Button
+                                className="p-1"
+                                variant={"ghost"}
+                                size={"icon"}
+                                ref={selected_copy}
+                                title={t("collections.copyData")}
+                                onClick={() => {
+                                    const items = currentCollection.items.filter((e) =>
+                                        selected.includes(e.id)
+                                    );
+                                    if (items && items.length > 0) {
+                                        navigator.clipboard.writeText(
+                                            window.formatCopyData(
+                                                appSetting.copyDataFormat,
+                                                items,
+                                                currentCollection.title
+                                            )
+                                        );
+                                        toast.success(
+                                            t("messages.copiedItems", {
+                                                count: items.length,
+                                            })
+                                        );
+                                    }
+                                }}
+                            >
+                                <Copy />
+                            </Button>
+
+                            <AlertDialogTrigger asChild ref={selected_deleteRef}>
+                                <Button className="p-1" variant={"ghost"} size={"icon"}>
+                                    <Trash />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <Button
+                                className="p-1"
+                                variant={"ghost"}
+                                size={"icon"}
+                                onClick={() => {
+                                    setSelected([]);
+                                }}
+                            >
+                                <X />
+                            </Button>
+                        </div>
+                    )}
+                    <div className="h-full overflow-hidden overflow-y-auto">
+                        <Reorder.Group
+                            values={visibleItemsOrder}
+                            // this is called each time an item is reordered in ui, cant be used to update storage
+                            onReorder={(e) => {
+                                if (canDrag) setItemsOrder(e);
                             }}
+                            className="flex flex-col gap-2 p-3"
                         >
-                            <X />
-                        </Button>
+                            {itemsOrder.length <= 0 ? (
+                                <p>{t("collections.noItems")}</p>
+                            ) : visibleItemsOrder.length <= 0 && searchText ? (
+                                <p>{t("collections.noSearchResults", { query: search })}</p>
+                            ) : (
+                                visibleItemsOrder.map((id) => {
+                                    const e = currentCollectionItemsMap?.get(id);
+                                    if (!e) return null;
+                                    return (
+                                        <CollectionItem
+                                            {...e}
+                                            key={e.id}
+                                            changeSelected={changeSelected}
+                                            isSelected={selected.includes(e.id)}
+                                            anySelected={selected.length > 0}
+                                            onShiftPlusClick={onShiftPlusClick}
+                                            canDrag={canDrag}
+                                            onDragEnd={() => {
+                                                if (canDrag && inCollectionView)
+                                                    operations.changeCollectionItemOrder(
+                                                        inCollectionView,
+                                                        itemsOrder
+                                                    );
+                                            }}
+                                        />
+                                    );
+                                })
+                            )}
+                        </Reorder.Group>
                     </div>
-                )}
-                <div className="h-full overflow-hidden overflow-y-auto">
-                    <Reorder.Group
-                        values={itemsOrder}
-                        // this is called each time an item is reordered in ui, cant be used to update storage
-                        onReorder={(e) => {
-                            setItemsOrder(e);
-                        }}
-                        className="flex flex-col gap-2 p-3"
-                    >
-                        {itemsOrder.length <= 0 ? (
-                            <p>{t("collections.noItems")}</p>
-                        ) : (
-                            itemsOrder.map((id) => {
-                                const e = currentCollectionItemsMap?.get(id);
-                                if (!e) return null;
-                                return (
-                                    <CollectionItem
-                                        {...e}
-                                        key={e.id}
-                                        changeSelected={changeSelected}
-                                        isSelected={selected.includes(e.id)}
-                                        anySelected={selected.length > 0}
-                                        onShiftPlusClick={onShiftPlusClick}
-                                        onDragEnd={() => {
-                                            if (inCollectionView)
-                                                operations.changeCollectionItemOrder(
-                                                    inCollectionView,
-                                                    itemsOrder
-                                                );
-                                        }}
-                                    />
-                                );
-                            })
-                        )}
-                    </Reorder.Group>
                 </div>
-            </div>
-            <AlertDialogContent
-                onKeyDown={(e) => {
-                    e.stopPropagation();
-                }}
-            >
-                <AlertDialogHeader>
-                    <AlertDialogTitle>{t("collections.deleteUrls")}</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        {t("collections.deleteUrlsDescription", {
-                            count: selected.length,
-                        })}
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                    <AlertDialogAction
-                        onClick={() => {
-                            inCollectionView &&
-                                operations.removeFromCollection(inCollectionView, selected);
-                        }}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                        {t("common.delete")}
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+                <AlertDialogContent
+                    onKeyDown={(e) => {
+                        e.stopPropagation();
+                    }}
+                >
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{t("collections.deleteUrls")}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {t("collections.deleteUrlsDescription", {
+                                count: selected.length,
+                            })}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                inCollectionView &&
+                                    operations.removeFromCollection(inCollectionView, selected);
+                            }}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {t("common.delete")}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            {openManyWarningDialog}
+        </>
     ) : (
         <p>{t("collections.collectionNotFound")}</p>
     );

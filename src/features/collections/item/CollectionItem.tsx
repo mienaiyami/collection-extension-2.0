@@ -20,6 +20,7 @@ type PropType = CollectionItem & {
     anySelected: boolean;
     onShiftPlusClick: (id: UUID) => void;
     onDragEnd: () => void;
+    canDrag: boolean;
 };
 const CollectionItem = (props: PropType) => {
     const { inCollectionView } = useAppContext();
@@ -33,13 +34,13 @@ const CollectionItem = (props: PropType) => {
         <Reorder.Item
             value={props.id}
             whileDrag={{ backdropFilter: "blur(4px)" }}
-            dragListener={!props.anySelected}
+            dragListener={props.canDrag && !props.anySelected}
             onDragStart={() => {
                 draggingRef.current = true;
             }}
             onDragEnd={() => {
                 draggingRef.current = false;
-                props.onDragEnd();
+                if (props.canDrag) props.onDragEnd();
             }}
             transition={{ duration: 0.2 }}
         >
