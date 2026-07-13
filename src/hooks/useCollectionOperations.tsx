@@ -35,6 +35,11 @@ type CollectionOperationsContextType = {
         collectionId: UUID,
         itemId: UUID | UUID[]
     ) => CollectionOperationResponse<"REMOVE_FROM_COLLECTION">;
+    updateCollectionItem: (
+        collectionId: UUID,
+        itemId: UUID,
+        patch: Pick<CollectionItem, "title" | "url" | "img">
+    ) => CollectionOperationResponse<"UPDATE_COLLECTION_ITEM">;
     renameCollection: (
         id: UUID,
         newName: string
@@ -289,6 +294,54 @@ export const CollectionOperationsProvider: React.FC<{
                         await sendMessage({
                             type: "IMPORT_DATA",
                             payload: oldState.data.data,
+                        });
+                    },
+                },
+            });
+            return response;
+        },
+        [sendMessage, t]
+    );
+
+    const updateCollectionItem = useCallback(
+        async (
+            collectionId: UUID,
+            itemId: UUID,
+            patch: Pick<CollectionItem, "title" | "url" | "img">
+        ) => {
+            toast.dismiss();
+            const response = await sendMessage({
+                type: "UPDATE_COLLECTION_ITEM",
+                payload: {
+                    collectionId,
+                    itemId,
+                    title: patch.title,
+                    url: patch.url,
+                    img: patch.img,
+                },
+            });
+
+            if (!response.success) {
+                toast.error(t("messages.failedToUpdateCollectionItem"), {
+                    description: response.error,
+                });
+                return response;
+            }
+
+            toast.success(t("messages.updatedCollectionItem"), {
+                duration: 5000,
+                action: {
+                    label: t("common.undo"),
+                    onClick: async () => {
+                        await sendMessage({
+                            type: "UPDATE_COLLECTION_ITEM",
+                            payload: {
+                                collectionId,
+                                itemId,
+                                title: response.data.previous.title,
+                                url: response.data.previous.url,
+                                img: response.data.previous.img,
+                            },
                         });
                     },
                 },
@@ -651,6 +704,7 @@ export const CollectionOperationsProvider: React.FC<{
                 addActiveTabToCollection,
                 addAllTabsToCollection,
                 removeFromCollection,
+                updateCollectionItem,
                 renameCollection,
                 changeCollectionOrder,
                 changeCollectionItemOrder,

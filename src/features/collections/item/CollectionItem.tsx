@@ -13,6 +13,7 @@ import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { Reorder } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import EditCollectionItemDialog from "./EditCollectionItemDialog";
 
 type PropType = CollectionItem & {
     changeSelected: (id: UUID, checked: boolean) => void;
@@ -27,6 +28,7 @@ const CollectionItem = (props: PropType) => {
     const operations = useCollectionOperations();
     const { t } = useTranslation();
     const [imgLoaded, setImgLoaded] = useState(false);
+    const [editOpen, setEditOpen] = useState(false);
 
     const draggingRef = useRef(false);
 
@@ -262,6 +264,14 @@ const CollectionItem = (props: PropType) => {
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem
+                        onSelect={(e) => {
+                            e.preventDefault();
+                            if (inCollectionView) setEditOpen(true);
+                        }}
+                    >
+                        {t("collections.editItem")}
+                    </ContextMenuItem>
+                    <ContextMenuItem
                         onClick={() => {
                             (async () => {
                                 navigator.clipboard.writeText(props.url);
@@ -281,6 +291,21 @@ const CollectionItem = (props: PropType) => {
                     </ContextMenuItem>
                 </ContextMenuContent>
             </ContextMenu>
+            {inCollectionView ? (
+                <EditCollectionItemDialog
+                    open={editOpen}
+                    onOpenChange={setEditOpen}
+                    collectionId={inCollectionView}
+                    item={{
+                        id: props.id,
+                        title: props.title,
+                        url: props.url,
+                        img: props.img,
+                        createdAt: props.createdAt,
+                        orderUpdatedAt: props.orderUpdatedAt,
+                    }}
+                />
+            ) : null}
         </Reorder.Item>
     );
 };
