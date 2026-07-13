@@ -22,6 +22,8 @@
     "hooks:pre-commit": "pnpm exec lint-staged",
     "hooks:install": "husky",
     "tslint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview",
     "release": "pnpm build:zip && tsx release.ts",
     "prepare": "husky"
@@ -73,7 +75,8 @@
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.5",
     "typescript": "^5.7.2",
-    "vite": "^4.5.14",
+    "vite": "^5.4.21",
+    "vitest": "^3.2.7",
     "webextension-polyfill": "^0.12.0"
   },
   "lint-staged": {
@@ -81,7 +84,7 @@
       "biome check --write --files-ignore-unknown=true --no-errors-on-unmatched"
     ],
     "*.{json,css}": [
-      "biome format --write"
+      "biome format --write --files-ignore-unknown=true --no-errors-on-unmatched"
     ]
   },
   "pnpm": {
