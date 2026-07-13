@@ -44,6 +44,19 @@ export type CollectionOperation =
           payload: { collectionId: UUID; itemId: UUID | UUID[] };
       }
     | {
+          type: "UPDATE_COLLECTION_ITEM";
+          payload: {
+              collectionId: UUID;
+              itemId: UUID;
+              title: string;
+              url: string;
+              img: string;
+          };
+          response: {
+              previous: Pick<CollectionItem, "title" | "url" | "img">;
+          };
+      }
+    | {
           type: "RENAME_COLLECTION";
           payload: { id: UUID; newName: string };
           response: {

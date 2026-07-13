@@ -21,6 +21,10 @@
 - added: warning dialog before opening many links at once (≥20; may lag or crash the browser)
 - added: persist list/item search mode, sort, sort direction, and filters-panel open state in app settings; keep collection list search text for the session when opening a collection and going back
 
+### Collections — edit item
+
+- added: edit collection item title, URL, and image (URL or upload) from the item context menu (#35); closes #22
+
 ## v2.5.1
 
 - fixed: sync behavior, prevent fake sync loops.

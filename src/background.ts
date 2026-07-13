@@ -544,6 +544,42 @@ class CollectionManager {
         }
     }
 
+    /**
+     * Updates title/url/img for one item in a collection.
+     * Touches collection `updatedAt` so sync sees the change.
+     */
+    static async updateCollectionItem(
+        collectionId: UUID,
+        itemId: UUID,
+        patch: Pick<CollectionItem, "title" | "url" | "img">
+    ): CollectionOperationResponse<"UPDATE_COLLECTION_ITEM"> {
+        try {
+            const collections = await this.getCollectionData();
+            const collection = collections.find((e) => e.id === collectionId);
+            if (!collection) {
+                return { success: false, error: "Collection not found." };
+            }
+
+            const item = collection.items.find((entry) => entry.id === itemId);
+            if (!item) {
+                return { success: false, error: "Item not found." };
+            }
+
+            const previous = { title: item.title, url: item.url, img: item.img };
+            item.title = patch.title;
+            item.url = patch.url;
+            item.img = patch.img;
+            collection.updatedAt = Date.now();
+
+            await this.setCollectionData(collections);
+            this.updateRecentlyUsed(collectionId, 0);
+
+            return { success: true, data: { previous } };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+
     static async renameCollection(
         id: UUID,
         newName: string
@@ -832,6 +868,16 @@ browser.runtime.onMessage.addListener(
                     return await CollectionManager.removeFromCollection(
                         message.payload.collectionId,
                         message.payload.itemId
+                    );
+                case "UPDATE_COLLECTION_ITEM":
+                    return await CollectionManager.updateCollectionItem(
+                        message.payload.collectionId,
+                        message.payload.itemId,
+                        {
+                            title: message.payload.title,
+                            url: message.payload.url,
+                            img: message.payload.img,
+                        }
                     );
                 case "RENAME_COLLECTION":
                     return await CollectionManager.renameCollection(
