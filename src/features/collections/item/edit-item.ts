@@ -5,36 +5,78 @@
 export const MAX_ITEM_IMAGE_DATA_URL_LENGTH = 400_000;
 
 /**
+ * Schemes allowed for remote/extension cover images (not `data:` — handled separately).
+ * Allowlist avoids incomplete blocklists (`javascript:` / `vbscript:` / executable `data:`).
+ */
+const SAFE_ITEM_IMAGE_PROTOCOLS = new Set([
+    "http:",
+    "https:",
+    "chrome-extension:",
+    "moz-extension:",
+    "safari-web-extension:",
+    "edge-extension:",
+]);
+
+/**
  * Parses and normalizes a page URL for a collection item.
- * Returns `null` when the string is not a valid absolute URL.
+ * Only `http:` / `https:` are accepted so saved links stay safe to open in tabs.
+ * Returns `null` when the string is empty, not absolute, or not http(s).
  */
 export const parseItemUrl = (raw: string): string | null => {
     const trimmed = raw.trim();
     if (!trimmed) return null;
     try {
-        return new URL(trimmed).toString();
+        const url = new URL(trimmed);
+        if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+        return url.toString();
     } catch {
         return null;
     }
 };
 
 /**
- * Validates an image source: empty (cleared), `data:image/…` under size limit,
- * or any non-`javascript:` absolute URL (includes `http(s)` and browser favicon schemes).
+ * Returns a cover image URL safe to assign to `<img src>`, or `null` if unsafe/empty.
+ * Allows size-capped `data:image/…` uploads and {@link SAFE_ITEM_IMAGE_PROTOCOLS}.
  */
-export const isValidItemImageSrc = (raw: string): boolean => {
+export const getSafeItemImageSrc = (raw: string): string | null => {
     const trimmed = raw.trim();
-    if (!trimmed) return true;
+    if (!trimmed) return null;
     if (trimmed.startsWith("data:image/")) {
-        return trimmed.length <= MAX_ITEM_IMAGE_DATA_URL_LENGTH;
+        return trimmed.length <= MAX_ITEM_IMAGE_DATA_URL_LENGTH ? trimmed : null;
     }
-    if (trimmed.startsWith("data:")) return false;
     try {
         const url = new URL(trimmed);
-        return url.protocol !== "javascript:";
+        if (!SAFE_ITEM_IMAGE_PROTOCOLS.has(url.protocol)) return null;
+        return url.toString();
     } catch {
-        return false;
+        return null;
     }
+};
+
+/**
+ * Whether an image field value may be saved: empty (clear) or {@link getSafeItemImageSrc}.
+ */
+export const isValidItemImageSrc = (raw: string): boolean => {
+    if (!raw.trim()) return true;
+    return getSafeItemImageSrc(raw) !== null;
+};
+
+/**
+ * First image {@link File} from clipboard/drag {@link DataTransfer}, if any.
+ */
+export const getImageFileFromDataTransfer = (
+    data: DataTransfer | null | undefined
+): File | null => {
+    if (!data) return null;
+    for (const item of Array.from(data.items)) {
+        if (item.kind === "file" && item.type.startsWith("image/")) {
+            return item.getAsFile();
+        }
+    }
+    for (const file of Array.from(data.files)) {
+        if (file.type.startsWith("image/")) return file;
+    }
+    return null;
 };
 
 /**

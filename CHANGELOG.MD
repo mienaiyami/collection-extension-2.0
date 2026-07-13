@@ -23,7 +23,7 @@
 
 ### Collections — edit item
 
-- added: edit collection item title, URL, and image (URL or upload) from the item context menu (#35); closes #22
+- added: edit collection item title, URL, and image (URL, file upload, or clipboard paste) from the item context menu (#35); closes #22
 
 ## v2.5.1
 

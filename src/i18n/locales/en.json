@@ -110,6 +110,7 @@
         "itemImageUrl": "Image URL",
         "itemImageUrlPlaceholder": "https://…",
         "itemImageUploadedPlaceholder": "Uploaded image (enter a URL to replace)",
+        "itemImagePasteHint": "Paste an image here (Ctrl+V) or upload a file",
         "clearItemImage": "Clear image",
         "copyUrl": "Copy URL",
         "open": "Open",

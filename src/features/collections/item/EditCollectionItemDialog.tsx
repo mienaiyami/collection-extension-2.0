@@ -10,10 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { AppWindow } from "lucide-react";
-import { useEffect, useState } from "react";
+import { type ClipboardEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { isValidItemImageSrc, parseItemUrl, readImageFileAsDataUrl } from "./edit-item";
+import {
+    getImageFileFromDataTransfer,
+    getSafeItemImageSrc,
+    parseItemUrl,
+    readImageFileAsDataUrl,
+} from "./edit-item";
 
 type EditCollectionItemDialogProps = {
     open: boolean;
@@ -23,7 +28,7 @@ type EditCollectionItemDialogProps = {
 };
 
 /**
- * Dialog to edit a collection item's title, URL, and image (URL or local upload).
+ * Dialog to edit a collection item's title, URL, and image (URL, upload, or clipboard paste).
  * Save commits all three fields together via {@link useCollectionOperations.updateCollectionItem}.
  */
 const EditCollectionItemDialog = ({
@@ -49,13 +54,33 @@ const EditCollectionItemDialog = ({
         setSaving(false);
     }, [open, item.title, item.url, item.img]);
 
+    const applyImageFile = async (file: File) => {
+        const dataUrl = await readImageFileAsDataUrl(file);
+        if (!dataUrl) {
+            toast.error(t("messages.invalidItemImageUpload"));
+            return;
+        }
+        setImg(dataUrl);
+        setPreviewFailed(false);
+    };
+
+    /** Prefer clipboard image over text when pasting into the image fields/preview. */
+    const onImagePaste = (e: ClipboardEvent) => {
+        const file = getImageFileFromDataTransfer(e.clipboardData);
+        if (!file) return;
+        e.preventDefault();
+        void applyImageFile(file);
+    };
+
     const onSave = async () => {
         const parsedUrl = parseItemUrl(url);
         if (!parsedUrl) {
             toast.error(t("messages.invalidItemUrl"));
             return;
         }
-        if (!isValidItemImageSrc(img)) {
+        const trimmedImg = img.trim();
+        const safeImg = trimmedImg === "" ? "" : getSafeItemImageSrc(img);
+        if (safeImg === null) {
             toast.error(t("messages.invalidItemImage"));
             return;
         }
@@ -64,11 +89,13 @@ const EditCollectionItemDialog = ({
         const response = await operations.updateCollectionItem(collectionId, item.id, {
             title: title.trim(),
             url: parsedUrl,
-            img: img.trim(),
+            img: safeImg,
         });
         setSaving(false);
         if (response.success) onOpenChange(false);
     };
+
+    const previewSrc = getSafeItemImageSrc(img);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,10 +109,15 @@ const EditCollectionItemDialog = ({
                     <DialogTitle>{t("collections.editItem")}</DialogTitle>
                 </DialogHeader>
                 <div className="flex flex-col gap-3">
-                    <div className="grid h-28 w-full place-items-center overflow-hidden rounded-md border bg-muted/30">
-                        {img.trim() && !previewFailed ? (
+                    <div
+                        className="grid h-28 w-full place-items-center overflow-hidden rounded-md border bg-muted/30 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        tabIndex={0}
+                        onPaste={onImagePaste}
+                        title={t("collections.itemImagePasteHint")}
+                    >
+                        {previewSrc && !previewFailed ? (
                             <img
-                                src={img.trim()}
+                                src={previewSrc}
                                 alt=""
                                 className="max-h-28 max-w-full object-contain p-1"
                                 onError={() => setPreviewFailed(true)}
@@ -95,6 +127,9 @@ const EditCollectionItemDialog = ({
                             <AppWindow className="h-12 w-12 text-muted-foreground" />
                         )}
                     </div>
+                    <p className="text-muted-foreground text-xs">
+                        {t("collections.itemImagePasteHint")}
+                    </p>
                     <div className="flex flex-col gap-1.5">
                         <Label htmlFor="edit-item-title">{t("collections.itemTitle")}</Label>
                         <Input
@@ -127,6 +162,7 @@ const EditCollectionItemDialog = ({
                                 setImg(e.target.value);
                                 setPreviewFailed(false);
                             }}
+                            onPaste={onImagePaste}
                             autoComplete="off"
                         />
                         <div className="flex flex-wrap gap-2">
@@ -138,13 +174,7 @@ const EditCollectionItemDialog = ({
                                     const file = e.target.files?.[0];
                                     e.target.value = "";
                                     if (!file) return;
-                                    const dataUrl = await readImageFileAsDataUrl(file);
-                                    if (!dataUrl) {
-                                        toast.error(t("messages.invalidItemImageUpload"));
-                                        return;
-                                    }
-                                    setImg(dataUrl);
-                                    setPreviewFailed(false);
+                                    await applyImageFile(file);
                                 }}
                             />
                             <Button
