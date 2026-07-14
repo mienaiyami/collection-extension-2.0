@@ -1,4 +1,4 @@
-## Unreleased
+## v2.6.0
 
 ### Localization & docs
 
@@ -29,6 +29,12 @@
 
 - added: remove duplicate URLs within a collection (keep most recent or oldest) from selection overflow menus and collection context menu (#10)
 - added: settings toggle to auto-remove older duplicate URLs when adding a link to a collection (#10)
+
+---
+
+Demo walkthrough (search, sort, multi-select, open-many warning, remove duplicates, edit item, language, settings):
+
+https://github.com/mienaiyami/collection-extension-2.0/blob/main/github/v2.6.0-changelog.webm
 
 ## v2.5.1
 

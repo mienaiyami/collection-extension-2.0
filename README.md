@@ -41,6 +41,8 @@ If you have questions, ideas, or want to stay updated with development, join our
 
 ## Features
 
+[v2.6.0 feature walkthrough](github/v2.6.0-changelog.webm) — search & sort, multi-select, duplicates, edit item, and more.
+
 ### Collection Management
 
 - Create collections from all currently opened tabs
@@ -149,7 +151,11 @@ Want to contribute translations? Check our [Translation Guide](docs/translation-
 
 We welcome contributions! Please see our [Contributing Guide](docs/contribute.md) for details on setting up the development environment, code style conventions, and submitting pull requests.
 
-## Screenshots
+## Screenshots & demos
+
+**v2.6.0** — [feature walkthrough video](github/v2.6.0-changelog.webm)
+
+<video src="github/v2.6.0-changelog.webm" controls width="360"></video>
 
 <https://github.com/mienaiyami/collection-extension-2.0/assets/84740082/1f2b496e-30eb-46e8-977b-dbd5daa671db>
 
