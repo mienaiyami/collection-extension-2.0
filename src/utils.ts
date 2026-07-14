@@ -214,6 +214,11 @@ export const appSettingSchema = z
             })
             .default({}),
         copyDataFormat: z.string().default("{{url}}"),
+        /**
+         * When true, adding a URL that already exists in that collection removes older
+         * same-URL rows (keeps the newest). Other collections are untouched.
+         */
+        autoRemoveDuplicateUrls: z.boolean().default(false),
         /** Persisted Collection View search-mode / sort / filters panel. */
         collectionListView: collectionListViewSettingSchema.default({}),
         /** Persisted Collection Item View sort / filters panel. */

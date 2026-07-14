@@ -35,6 +35,10 @@ type CollectionOperationsContextType = {
         collectionId: UUID,
         itemId: UUID | UUID[]
     ) => CollectionOperationResponse<"REMOVE_FROM_COLLECTION">;
+    removeCollectionDuplicates: (
+        collectionIds: UUID[],
+        keep: "newest" | "oldest"
+    ) => CollectionOperationResponse<"REMOVE_COLLECTION_DUPLICATES">;
     updateCollectionItem: (
         collectionId: UUID,
         itemId: UUID,
@@ -194,6 +198,14 @@ export const CollectionOperationsProvider: React.FC<{
                 });
                 return response;
             }
+            if (response.data.removedDuplicateCount > 0) {
+                toast.message(
+                    t("messages.removedOlderDuplicates", {
+                        count: response.data.removedDuplicateCount,
+                    })
+                );
+            }
+            return response;
         },
         [sendMessage, t]
     );
@@ -216,6 +228,14 @@ export const CollectionOperationsProvider: React.FC<{
                 });
                 return response;
             }
+            if (response.data.removedDuplicateCount > 0) {
+                toast.message(
+                    t("messages.removedOlderDuplicates", {
+                        count: response.data.removedDuplicateCount,
+                    })
+                );
+            }
+            return response;
         },
         [sendMessage, t]
     );
@@ -242,8 +262,15 @@ export const CollectionOperationsProvider: React.FC<{
             const message = Array.isArray(items)
                 ? t("messages.addedItemsToCollection", { count: items.length })
                 : t("messages.addedToCollection");
+            const removedDupDesc =
+                response.data.removedDuplicateCount > 0
+                    ? t("messages.removedOlderDuplicates", {
+                          count: response.data.removedDuplicateCount,
+                      })
+                    : undefined;
             if (redoEnabled && oldState && oldState.success) {
                 toast.success(message, {
+                    description: removedDupDesc,
                     action: {
                         label: t("common.undo"),
                         onClick: async () => {
@@ -254,7 +281,11 @@ export const CollectionOperationsProvider: React.FC<{
                         },
                     },
                 });
-            } else toast.success(message);
+            } else
+                toast.success(
+                    message,
+                    removedDupDesc ? { description: removedDupDesc } : undefined
+                );
             return response;
         },
         [sendMessage, t]
@@ -298,6 +329,32 @@ export const CollectionOperationsProvider: React.FC<{
                     },
                 },
             });
+            return response;
+        },
+        [sendMessage, t]
+    );
+
+    const removeCollectionDuplicates = useCallback(
+        async (collectionIds: UUID[], keep: "newest" | "oldest") => {
+            toast.dismiss();
+            const response = await sendMessage({
+                type: "REMOVE_COLLECTION_DUPLICATES",
+                payload: { collectionIds, keep },
+            });
+            if (!response.success) {
+                toast.error(t("messages.failedToRemoveDuplicates"), {
+                    description: response.error,
+                });
+                return response;
+            }
+            if (response.data.removedCount > 0) {
+                toast.success(t("messages.removedDuplicates"), {
+                    description: t("messages.removedDuplicatesDesc", {
+                        count: response.data.removedCount,
+                        collections: response.data.collectionCount,
+                    }),
+                });
+            }
             return response;
         },
         [sendMessage, t]
@@ -704,6 +761,7 @@ export const CollectionOperationsProvider: React.FC<{
                 addActiveTabToCollection,
                 addAllTabsToCollection,
                 removeFromCollection,
+                removeCollectionDuplicates,
                 updateCollectionItem,
                 renameCollection,
                 changeCollectionOrder,

@@ -25,6 +25,11 @@
 
 - added: edit collection item title, URL, and image (URL, file upload, or clipboard paste) from the item context menu (#35); closes #22
 
+### Collections — duplicates
+
+- added: remove duplicate URLs within a collection (keep most recent or oldest) from selection overflow menus and collection context menu (#10)
+- added: settings toggle to auto-remove older duplicate URLs when adding a link to a collection (#10)
+
 ## v2.5.1
 
 - fixed: sync behavior, prevent fake sync loops.

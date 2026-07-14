@@ -11,7 +11,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
+import { useRemoveDuplicatesDialog } from "@/features/collections/duplicates/use-remove-duplicates-dialog";
 import {
     applyRangeSelection,
     pruneSelectionToVisible,
@@ -20,7 +27,7 @@ import { useAppContext } from "@/features/layout/App";
 import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { Reorder } from "framer-motion";
-import { Copy, Trash, X } from "lucide-react";
+import { MoreHorizontal, Trash, X } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -45,6 +52,7 @@ const CollectionView = () => {
     } = useCollectionSearchSort(collectionData);
 
     const { requestOpenMany, openManyWarningDialog } = useOpenManyWarning();
+    const { openForCollections, removeDuplicatesDialog } = useRemoveDuplicatesDialog();
 
     const [selected, setSelected] = useState<UUID[]>([]);
     const [lastChanged, setLastChanged] = useState<{
@@ -55,7 +63,8 @@ const CollectionView = () => {
 
     const selected_deleteRef = useRef<HTMLButtonElement>(null);
     const selected_open = useRef<HTMLButtonElement>(null);
-    const selected_copy = useRef<HTMLButtonElement>(null);
+    const selected_openNewWindow = useRef<HTMLButtonElement>(null);
+    const selected_openIncognito = useRef<HTMLButtonElement>(null);
     const ref = useRef<HTMLDivElement>(null);
     const initialScrollPos = useRef(scrollPos);
 
@@ -88,6 +97,20 @@ const CollectionView = () => {
         );
     };
 
+    const copySelectedCollections = () => {
+        const chunks = selectedCollections.map((collection) =>
+            window.formatCopyData(appSetting.copyDataFormat, collection.items, collection.title)
+        );
+        navigator.clipboard.writeText(chunks.filter(Boolean).join("\n\n"));
+        toast.success(
+            t("messages.copiedItems", {
+                count: selectedItemCount,
+            })
+        );
+    };
+    const copySelectedCollectionsRef = useRef(copySelectedCollections);
+    copySelectedCollectionsRef.current = copySelectedCollections;
+
     useLayoutEffect(() => {
         const timeout = setTimeout(() => {
             ref.current?.scrollTo({ top: initialScrollPos.current });
@@ -113,11 +136,17 @@ const CollectionView = () => {
                 case "Delete":
                     if (selected.length > 0) selected_deleteRef.current?.click();
                     break;
+                case "KeyN":
+                    if (selected.length > 0) {
+                        if (e.shiftKey) selected_openIncognito.current?.click();
+                        else selected_openNewWindow.current?.click();
+                    }
+                    break;
                 case "KeyT":
                     if (selected.length > 0) selected_open.current?.click();
                     break;
                 case "KeyC":
-                    if (selected.length > 0) selected_copy.current?.click();
+                    if (selected.length > 0) copySelectedCollectionsRef.current();
                     break;
                 case "Escape":
                     setSelected([]);
@@ -174,7 +203,7 @@ const CollectionView = () => {
                             </Button>
                         </div>
                     ) : (
-                        <div className="flex h-12 w-full flex-row items-center border-border border-b p-2">
+                        <div className="flex h-12 w-full flex-row items-center border-border border-b p-1">
                             <span className="p-1">
                                 {selected.length} {t("collections.selected")}
                             </span>
@@ -196,39 +225,76 @@ const CollectionView = () => {
                                     });
                                 }}
                             >
-                                {t("collections.openAll")}
+                                {t("collections.open")}
                             </Button>
                             <Button
                                 className="p-1"
                                 variant={"ghost"}
-                                size={"icon"}
-                                ref={selected_copy}
-                                title={t("collections.copyData")}
+                                ref={selected_openNewWindow}
                                 onClick={() => {
-                                    const chunks = selectedCollections.map((collection) =>
-                                        window.formatCopyData(
-                                            appSetting.copyDataFormat,
-                                            collection.items,
-                                            collection.title
-                                        )
+                                    const urls = selectedCollections.flatMap((collection) =>
+                                        collection.items.map((item) => item.url).filter(Boolean)
                                     );
-                                    navigator.clipboard.writeText(
-                                        chunks.filter(Boolean).join("\n\n")
-                                    );
-                                    toast.success(
-                                        t("messages.copiedItems", {
-                                            count: selectedItemCount,
-                                        })
-                                    );
+                                    requestOpenMany(urls, (urlsToOpen) => {
+                                        window.browser.windows.create({
+                                            url: urlsToOpen,
+                                            state: "normal",
+                                        });
+                                    });
                                 }}
                             >
-                                <Copy />
+                                {t("collections.newWindow")}
+                            </Button>
+                            <Button
+                                className="p-1"
+                                variant={"ghost"}
+                                ref={selected_openIncognito}
+                                onClick={() => {
+                                    const urls = selectedCollections.flatMap((collection) =>
+                                        collection.items.map((item) => item.url).filter(Boolean)
+                                    );
+                                    requestOpenMany(urls, (urlsToOpen) => {
+                                        window.browser.windows
+                                            .create({
+                                                url: urlsToOpen,
+                                                state: "maximized",
+                                                incognito: true,
+                                            })
+                                            .catch((e) => {
+                                                toast.error(t("common.error"), {
+                                                    description: e,
+                                                });
+                                            });
+                                    });
+                                }}
+                            >
+                                {t("collections.incognito")}
                             </Button>
                             <AlertDialogTrigger asChild ref={selected_deleteRef}>
                                 <Button className="p-1" variant={"ghost"} size={"icon"}>
                                     <Trash />
                                 </Button>
                             </AlertDialogTrigger>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        className="p-1"
+                                        variant={"ghost"}
+                                        size={"icon"}
+                                        title={t("collections.moreActions")}
+                                    >
+                                        <MoreHorizontal />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onSelect={() => copySelectedCollections()}>
+                                        {t("collections.copyData")}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => openForCollections(selected)}>
+                                        {t("collections.removeDuplicates")}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                             <Button
                                 className="p-1"
                                 variant={"ghost"}
@@ -275,6 +341,9 @@ const CollectionView = () => {
                                         changeSelected={changeSelected}
                                         onShiftPlusClick={onShiftPlusClick}
                                         requestOpenMany={requestOpenMany}
+                                        onRemoveDuplicates={(collectionId) =>
+                                            openForCollections([collectionId])
+                                        }
                                         onDragEnd={() => {
                                             if (canDrag) {
                                                 operations.changeCollectionOrder(
@@ -329,6 +398,7 @@ const CollectionView = () => {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            {removeDuplicatesDialog}
             {openManyWarningDialog}
         </>
     );
