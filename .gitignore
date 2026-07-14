@@ -32,3 +32,10 @@ dist-ssr
 build.zip
 github/aaa
 public/manifest.json
+
+# Standalone Playwright demo (keeps deps out of the extension package)
+demo/node_modules
+demo/output
+demo/test-results
+demo/playwright-report
+demo/.auth

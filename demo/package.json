@@ -1,0 +1,19 @@
+{
+  "name": "collection-extension-demo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Standalone Playwright demos for the Collections extension. Not part of the extension bundle.",
+  "scripts": {
+    "tour:basic": "tsx src/tours/basic.ts",
+    "tour:changelog-v2.6.0": "tsx src/tours/changelog-v2.6.0.ts",
+    "browsers": "playwright install chromium",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.9",
+    "playwright": "^1.52.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.7.2"
+  }
+}
