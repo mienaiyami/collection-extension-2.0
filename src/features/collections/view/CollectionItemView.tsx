@@ -10,13 +10,20 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useRemoveDuplicatesDialog } from "@/features/collections/duplicates/use-remove-duplicates-dialog";
 import { useAppContext } from "@/features/layout/App";
 import { useAppSetting } from "@/hooks/appSetting-provider";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { Reorder } from "framer-motion";
-import { Copy, CopyPlus, FilePlus, Trash, X } from "lucide-react";
+import { CopyPlus, FilePlus, MoreHorizontal, Trash, X } from "lucide-react";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -45,7 +52,6 @@ const CollectionItemView = () => {
     const selected_open = useRef<HTMLButtonElement>(null);
     const selected_openNewWindow = useRef<HTMLButtonElement>(null);
     const selected_openIncognito = useRef<HTMLButtonElement>(null);
-    const selected_copy = useRef<HTMLButtonElement>(null);
     const currentCollection = useMemo(() => {
         if (inCollectionView) {
             return collectionData.find((e) => e.id === inCollectionView);
@@ -61,6 +67,7 @@ const CollectionItemView = () => {
         useCollectionItemSearchSort(itemsOrder, currentCollectionItemsMap);
 
     const { requestOpenMany, openManyWarningDialog } = useOpenManyWarning();
+    const { openForCollections, removeDuplicatesDialog } = useRemoveDuplicatesDialog();
 
     const changeSelected = (id: UUID, checked: boolean) => {
         setLastChanged({
@@ -81,6 +88,22 @@ const CollectionItemView = () => {
             applyRangeSelection(init, visibleItemsOrder, lastChanged.id, onItem, lastChanged.type)
         );
     };
+
+    const copySelectedItems = () => {
+        if (!currentCollection) return;
+        const items = currentCollection.items.filter((e) => selected.includes(e.id));
+        if (items.length === 0) return;
+        navigator.clipboard.writeText(
+            window.formatCopyData(appSetting.copyDataFormat, items, currentCollection.title)
+        );
+        toast.success(
+            t("messages.copiedItems", {
+                count: items.length,
+            })
+        );
+    };
+    const copySelectedItemsRef = useRef(copySelectedItems);
+    copySelectedItemsRef.current = copySelectedItems;
 
     useLayoutEffect(() => {
         setItemsOrder(currentCollection?.items.map((e) => e.id) || []);
@@ -121,7 +144,7 @@ const CollectionItemView = () => {
                     setSelected([]);
                     break;
                 case "KeyC":
-                    if (selected.length > 0) selected_copy.current?.click();
+                    if (selected.length > 0) copySelectedItemsRef.current();
                     break;
                 case "KeyA":
                     if (e.ctrlKey) {
@@ -164,6 +187,7 @@ const CollectionItemView = () => {
         openCollection,
         selected.length,
         visibleItemsOrder,
+        operations.addActiveTabToCollection,
     ]);
 
     return currentCollection ? (
@@ -172,7 +196,7 @@ const CollectionItemView = () => {
                 <div className="grid min-h-full grid-rows-[auto_auto_1fr]">
                     <SearchSortControls {...controlsProps} />
                     {selected.length === 0 && (
-                        <div className="grid h-full grid-cols-[1fr_1px_1fr_1px_0.4fr] items-center border-border border-b p-1">
+                        <div className="grid h-12 grid-cols-[1fr_1px_1fr_1px_0.4fr] items-center border-border border-b p-1">
                             <TooltipProvider
                                 disableHoverableContent
                                 delayDuration={200}
@@ -221,7 +245,7 @@ const CollectionItemView = () => {
                         </div>
                     )}
                     {selected.length > 0 && (
-                        <div className="flex h-full w-full flex-row items-center border-border border-b p-2">
+                        <div className="flex h-12 w-full flex-row items-center border-border border-b p-1">
                             <span className="p-1">
                                 {selected.length} {t("collections.selected")}
                             </span>
@@ -291,40 +315,36 @@ const CollectionItemView = () => {
                             >
                                 {t("collections.incognito")}
                             </Button>
-                            <Button
-                                className="p-1"
-                                variant={"ghost"}
-                                size={"icon"}
-                                ref={selected_copy}
-                                title={t("collections.copyData")}
-                                onClick={() => {
-                                    const items = currentCollection.items.filter((e) =>
-                                        selected.includes(e.id)
-                                    );
-                                    if (items && items.length > 0) {
-                                        navigator.clipboard.writeText(
-                                            window.formatCopyData(
-                                                appSetting.copyDataFormat,
-                                                items,
-                                                currentCollection.title
-                                            )
-                                        );
-                                        toast.success(
-                                            t("messages.copiedItems", {
-                                                count: items.length,
-                                            })
-                                        );
-                                    }
-                                }}
-                            >
-                                <Copy />
-                            </Button>
-
                             <AlertDialogTrigger asChild ref={selected_deleteRef}>
                                 <Button className="p-1" variant={"ghost"} size={"icon"}>
                                     <Trash />
                                 </Button>
                             </AlertDialogTrigger>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        className="p-1"
+                                        variant={"ghost"}
+                                        size={"icon"}
+                                        title={t("collections.moreActions")}
+                                    >
+                                        <MoreHorizontal />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onSelect={() => copySelectedItems()}>
+                                        {t("collections.copyData")}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onSelect={() => {
+                                            if (inCollectionView)
+                                                openForCollections([inCollectionView]);
+                                        }}
+                                    >
+                                        {t("collections.removeDuplicates")}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                             <Button
                                 className="p-1"
                                 variant={"ghost"}
@@ -404,6 +424,7 @@ const CollectionItemView = () => {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            {removeDuplicatesDialog}
             {openManyWarningDialog}
         </>
     ) : (

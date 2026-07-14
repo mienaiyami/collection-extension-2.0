@@ -42,6 +42,7 @@ type PropType = {
     changeSelected: (id: UUID, checked: boolean) => void;
     onShiftPlusClick: (id: UUID) => void;
     requestOpenMany: (urls: string[], open: (urls: string[]) => void) => void;
+    onRemoveDuplicates: (collectionId: UUID) => void;
 };
 
 const Collection = ({
@@ -53,6 +54,7 @@ const Collection = ({
     changeSelected,
     onShiftPlusClick,
     requestOpenMany,
+    onRemoveDuplicates,
 }: PropType) => {
     const { collectionData, openCollection } = useAppContext();
     const operations = useCollectionOperations();
@@ -231,6 +233,13 @@ const Collection = ({
                             {t("collections.openAllInIncognitoWindow")}
                         </ContextMenuItem>
                         <ContextMenuSeparator />
+                        <ContextMenuItem
+                            onSelect={() => {
+                                onRemoveDuplicates(item.id);
+                            }}
+                        >
+                            {t("collections.removeDuplicates")}
+                        </ContextMenuItem>
                         <ContextMenuItem
                             onClick={() => {
                                 (async () => {

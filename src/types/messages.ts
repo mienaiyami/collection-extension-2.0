@@ -22,6 +22,7 @@ export type CollectionOperation =
               collectionId: UUID;
               items: CollectionItem | CollectionItem[];
           };
+          response: { removedDuplicateCount: number };
       }
     | {
           type: "ADD_TAB_TO_COLLECTION";
@@ -30,6 +31,7 @@ export type CollectionOperation =
               /** required because by the time its queried in background.ts another tab might be active */
               tabId: number;
           };
+          response: { removedDuplicateCount: number };
       }
     | {
           type: "ADD_ALL_TABS_TO_COLLECTION";
@@ -38,10 +40,19 @@ export type CollectionOperation =
               /** required because by the time its queried in background.ts another window might be active */
               windowId: number;
           };
+          response: { removedDuplicateCount: number };
       }
     | {
           type: "REMOVE_FROM_COLLECTION";
           payload: { collectionId: UUID; itemId: UUID | UUID[] };
+      }
+    | {
+          type: "REMOVE_COLLECTION_DUPLICATES";
+          payload: {
+              collectionIds: UUID[];
+              keep: "newest" | "oldest";
+          };
+          response: { removedCount: number; collectionCount: number };
       }
     | {
           type: "UPDATE_COLLECTION_ITEM";

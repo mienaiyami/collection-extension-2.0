@@ -1,6 +1,11 @@
 import i18next from "i18next";
 import browser from "webextension-polyfill";
 import { z } from "zod";
+import {
+    type DedupeKeep,
+    getDuplicateItemIdsToRemove,
+    getOlderDuplicateIdsAfterAdd,
+} from "./features/collections/duplicates/dedupe";
 import { GoogleAuthService } from "./services/GoogleAuthService";
 import { SyncService } from "./services/SyncService";
 import type {
@@ -508,10 +513,29 @@ class CollectionManager {
 
             const itemsToAdd = Array.isArray(items) ? items : [items];
             collection.items.unshift(...itemsToAdd);
+
+            let removedDuplicateCount = 0;
+            const { appSetting } = (await browser.storage.local.get("appSetting")) as {
+                appSetting?: AppSettingType;
+            };
+            if (appSetting?.autoRemoveDuplicateUrls) {
+                const removeIds = getOlderDuplicateIdsAfterAdd(collection.items);
+                if (removeIds.length > 0) {
+                    const removeSet = new Set(removeIds);
+                    collection.items = collection.items.filter((item) => !removeSet.has(item.id));
+                    removedDuplicateCount = removeIds.length;
+                    const timestamp = Date.now();
+                    this.addToDeletedCollection(
+                        removeIds.map((id) => ({ id, deletedAt: timestamp, isItem: true }))
+                    );
+                    collection.updatedAt = timestamp;
+                }
+            }
+
             await this.setCollectionData(collections);
             this.updateRecentlyUsed(collectionId, 0);
 
-            return { success: true };
+            return { success: true, data: { removedDuplicateCount } };
         } catch (error) {
             return { success: false, error: String(error) };
         }
@@ -575,6 +599,48 @@ class CollectionManager {
             this.updateRecentlyUsed(collectionId, 0);
 
             return { success: true, data: { previous } };
+        } catch (error) {
+            return { success: false, error: String(error) };
+        }
+    }
+
+    /**
+     * Removes same-URL duplicates within each listed collection (collections are independent).
+     */
+    static async removeCollectionDuplicates(
+        collectionIds: UUID[],
+        keep: DedupeKeep
+    ): CollectionOperationResponse<"REMOVE_COLLECTION_DUPLICATES"> {
+        try {
+            const collections = await this.getCollectionData();
+            const idSet = new Set(collectionIds);
+            const allRemoveIds: UUID[] = [];
+            let collectionCount = 0;
+            const timestamp = Date.now();
+
+            for (const collection of collections) {
+                if (!idSet.has(collection.id)) continue;
+                const removeIds = getDuplicateItemIdsToRemove(collection.items, keep);
+                if (removeIds.length === 0) continue;
+                const removeSet = new Set(removeIds);
+                collection.items = collection.items.filter((item) => !removeSet.has(item.id));
+                collection.updatedAt = timestamp;
+                allRemoveIds.push(...removeIds);
+                collectionCount += 1;
+            }
+
+            if (allRemoveIds.length > 0) {
+                this.addToDeletedCollection(
+                    allRemoveIds.map((id) => ({ id, deletedAt: timestamp, isItem: true }))
+                );
+                await this.setCollectionData(collections);
+                this.updateRecentlyUsed("update");
+            }
+
+            return {
+                success: true,
+                data: { removedCount: allRemoveIds.length, collectionCount },
+            };
         } catch (error) {
             return { success: false, error: String(error) };
         }
@@ -878,6 +944,11 @@ browser.runtime.onMessage.addListener(
                             url: message.payload.url,
                             img: message.payload.img,
                         }
+                    );
+                case "REMOVE_COLLECTION_DUPLICATES":
+                    return await CollectionManager.removeCollectionDuplicates(
+                        message.payload.collectionIds,
+                        message.payload.keep
                     );
                 case "RENAME_COLLECTION":
                     return await CollectionManager.renameCollection(

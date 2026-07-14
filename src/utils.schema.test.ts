@@ -14,6 +14,7 @@ describe("appSettingSchema", () => {
                 family: "Inter",
             },
             copyDataFormat: "{{url}}",
+            autoRemoveDuplicateUrls: false,
             collectionListView: {
                 searchMode: "title",
                 sortBy: "default",

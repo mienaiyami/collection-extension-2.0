@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCollectionOperations } from "@/hooks/useCollectionOperations";
 import { Trans, useTranslation } from "react-i18next";
+import AutoRemoveDuplicatesSetting from "./components/AutoRemoveDuplicatesSetting";
 import BackupSettings from "./components/BackupSettings";
 import CopyDataFormatSetting from "./components/CopyDataFormatSetting";
 import FontSettings from "./components/FontSettings";
@@ -30,6 +31,7 @@ const Settings: React.FC = () => {
                 </div>
                 <FontSettings />
                 <CopyDataFormatSetting />
+                <AutoRemoveDuplicatesSetting />
                 <div className="flex flex-col gap-2 rounded-md border p-2">
                     <div className="flex w-full flex-row items-center gap-2">
                         <span className="font-semibold">{t("settings.data")}</span>
