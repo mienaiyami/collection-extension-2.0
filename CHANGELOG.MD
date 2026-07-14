@@ -1,9 +1,7 @@
-## Unreleased
+## v2.6.1 hotfix
 
-- feat: danger-styled SyncStatus tooltip for signed-out users warning that collections are local-only (not browser online sync) and can be lost if the browser session ends or the extension is removed ([#42](https://github.com/mienaiyami/collection-extension-2.0/pull/42))
 - fix: Collection View crash (`sortBy` of undefined) for users whose saved app settings predate search/sort fields — normalize `appSetting` on load and when writing/migrating settings so `collectionListView` / `collectionItemView` defaults are always present
-- improved: vertical divider between “New empty” and “New from opened tabs” on the collections list toolbar (same pattern as Collection Item View)
-- chore **dev**: add release guide and update contribution docs
+- feat: danger-styled SyncStatus tooltip for signed-out users warning that collections are local-only (not browser online sync) and can be lost if the browser session ends or the extension is removed ([#42](https://github.com/mienaiyami/collection-extension-2.0/pull/42))
 
 ## v2.6.0
 
