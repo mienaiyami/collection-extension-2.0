@@ -1,32 +1,40 @@
 import { describe, expect, it, vi } from "vitest";
-import { appSettingSchema, collectionItemSchema, collectionSchema } from "./utils";
+import {
+    appSettingSchema,
+    collectionItemSchema,
+    collectionSchema,
+    initAppSetting,
+    normalizeAppSetting,
+} from "./utils";
 
 vi.mock("webextension-polyfill", () => ({
     default: {},
 }));
 
+const fullAppSettingDefaults = {
+    version: 1,
+    font: {
+        size: 16,
+        family: "Inter",
+    },
+    copyDataFormat: "{{url}}",
+    autoRemoveDuplicateUrls: false,
+    collectionListView: {
+        searchMode: "title",
+        sortBy: "default",
+        sortDir: "asc",
+        filtersOpen: false,
+    },
+    collectionItemView: {
+        sortBy: "default",
+        sortDir: "asc",
+        filtersOpen: false,
+    },
+};
+
 describe("appSettingSchema", () => {
     it("applies defaults for an empty object", () => {
-        expect(appSettingSchema.parse({})).toEqual({
-            version: 1,
-            font: {
-                size: 16,
-                family: "Inter",
-            },
-            copyDataFormat: "{{url}}",
-            autoRemoveDuplicateUrls: false,
-            collectionListView: {
-                searchMode: "title",
-                sortBy: "default",
-                sortDir: "asc",
-                filtersOpen: false,
-            },
-            collectionItemView: {
-                sortBy: "default",
-                sortDir: "asc",
-                filtersOpen: false,
-            },
-        });
+        expect(appSettingSchema.parse({})).toEqual(fullAppSettingDefaults);
     });
 
     it("fills collection view defaults when older settings omit them", () => {
@@ -47,6 +55,63 @@ describe("appSettingSchema", () => {
                 sortBy: "default",
                 filtersOpen: false,
             },
+        });
+    });
+});
+
+describe("normalizeAppSetting", () => {
+    it("fills defaults when older settings omit list/item view and autoRemoveDuplicateUrls", () => {
+        const result = normalizeAppSetting({
+            version: 1,
+            font: { size: 16, family: "Inter" },
+            copyDataFormat: "{{url}}",
+        });
+        expect(result.setting).toEqual(fullAppSettingDefaults);
+        expect(result.persist).toBe(true);
+    });
+
+    it("defaults missing nested collectionListView fields", () => {
+        const result = normalizeAppSetting({
+            version: 1,
+            font: { size: 16, family: "Inter" },
+            copyDataFormat: "{{url}}",
+            collectionListView: { sortBy: "name" },
+        });
+        expect(result.setting).toMatchObject({
+            collectionListView: {
+                searchMode: "title",
+                sortBy: "name",
+                sortDir: "asc",
+                filtersOpen: false,
+            },
+            collectionItemView: {
+                sortBy: "default",
+                sortDir: "asc",
+                filtersOpen: false,
+            },
+            autoRemoveDuplicateUrls: false,
+        });
+        expect(result.persist).toBe(true);
+    });
+
+    it("does not ask to persist when settings are already complete", () => {
+        const result = normalizeAppSetting(fullAppSettingDefaults);
+        expect(result.setting).toEqual(fullAppSettingDefaults);
+        expect(result.persist).toBe(false);
+    });
+
+    it("falls back to initAppSetting for invalid input without persist", () => {
+        expect(normalizeAppSetting(null)).toEqual({
+            setting: initAppSetting,
+            persist: false,
+        });
+        expect(normalizeAppSetting("broken")).toEqual({
+            setting: initAppSetting,
+            persist: false,
+        });
+        expect(normalizeAppSetting({ version: "not-a-number" })).toEqual({
+            setting: initAppSetting,
+            persist: false,
         });
     });
 });

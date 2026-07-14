@@ -1,4 +1,4 @@
-import { initAppSetting } from "@/utils";
+import { initAppSetting, normalizeAppSetting } from "@/utils";
 import { createContext, useContext, useLayoutEffect, useState } from "react";
 import type Browser from "webextension-polyfill";
 
@@ -25,17 +25,23 @@ export const AppSettingProvider = ({ children }: AppSettingProviderProps) => {
 
     useLayoutEffect(() => {
         window.browser.storage.local.get().then(({ appSetting: _appSetting }) => {
-            if (_appSetting && Object.keys(_appSetting).includes("version"))
-                setAppSetting(_appSetting as AppSettingType);
-            else window.browser.storage.local.set({ appSetting });
+            if (_appSetting && typeof _appSetting === "object" && "version" in _appSetting) {
+                const { setting, persist } = normalizeAppSetting(_appSetting);
+                setAppSetting(setting);
+                /* One-shot heal so legacy blobs gain collectionListView / etc. */
+                if (persist) {
+                    void window.browser.storage.local.set({ appSetting: setting });
+                }
+            } else window.browser.storage.local.set({ appSetting });
         });
         const onStorageChangeListener = (changes: {
             [key: string]: Browser.Storage.StorageChange;
         }) => {
             if (changes.appSetting) {
-                const newValue = changes.appSetting.newValue as AppSettingType;
+                /* Normalize for UI only — do not write here (multi-context write storms). */
+                const { setting } = normalizeAppSetting(changes.appSetting.newValue);
                 setAppSetting((prev) =>
-                    JSON.stringify(newValue) !== JSON.stringify(prev) ? newValue : prev
+                    JSON.stringify(setting) !== JSON.stringify(prev) ? setting : prev
                 );
             }
         };
