@@ -32,9 +32,9 @@
 
 ---
 
-Demo walkthrough (search, sort, multi-select, open-many warning, remove duplicates, edit item, language, settings):
+Demo walkthrough:
 
-https://github.com/mienaiyami/collection-extension-2.0/blob/main/github/v2.6.0-changelog.mp4
+![v2.6.0 feature walkthrough](github/v2.6.0-changelog.gif)
 
 ## v2.5.1
 
