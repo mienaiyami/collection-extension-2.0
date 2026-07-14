@@ -141,14 +141,15 @@ pnpm build
 
 ## Release Process
 
-The release process is handled by maintainers and includes:
+The release process is handled by maintainers. See the full guide:
 
-1. Version bump in `package.json`
-2. Automated building and packaging
-3. Publishing to browser stores:
-   - Chrome Web Store
-   - Firefox Add-ons
-4. Creating GitHub releases
+**[Release guide](release.md)** — env vars, Chrome OAuth refresh token, Firefox AMO keys, `web-ext`, troubleshooting.
+
+Summary:
+
+1. Version bump in `package.json` (+ changelog)
+2. `pnpm release` — zip, tag, sign Firefox, publish Chrome
+3. Tag push also creates the GitHub Release with `build.zip`
 
 ## Getting Help
 

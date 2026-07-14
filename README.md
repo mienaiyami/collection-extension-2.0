@@ -144,6 +144,7 @@ Want to contribute translations? Check our [Translation Guide](docs/translation-
 - [User Guide](docs/guide.md) - Build instructions and usage tips
 - [Wiki](https://github.com/mienaiyami/collection-extension-2.0/wiki) - More information about the extension
 - [Contributing](docs/contribute.md) - How to contribute to the project
+- [Release guide](docs/release.md) - Store publish, OAuth/AMO credentials, troubleshooting (maintainers)
 - [Translation Guide](docs/translation-guide.md) - How to add translations
 - [Report Issues](https://github.com/mienaiyami/collection-extension-2.0/issues/new/choose) - Bug reports and feature requests
 

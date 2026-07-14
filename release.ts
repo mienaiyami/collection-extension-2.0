@@ -1,4 +1,4 @@
-import { exec, execFile } from "node:child_process";
+import { exec, spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
@@ -42,9 +42,10 @@ const tagAndPush = (): Promise<void> =>
     });
 
 const signFireFoxAddon = (): Promise<void> =>
-    new Promise((resolve) => {
+    new Promise((resolve, reject) => {
         log("Signing Firefox add-on...");
-        const pwshSpawn = execFile(
+        /* shell:true so Windows resolves the global web-ext.cmd shim (execFile ENOENT = -4058). */
+        const child = spawn(
             "web-ext",
             [
                 "sign",
@@ -54,20 +55,20 @@ const signFireFoxAddon = (): Promise<void> =>
             ],
             {
                 cwd: path.join(process.cwd(), "dist"),
+                shell: true,
+                stdio: "inherit",
             }
         );
 
-        pwshSpawn.stdout?.on("data", (data) => {
-            process.stdout.write(data);
+        child.on("error", (err) => {
+            reject(err);
         });
 
-        pwshSpawn.stderr?.on("data", (data) => {
-            process.stdout.write(`\x1b[91m${data}\x1b[0m`);
-        });
-
-        pwshSpawn.on("close", (code) => {
+        child.on("close", (code) => {
             log(`sign addon: exited with code ${code}.`);
-            if (code === 1) process.exit(1);
+            if (code !== 0) {
+                process.exit(code ?? 1);
+            }
             resolve();
         });
     });
