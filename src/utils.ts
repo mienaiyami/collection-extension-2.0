@@ -227,6 +227,33 @@ export const appSettingSchema = z
     .strip();
 export const initAppSetting = appSettingSchema.parse({});
 
+type NormalizedAppSetting = z.infer<typeof appSettingSchema>;
+
+type NormalizeAppSettingResult = {
+    setting: NormalizedAppSetting;
+    /**
+     * True when `raw` parsed and differs from the filled result (e.g. new defaults).
+     * False on parse failure — do not overwrite storage with {@link initAppSetting}.
+     */
+    persist: boolean;
+};
+
+/**
+ * Coerces storage/raw settings into a full app setting object.
+ * Call at storage trust boundaries (provider load, background write/migrate)
+ * so consumers never see missing nested fields like `collectionListView.sortBy`.
+ */
+export const normalizeAppSetting = (raw: unknown): NormalizeAppSettingResult => {
+    const parsed = appSettingSchema.safeParse(raw);
+    if (!parsed.success) {
+        return { setting: initAppSetting, persist: false };
+    }
+    return {
+        setting: parsed.data,
+        persist: JSON.stringify(parsed.data) !== JSON.stringify(raw),
+    };
+};
+
 // version<=v2.4.2: data is on every item, adding createdAt,updatedAt,deleted now;
 export const collectionItemSchema = z
     .object({

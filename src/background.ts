@@ -14,11 +14,11 @@ import type {
     MessageResponse,
 } from "./types/messages";
 import {
-    appSettingSchema,
     collectionSchema,
     deletedCollectionItemSchema,
     getDataFromTab,
     initAppSetting,
+    normalizeAppSetting,
     wait,
 } from "./utils";
 import "./i18n/config"; // Import i18n configuration
@@ -139,14 +139,11 @@ browser.runtime.onInstalled.addListener((e) => {
         (() => {
             browser.storage.local.get("appSetting").then(({ appSetting }) => {
                 if (appSetting) {
-                    if (
-                        !(appSetting as AppSettingType).version ||
-                        (appSetting as AppSettingType).version < initAppSetting.version
-                    ) {
-                        const newSettings = appSettingSchema.parse(appSetting);
-                        browser.storage.local.set({
-                            appSetting: newSettings,
-                        });
+                    /* Parse on every update so new defaulted fields are filled even
+                     * when version was not bumped (collectionListView, etc.). */
+                    const { setting, persist } = normalizeAppSetting(appSetting);
+                    if (persist) {
+                        browser.storage.local.set({ appSetting: setting });
                     }
                 }
             });
@@ -872,14 +869,16 @@ class CollectionManager {
     static async updateAppSetting(
         update: Partial<AppSettingType>
     ): CollectionOperationResponse<"SET_APP_SETTING"> {
-        const { appSetting } = (await browser.storage.local.get("appSetting")) as {
-            appSetting: AppSettingType;
-        };
+        const { appSetting } = await browser.storage.local.get("appSetting");
         if (!appSetting) {
             return { success: false, error: "App setting not found" };
         }
-        const newSetting = { ...appSetting, ...update };
-        await browser.storage.local.set({ appSetting: newSetting });
+        /* Normalize after shallow merge so nested patches never persist a half-object. */
+        const { setting } = normalizeAppSetting({
+            ...(appSetting as AppSettingType),
+            ...update,
+        });
+        await browser.storage.local.set({ appSetting: setting });
         return { success: true };
     }
 }

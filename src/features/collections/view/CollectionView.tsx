@@ -18,6 +18,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useRemoveDuplicatesDialog } from "@/features/collections/duplicates/use-remove-duplicates-dialog";
 import {
     applyRangeSelection,
@@ -176,7 +177,7 @@ const CollectionView = () => {
                     <SearchSortControls {...controlsProps} />
 
                     {selected.length === 0 ? (
-                        <div className="grid h-12 grid-cols-2 items-center border-border border-b p-1">
+                        <div className="grid h-12 grid-cols-[1fr_1px_1fr] items-center border-border border-b p-1">
                             <Button
                                 variant={"ghost"}
                                 onClick={async () => {
@@ -190,6 +191,7 @@ const CollectionView = () => {
                             >
                                 {t("collections.newEmpty")}
                             </Button>
+                            <Separator orientation="vertical" />
                             <Button
                                 variant={"ghost"}
                                 onClick={async () => {
