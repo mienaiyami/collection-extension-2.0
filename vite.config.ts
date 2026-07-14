@@ -114,6 +114,10 @@ export default defineConfig({
     },
 
     build: {
+        /* Extension runtimes only (gecko strict_min_version 109). Vite's default
+         * includes safari14; esbuild 0.28+ errors on destructuring for Safari <14.1
+         * because it will not downlevel that syntax (evanw/esbuild#4436). */
+        target: ["chrome109", "firefox109", "edge109"],
         minify: !isDev,
         rollupOptions: {
             input: {
