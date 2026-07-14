@@ -1,20 +1,22 @@
 ## v2.6.0
 
+![v2.6.0 feature walkthrough](github/v2.6.0-changelog.gif)
+
 ### Localization & docs
 
 - added: multi-language support with i18next (English / Spanish(incomplete) / French)
-- added: French translation by @swirti (#29, #30)
+- added: French translation by [@swirti](https://github.com/swirti) ([#29](https://github.com/mienaiyami/collection-extension-2.0/issues/29), [#30](https://github.com/mienaiyami/collection-extension-2.0/pull/30))
 - added: Discord invite link in the README
 
 ### Fixes
 
 - fixed: sync alarm scheduling after the v2.5.1 release
-- fixed: stale app setting UI when reverting to defaults (#31)
-- fixed: invalid `items-center` on collection item title layouts (#32)
+- fixed: stale app setting UI when reverting to defaults ([#31](https://github.com/mienaiyami/collection-extension-2.0/issues/31))
+- fixed: invalid `items-center` on collection item title layouts ([#32](https://github.com/mienaiyami/collection-extension-2.0/issues/32))
 
 ### Collections — search, sort & multi-select
 
-- added: search and sort on the collections list and inside a collection, with a collapsible filters panel (based on work by @shanksxz in `feat/search-and-sort`)
+- added: search and sort on the collections list and inside a collection, with a collapsible filters panel (based on work by [@shanksxz](https://github.com/shanksxz) in `feat/search-and-sort`)
 - added: collection list search modes — title only, or title + items (deep), with a hint when the match is from nested items only
 - added: sort by default (manual), name, modified, date (plus item count on the list), with ascending/descending; drag-reorder only when search is empty and sort is default
 - added: multi-select collections (checkbox, Shift+click range, Ctrl+A for visible rows) with batch open, copy, and delete (delete requires confirmation)
@@ -23,18 +25,16 @@
 
 ### Collections — edit item
 
-- added: edit collection item title, URL, and image (URL, file upload, or clipboard paste) from the item context menu (#35); closes #22
+- added: edit collection item title, URL, and image (URL, file upload, or clipboard paste) from the item context menu ([#35](https://github.com/mienaiyami/collection-extension-2.0/issues/35)); closes [#22](https://github.com/mienaiyami/collection-extension-2.0/issues/22)
 
 ### Collections — duplicates
 
-- added: remove duplicate URLs within a collection (keep most recent or oldest) from selection overflow menus and collection context menu (#10)
-- added: settings toggle to auto-remove older duplicate URLs when adding a link to a collection (#10)
+- added: remove duplicate URLs within a collection (keep most recent or oldest) from selection overflow menus and collection context menu ([#10](https://github.com/mienaiyami/collection-extension-2.0/issues/10))
+- added: settings toggle to auto-remove older duplicate URLs when adding a link to a collection ([#10](https://github.com/mienaiyami/collection-extension-2.0/issues/10))
 
----
+### Sync
 
-Demo walkthrough:
-
-![v2.6.0 feature walkthrough](github/v2.6.0-changelog.gif)
+- added: danger-styled SyncStatus tooltip for signed-out users warning that collections are local-only (not browser online sync) and can be lost if the browser session ends or the extension is removed
 
 ## v2.5.1
 

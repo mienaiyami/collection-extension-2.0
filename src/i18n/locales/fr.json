@@ -247,7 +247,7 @@
         "notAuthenticated": "Non authentifié",
         "statusUnknown": "Statut de synchronisation inconnu",
         "tryLoggingInAgain": "Essayez de vous reconnecter.",
-        "pleaseLoginToSync": "Veuillez vous connecter pour synchroniser.",
+        "localDataWarning": "Collections are stored only in this browser (local), not in browser online sync. Signing out or removing the extension can permanently delete them. Optionally log in with Google Drive from Settings to sync/backup.",
         "changesNotSynced": "Modifications non synchronisées",
         "lastSynced": "Dernière synchronisation : {{time}}",
         "clickToSync": "Cliquez pour synchroniser maintenant"

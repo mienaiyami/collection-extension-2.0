@@ -15,6 +15,7 @@ const getIcon = (status: SyncState["status"] | undefined) => {
         case "syncing":
             return <RefreshCw className="animate-spin text-blue-500" />;
         case "error":
+        case "not-authenticated":
             return <CloudOff className="text-destructive" />;
         case "unsynced":
             return <CloudOff className="text-yellow-500" />;
@@ -23,13 +24,18 @@ const getIcon = (status: SyncState["status"] | undefined) => {
     }
 };
 
-const getTooltipContent = (
-    syncState: SyncState | null,
-    t: TFunction
-): {
+type SyncTooltipContent = {
     message: string;
     details: string;
-} => {
+    /** Danger styling for local-only / not-logged-in warnings. */
+    danger?: boolean;
+};
+
+/**
+ * Builds SyncStatus tooltip copy from the current sync state.
+ * Unauthenticated users get a local-data loss warning (danger).
+ */
+const getTooltipContent = (syncState: SyncState | null, t: TFunction): SyncTooltipContent => {
     if (syncState === null)
         return {
             message: t("sync.statusUnknown"),
@@ -62,7 +68,8 @@ const getTooltipContent = (
         case "not-authenticated":
             return {
                 message: t("sync.notAuthenticated"),
-                details: t("sync.pleaseLoginToSync"),
+                details: t("sync.localDataWarning"),
+                danger: true,
             };
         default:
             return {
@@ -119,11 +126,17 @@ export const SyncStatus = () => {
                     </Button>
                 </span>
             </TooltipTrigger>
-            <TooltipContent className="max-w-xs text-center">
-                <div className="flex flex-col items-start">
+            <TooltipContent
+                className={
+                    tooltipContent.danger
+                        ? "max-w-xs border-destructive bg-destructive text-center text-destructive-foreground"
+                        : "max-w-xs text-center"
+                }
+            >
+                <div className="flex flex-col items-start gap-1 text-left">
                     <span className="font-semibold">{tooltipContent.message}</span>
                     {tooltipContent.details && (
-                        <span className="text-sm">{tooltipContent.details}</span>
+                        <span className="text-sm opacity-95">{tooltipContent.details}</span>
                     )}
                 </div>
             </TooltipContent>
