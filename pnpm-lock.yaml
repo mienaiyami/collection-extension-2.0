@@ -6,7 +6,7 @@ settings:
 
 overrides:
   rollup@>=3.0.0 <3.29.5: '>=3.29.5'
-  esbuild@<=0.24.2: '>=0.25.0'
+  esbuild@<=0.24.2: 0.25.9
 
 importers:
 
