@@ -41,7 +41,7 @@ If you have questions, ideas, or want to stay updated with development, join our
 
 ## Features
 
-[v2.6.0 feature walkthrough](github/v2.6.0-changelog.webm) — search & sort, multi-select, duplicates, edit item, and more.
+[v2.6.0 feature walkthrough (MP4)](github/v2.6.0-changelog.mp4) — search & sort, multi-select, duplicates, edit item, and more.
 
 ### Collection Management
 
@@ -153,9 +153,9 @@ We welcome contributions! Please see our [Contributing Guide](docs/contribute.md
 
 ## Screenshots & demos
 
-**v2.6.0** — [feature walkthrough video](github/v2.6.0-changelog.webm)
+**v2.6.0** — [feature walkthrough (MP4)](github/v2.6.0-changelog.mp4)
 
-<video src="github/v2.6.0-changelog.webm" controls width="360"></video>
+<video src="github/v2.6.0-changelog.mp4" controls width="360"></video>
 
 <https://github.com/mienaiyami/collection-extension-2.0/assets/84740082/1f2b496e-30eb-46e8-977b-dbd5daa671db>
 

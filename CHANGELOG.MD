@@ -34,7 +34,7 @@
 
 Demo walkthrough (search, sort, multi-select, open-many warning, remove duplicates, edit item, language, settings):
 
-https://github.com/mienaiyami/collection-extension-2.0/blob/main/github/v2.6.0-changelog.webm
+https://github.com/mienaiyami/collection-extension-2.0/blob/main/github/v2.6.0-changelog.mp4
 
 ## v2.5.1
 
